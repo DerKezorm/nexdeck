@@ -64,6 +64,15 @@ MAX_NEW_PER_DAY = 10
 #: GitHub keeps an issue to 65536 characters.
 MAX_BODY = 65_000
 MAX_TEXT = 4000
+#: A description has at least this many words and characters, and one of the common English words below (the same rule as the Workshop's check).
+MIN_WORDS = 3
+MIN_CHARS = 20
+#: A list of changes of an update has at least this many characters.
+MIN_CHANGES = 3
+COMMON_WORDS = frozenset(
+    "the a an of to and in on for your how many shows with from is are it this that".split(),
+)
+DESCRIPTION_SENTENCE = "Add a description of a few sentences, in English."
 NEW_TITLE = "Submit: "
 UPDATE_TITLE = "Submit update: "
 BOT = "github-actions[bot]"
@@ -303,19 +312,25 @@ class Form:
     license: bool = False
 
 
+def describes(text: str) -> bool:
+    """Whether a text can be taken for a description: a few words, long enough, and English at least in part."""
+    words = re.findall(r"[A-Za-z]+", text)
+    return len(text.split()) >= MIN_WORDS and len(text.strip()) >= MIN_CHARS and any(word.lower() in COMMON_WORDS for word in words)
+
+
 def read_form(form: Form, *, update: bool) -> list[dict[str, str]]:
     problems: list[dict[str, str]] = []
     if form.category not in CATEGORIES:
         problems.append(problem("category", f"Pick a category: {', '.join(CATEGORIES.values())}.", "category"))
-    if not form.description.strip():
-        problems.append(problem("description", "Add a description of a few sentences, in English.", "description"))
+    if not describes(form.description):
+        problems.append(problem("description", DESCRIPTION_SENTENCE, "description"))
     if len(form.description) > MAX_TEXT or len(form.changes) > MAX_TEXT:
         problems.append(problem("too_long", f"The description and the list of changes may have {MAX_TEXT} characters each.", "description"))
     for label, text in (("description", form.description), ("changes", form.changes)):
         found = credentials._value(text, structure=False)  # noqa: SLF001
         if found:
             problems.append(problem("secret_in_text", f"The {label} looks like it holds {credentials.PHRASES[found]}. Take it out.", label))
-    if update and not form.changes.strip():
+    if update and len(form.changes.strip()) < MIN_CHANGES:
         problems.append(problem("changes", "An update needs a list of changes.", "changes"))
     if not form.license:
         problems.append(problem("license", "Tick the box that says you submit this under the MIT License.", "license"))

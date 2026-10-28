@@ -7,7 +7,7 @@ from typing import Any
 import pytest
 from fastapi.testclient import TestClient
 
-from .cards_sample import VALUE_CARD
+from .cards_sample import VALUE_CARD, changed
 from .conftest import CSRF
 from .karten3_sample import MEMOS
 from .karten14_sample import card_text
@@ -133,3 +133,31 @@ def test_karten8n_n5_a_new_submission_starts_from_the_card(me: TestClient) -> No
     found = check(me)
     assert found["mode"] == "new"
     assert found["suggested"] == {"description": "How many items wait in the queue.", "category": "media"}
+
+
+# -- N6: a description is a few words of English --------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "words",
+    ["Testkarte", "Eine Karte fuer das Wohnzimmer hier", "Shows the queue", "Queue sizes displayed here now", "x" * 30, "  \n "],
+)
+def test_karten8n_n6_a_description_that_is_not_a_few_words_of_english_is_refused(me: TestClient, hub: Hub, words: str) -> None:
+    refused = share(me, description=words)
+    assert refused.status_code == 400 and hub.issues == []
+    problems = refused.json()["detail"]["problems"]
+    assert [one["message"] for one in problems if one["code"] == "description"] == ["Add a description of a few sentences, in English."]
+
+
+@pytest.mark.parametrize("words", ["Shows how many items wait", "How many items are waiting in the download queue?", "A tile for the queue of your server"])
+def test_karten8n_n6_a_description_of_a_few_english_words_is_taken(me: TestClient, hub: Hub, words: str) -> None:
+    assert share(me, description=words).status_code == 200
+
+
+def test_karten8n_n6_the_list_of_changes_of_an_update_needs_three_characters(me: TestClient, hub: Hub, clock: list[float]) -> None:
+    share(me)
+    accepted(hub, clock, 1)
+    me.put(f"/api/v1/cards/{SLUG}", json={"yaml": changed('version: "1.0.0"', 'version: "1.1.0"'), "overwrite": True}, headers=CSRF)
+    short = share(me, changes=" a ")
+    assert short.status_code == 400 and "changes" in [one["code"] for one in short.json()["detail"]["problems"]]
+    assert share(me, changes="Fix").status_code == 200
