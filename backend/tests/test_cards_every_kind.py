@@ -44,6 +44,8 @@ SIGNS_IN: dict[str, str] = {
     "openwrt": "session id in the body, from a POST",
     "ghostfolio": "token in a header, from a POST",
     "zabbix": "asks without a token first",
+    "homebridge": "token in a header, from a POST",
+    "nodered": "token in a header, from a POST",
     "jackett": "cookie of a client of its own, a request without it is sent to the login page",
     "shelly": "asks the device for its generation first, then Basic or Digest",
 }
@@ -95,7 +97,7 @@ def readable() -> list[str]:
 
 def test_jede2_the_kinds_that_sign_in_first_are_kinds_that_exist_and_can_be_read() -> None:
     assert set(SIGNS_IN) <= set(readable())
-    assert len(SIGNS_IN) < 25, "the list is for the few that open a session, not a way out for kinds that do not work"
+    assert len(SIGNS_IN) < 30, "the list is for the few that open a session, not a way out for kinds that do not work"
 
 
 @pytest.mark.parametrize("kind", [one for one in readable() if one not in SIGNS_IN])

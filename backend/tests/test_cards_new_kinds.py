@@ -192,3 +192,107 @@ async def test_nach_merge_jackett_a_wrong_password_is_told_to_the_card_and_not_t
     with pytest.raises(AuthFailed):
         await get_adapter("jackett").raw_request("GET", "/api/v2.0/indexers", {"url": BASE, "password": PASSWORD}, ctx())
     assert service.logins == 1
+
+
+# -- Homebridge and Node-RED: a bearer token from a POST sign-in, found by watching the kind's own connection test -------
+
+
+class Bearer:
+    """A service that signs in with a POST, hands out a bearer token, and turns every other one down with 401."""
+
+    def __init__(self) -> None:
+        self.logins = 0
+        self.valid: str | None = None
+        self.asked: list[httpx.Request] = []
+
+    def sign_in(self, request: httpx.Request) -> httpx.Response:
+        assert PASSWORD.encode() in request.content
+        self.logins += 1
+        self.valid = f"tok-{self.logins}"
+        return httpx.Response(200, json={"access_token": self.valid, "expires_in": 3600})
+
+    def authorised(self, request: httpx.Request) -> bool:
+        return request.headers.get("authorization") == f"Bearer {self.valid}"
+
+
+class HomebridgeService(Bearer):
+    def read(self, request: httpx.Request) -> httpx.Response:
+        self.asked.append(request)
+        if request.url.path == "/api/auth/settings":
+            return httpx.Response(200, json={"env": {"packageVersion": "5.29.0", "homebridgeVersion": "2.4.0"}})
+        if not self.authorised(request):
+            return httpx.Response(401, json={"message": "Unauthorized"})
+        return httpx.Response(200, json={"status": "ok"} if request.url.path.endswith("/status/homebridge") else [])
+
+
+class NodeRedService(Bearer):
+    def read(self, request: httpx.Request) -> httpx.Response:
+        self.asked.append(request)
+        if request.url.path == "/auth/login":
+            return httpx.Response(200, json={"type": "credentials", "prompts": []})
+        if not self.authorised(request):
+            return httpx.Response(401, json={"message": "Unauthorized"})
+        if request.url.path == "/settings":
+            return httpx.Response(200, json={"version": "4.1.0"})
+        return httpx.Response(200, json={"state": "start"} if request.url.path == "/flows/state" else [])
+
+
+@respx.mock
+async def test_nach_merge_homebridge_a_card_uses_the_token_of_the_kinds_own_sign_in_and_renews_it_when_it_was_turned_down() -> None:
+    service = HomebridgeService()
+    respx.post(f"{BASE}/api/auth/login").mock(side_effect=service.sign_in)
+    respx.get(url__regex=rf"{BASE}/api/.*").mock(side_effect=service.read)
+    adapter, config, held = get_adapter("homebridge"), {"url": BASE, "username": "ZkUser", "password": PASSWORD}, ctx()
+    await adapter.test(config, held)  # the kind's own cards sign in first, as the board does
+    assert service.logins == 1
+    answer = await adapter.raw_request("GET", "/api/accessories", config, held)
+    assert answer.status_code == 200 and service.logins == 1, "the card uses the token the kind's cards hold"
+    sent = service.asked[-1]
+    assert sent.headers["authorization"] == "Bearer tok-1" and PASSWORD not in str(sent.url) + str(sent.headers)
+    service.valid = "tok-restarted"  # Homebridge restarted with a new secret: the token is a made-up one now
+    answer = await adapter.raw_request("GET", "/api/accessories", config, held)
+    assert answer.status_code == 200 and service.logins == 2
+    assert service.asked[-1].headers["authorization"] == "Bearer tok-2"
+
+
+@respx.mock
+async def test_nach_merge_homebridge_a_card_that_comes_first_signs_in_once() -> None:
+    service = HomebridgeService()
+    respx.post(f"{BASE}/api/auth/login").mock(side_effect=service.sign_in)
+    respx.get(url__regex=rf"{BASE}/api/.*").mock(side_effect=service.read)
+    adapter, config, held = get_adapter("homebridge"), {"url": BASE, "username": "ZkUser", "password": PASSWORD}, ctx()
+    answer = await adapter.raw_request("GET", "/api/plugins", config, held)
+    assert answer.status_code == 200 and service.asked[-1].headers["authorization"] == "Bearer tok-1"
+    await adapter.test(config, held)
+    assert service.logins == 1
+
+
+@respx.mock
+async def test_nach_merge_nodered_a_card_uses_the_token_of_the_kinds_own_sign_in_and_renews_it_when_it_was_turned_down() -> None:
+    service = NodeRedService()
+    respx.post(f"{BASE}/auth/token").mock(side_effect=service.sign_in)
+    respx.get(url__regex=rf"{BASE}/.*").mock(side_effect=service.read)
+    adapter, config, held = get_adapter("nodered"), {"url": BASE, "username": "ZkUser", "password": PASSWORD}, ctx()
+    await adapter.test(config, held)
+    assert service.logins == 1
+    answer = await adapter.raw_request("GET", "/flows", config, held)
+    assert answer.status_code == 200 and service.logins == 1
+    sent = service.asked[-1]
+    assert sent.headers["authorization"] == "Bearer tok-1" and PASSWORD not in str(sent.url) + str(sent.headers)
+    service.valid = "tok-restarted"
+    answer = await adapter.raw_request("GET", "/flows", config, held)
+    assert answer.status_code == 200 and service.logins == 2
+    assert service.asked[-1].headers["authorization"] == "Bearer tok-2"
+
+
+@respx.mock
+async def test_nach_merge_nodered_without_a_sign_in_the_card_asks_without_a_token() -> None:
+    asked: list[httpx.Request] = []
+
+    def answer(request: httpx.Request) -> httpx.Response:
+        asked.append(request)
+        return httpx.Response(200, json={} if request.url.path == "/auth/login" else {"version": "4.1.0", "state": "start"})
+
+    respx.get(url__regex=rf"{BASE}/.*").mock(side_effect=answer)
+    response = await get_adapter("nodered").raw_request("GET", "/flows", {"url": BASE}, ctx())
+    assert response.status_code == 200 and "authorization" not in asked[-1].headers
