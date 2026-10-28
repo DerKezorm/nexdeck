@@ -27,6 +27,7 @@ from pydantic import (
     Field,
     StringConstraints,
     ValidationError,
+    model_validator,
 )
 
 from ..adapters.base import outbound_client
@@ -72,6 +73,11 @@ Short = Annotated[str, StringConstraints(max_length=200)]
 LocalText = Short | Annotated[dict[str, Short], Field(max_length=20)]
 VERSION = r"^\d{1,6}(\.\d{1,6}){0,3}$"
 Version = Annotated[str, StringConstraints(pattern=VERSION, max_length=20)]
+
+
+def _id_as_text(value: Any) -> Any:
+    """GitHub hands out user IDs as numbers, and the repository writes them so; a number and its digits are the same ID."""
+    return str(value) if isinstance(value, int) and not isinstance(value, bool) else value
 #: A path inside the repository: no leading slash, no ``..``, plain characters.
 SAFE_PATH = re.compile(r"^(?!/)(?!.*(^|/)\.\.?(/|$))[A-Za-z0-9._@+ -]+(/[A-Za-z0-9._@+ -]+)*$")
 
@@ -92,7 +98,7 @@ def _known_category(value: Any) -> str:
 
 class Person(BaseModel):
     model_config = ConfigDict(extra="ignore")
-    id: Annotated[str, StringConstraints(pattern=r"^\d{1,20}$")]
+    id: Annotated[str, BeforeValidator(_id_as_text), StringConstraints(pattern=r"^\d{1,20}$")]
     login: Annotated[str, StringConstraints(max_length=100)] = ""
 
 
@@ -143,7 +149,8 @@ class Entry(BaseModel):
     name: LocalText
     description: Text = ""
     author: Person
-    version: Version
+    #: An own integration has no version of its own: the repository writes an empty one, and only a card needs one.
+    version: Version | Literal[""]
     min_nexdeck: Version | None = None
     category: Annotated[str, BeforeValidator(_known_category)] = "other"
     requires: list[Annotated[str, StringConstraints(pattern=r"^(custom:)?[a-z0-9][a-z0-9_-]{0,59}$")]] = Field(default_factory=list, max_length=10)
@@ -158,6 +165,12 @@ class Entry(BaseModel):
     license: Short | None = None
     updated_at: Short = ""
     removed: Removal | None = None
+
+    @model_validator(mode="after")
+    def _a_card_has_a_version(self) -> Entry:
+        if self.type == "card" and not self.version:
+            raise ValueError("a card has no version")
+        return self
 
     @property
     def author_id(self) -> str:
@@ -207,12 +220,18 @@ def parse(raw: bytes) -> Catalog:
             if entry.id != f"{entry.author.id}/{entry.slug}":
                 raise ValueError("the id does not match author and short name")
         except (ValidationError, ValueError) as failure:
+            # ⚠️ Left out, not the end of the shop: one entry this nexdeck cannot read (a field a newer repository writes
+            # differently, measured on the first real catalog on 28.10.2026) must not hide all the others.
             where = one.get("id") if isinstance(one, dict) and isinstance(one.get("id"), str) else f"number {number}"
-            raise broken(f"entry {where[:80]} is wrong ({str(failure).splitlines()[0][:100]})") from None
+            logger.warning("Catalog entry %s left out: %s", where[:80], str(failure).splitlines()[0][:100])
+            continue
         if entry.id in seen:
-            raise broken(f"entry {entry.id} is there twice")
+            logger.warning("Catalog entry %s is there twice; the second is left out", entry.id)
+            continue
         seen.add(entry.id)
         entries.append(entry)
+    if not entries:
+        raise broken("none of its entries can be read")
     return Catalog(entries, str(data.get("generated_at") or "")[:40], now())
 
 

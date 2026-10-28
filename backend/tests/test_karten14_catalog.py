@@ -3,17 +3,20 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import httpx
 import pytest
 import respx
 from fastapi.testclient import TestClient
 
+from app.workshop import catalog
+
 from .cards_sample import changed
 from .conftest import CSRF
 from .karten14_sample import AUTHOR, PNG, GitHub, card_text
 
-KEY = "ghp_example-key-0123456789"
+KEY = "ghp_example-key-040719639"
 SONARR = {"kind": "sonarr", "name": "My Sonarr", "config": {"url": "http://svc.example.com:8989", "api_key": "k"}}
 
 #: The pretend GitHub, the clock of the shop and the signed-in administrator with the shop on.
@@ -164,10 +167,10 @@ def test_karten14_ec6_an_entry_with_a_path_out_of_the_repository_is_refused(shop
     assert read(shop).json()["detail"]["code"] == "catalog_invalid"
 
 
-def test_karten14_ec6_an_entry_listed_twice_is_refused(shop: TestClient, github: GitHub) -> None:
+def test_karten14_ec6_an_entry_listed_twice_is_shown_once(shop: TestClient, github: GitHub) -> None:
     found = github.publish(card_text())
     github.entries.append(json.loads(json.dumps(found)))
-    assert read(shop).json()["detail"]["code"] == "catalog_invalid"
+    assert [one["id"] for one in read(shop).json()["entries"]] == [found["id"]]
 
 
 def test_karten14_ac5_the_detail_has_the_texts_of_the_entry(shop: TestClient, github: GitHub) -> None:
@@ -244,3 +247,26 @@ def test_karten14_ec1_a_definition_that_differs_from_the_catalog_is_not_used(sho
     found = shop.post(f"/api/v1/workshop/entries/{AUTHOR}/queue-size/preview", json={"integration_id": 1}, headers=CSRF)
     assert found.status_code == 409
     assert found.json()["detail"]["code"] == "checksum_mismatch"
+
+
+def _real_catalog() -> dict:
+    """The first real catalog of the workshop, with a made-up author and the digests left out (filled in here)."""
+    data = json.loads((Path(__file__).parent / "fixtures" / "workshop_catalog_real.json").read_bytes())
+    for one in data["entries"]:
+        one["sha256"] = "0" * 64
+    return data
+
+
+def test_karten14_the_catalog_the_workshop_writes_is_read_whole() -> None:
+    """The first real catalog of the workshop (28.10.2026): author IDs are numbers and an own integration has no version."""
+    data = _real_catalog()
+    read = catalog.parse(json.dumps(data).encode())
+    assert [entry.id for entry in read.entries] == [one["id"] for one in data["entries"]]
+    assert all(entry.author.id == "4071963" for entry in read.entries)
+
+
+def test_karten14_one_entry_that_cannot_be_read_leaves_the_others() -> None:
+    data = _real_catalog()
+    data["entries"][0]["sha256"] = "not a digest"
+    read = catalog.parse(json.dumps(data).encode())
+    assert len(read.entries) == len(data["entries"]) - 1

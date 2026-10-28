@@ -1,0 +1,170 @@
+{
+  "format": 1,
+  "generated_at": "2026-10-28T15:42:40Z",
+  "entries": [
+    {
+      "id": "4071963/test-box",
+      "type": "integration",
+      "slug": "test-box",
+      "name": "Example box",
+      "description": "A made-up connection that signs in with a user name and a password. A test entry that stays as test data.",
+      "author": {
+        "id": 4071963,
+        "login": "example-author"
+      },
+      "version": "",
+      "min_nexdeck": "0.51.0",
+      "category": "other",
+      "requires": [],
+      "class": "login",
+      "reads": [
+        {
+          "kind": "custom:test-box",
+          "path": "/api/items"
+        },
+        {
+          "kind": "custom:test-box",
+          "path": "/api/status"
+        }
+      ],
+      "buttons": [],
+      "sha256": "SHA256",
+      "files": {
+        "definition": "entries/4071963/test-box/definition.yaml",
+        "readme": "entries/4071963/test-box/README.md",
+        "changelog": "entries/4071963/test-box/CHANGELOG.md",
+        "light": "entries/4071963/test-box/preview-light.png",
+        "dark": "entries/4071963/test-box/preview-dark.png"
+      },
+      "thumbs": 0,
+      "discussion": "https://github.com/example-author/workshop/discussions/1",
+      "based_on": null,
+      "updated_at": "2026-10-28T11:25:34Z",
+      "removed": null
+    },
+    {
+      "id": "4071963/test-downloads",
+      "type": "card",
+      "slug": "test-downloads",
+      "name": {
+        "en": "Downloads",
+        "de": "Downloads"
+      },
+      "description": "Shows the torrents of a download client with their progress. A test entry that stays as test data.",
+      "author": {
+        "id": 4071963,
+        "login": "example-author"
+      },
+      "version": "1.1.0",
+      "min_nexdeck": "0.51.0",
+      "category": "downloads",
+      "requires": [
+        "jsonapi"
+      ],
+      "class": "read",
+      "reads": [
+        {
+          "kind": "jsonapi",
+          "path": "/api/torrents"
+        }
+      ],
+      "buttons": [],
+      "sha256": "SHA256",
+      "files": {
+        "definition": "entries/4071963/test-downloads/definition.yaml",
+        "readme": "entries/4071963/test-downloads/README.md",
+        "changelog": "entries/4071963/test-downloads/CHANGELOG.md",
+        "light": "entries/4071963/test-downloads/preview-light.png",
+        "dark": "entries/4071963/test-downloads/preview-dark.png"
+      },
+      "thumbs": 1,
+      "discussion": "https://github.com/example-author/workshop/discussions/1",
+      "based_on": null,
+      "updated_at": "2026-10-28T11:25:34Z",
+      "removed": null
+    },
+    {
+      "id": "4071963/test-queue-size",
+      "type": "card",
+      "slug": "test-queue-size",
+      "name": {
+        "en": "Queue size",
+        "de": "Warteschlange"
+      },
+      "description": "A test entry for the run of the correction: shows how many items wait.",
+      "author": {
+        "id": 4071963,
+        "login": "example-author"
+      },
+      "version": "1.0.0",
+      "min_nexdeck": "0.51.0",
+      "category": "media",
+      "requires": [
+        "jsonapi"
+      ],
+      "class": "read",
+      "reads": [
+        {
+          "kind": "jsonapi",
+          "path": "/api/queue"
+        }
+      ],
+      "buttons": [],
+      "sha256": "SHA256",
+      "files": {
+        "definition": "entries/4071963/test-queue-size/definition.yaml",
+        "readme": "entries/4071963/test-queue-size/README.md",
+        "changelog": "entries/4071963/test-queue-size/CHANGELOG.md",
+        "light": "entries/4071963/test-queue-size/preview-light.png",
+        "dark": "entries/4071963/test-queue-size/preview-dark.png"
+      },
+      "thumbs": 0,
+      "discussion": "https://github.com/example-author/workshop/discussions/1",
+      "based_on": null,
+      "updated_at": "2026-10-28T15:42:40Z",
+      "removed": null
+    },
+    {
+      "id": "4071963/test-removed",
+      "type": "card",
+      "slug": "test-removed",
+      "name": "Removed on purpose",
+      "description": "An entry made to be taken out again; it stays in the catalog as removed test data.",
+      "author": {
+        "id": 4071963,
+        "login": "example-author"
+      },
+      "version": "1.0.0",
+      "min_nexdeck": "0.51.0",
+      "category": "other",
+      "requires": [
+        "jsonapi"
+      ],
+      "class": "read",
+      "reads": [
+        {
+          "kind": "jsonapi",
+          "path": "/api/queue"
+        }
+      ],
+      "buttons": [],
+      "sha256": "SHA256",
+      "files": {
+        "definition": "entries/4071963/test-removed/definition.yaml",
+        "readme": "entries/4071963/test-removed/README.md",
+        "changelog": "entries/4071963/test-removed/CHANGELOG.md",
+        "light": "entries/4071963/test-removed/preview-light.png",
+        "dark": "entries/4071963/test-removed/preview-dark.png"
+      },
+      "thumbs": 0,
+      "discussion": "https://github.com/example-author/workshop/discussions/1",
+      "based_on": null,
+      "updated_at": "2026-10-28T11:25:34Z",
+      "removed": {
+        "level": "harmful",
+        "reason": "Test of the removal: this entry only exists to be taken out again.",
+        "at": "2026-10-28T11:27:06Z"
+      }
+    }
+  ]
+}
