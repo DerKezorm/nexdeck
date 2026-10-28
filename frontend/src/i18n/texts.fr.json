@@ -2275,7 +2275,18 @@
     "Options > ETAPI > Create new ETAPI token.": "Options > ETAPI > Créer un nouveau jeton ETAPI.",
     "Recently changed notes": "Notes modifiées récemment",
     "The notes changed last.": "Les notes modifiées en dernier.",
-    "No notes yet.": "Pas encore de notes."
+    "No notes yet.": "Pas encore de notes.",
+    "How many memos Memos holds, the memos written last, and the open tasks in them.": "Combien de mémos Memos contient, les mémos écrits en dernier, et les tâches ouvertes qu'ils contiennent.",
+    "How many memos there are, with those holding open tasks and the tags.": "Combien il y a de mémos, avec ceux qui contiennent des tâches ouvertes, et les étiquettes.",
+    "Memos": "Mémos",
+    "Memos with open tasks": "Mémos avec tâches ouvertes",
+    "Open tasks": "Tâches ouvertes",
+    "Recent memos": "Mémos récents",
+    "Settings > My account > Access tokens (it starts with memos_pat_). The one from signing in lasts fifteen minutes.": "Paramètres > Mon compte > Access tokens (il commence par memos_pat_). Celui de la connexion dure quinze minutes.",
+    "The memos written last, with their tags.": "Les mémos écrits en dernier, avec leurs étiquettes.",
+    "The unticked boxes of your task lists, with the memo they stand in.": "Les cases non cochées de vos listes de tâches, avec le mémo où elles se trouvent.",
+    "No memos yet.": "Pas encore de mémos.",
+    "No open tasks.": "Aucune tâche ouverte."
   },
   "labels": {
     "Private resources": "Ressources privées",
