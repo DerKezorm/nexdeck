@@ -112,7 +112,9 @@
         "declined": "Rechazada",
         "expired": "Caducada",
         "failed": "Permitida, pero no funcionó"
-      }
+      },
+      "row": "Fila",
+      "up": "{{name}}: {{text}}"
     },
     "chronicle": {
       "pressed": "{{after}} en {{name}} por {{before}}",
@@ -153,6 +155,15 @@
       "container_log": "Las últimas líneas del registro de un contenedor, con los secretos ocultos.",
       "press_button": "Pulsa un botón que ofrece una tarjeta. Te pregunta antes si no está permitido; los botones peligrosos siempre preguntan.",
       "request_status": "Cómo va una pulsación que espera tu respuesta."
+    },
+    "notice": {
+      "asks": "{{program}} quiere pulsar {{button}} en {{card}}",
+      "board": "Tablero {{board}}.",
+      "what": "{{button}} ({{row}})",
+      "pressed": "{{button}} en {{card}}, por {{program}} (MCP)",
+      "pressedApproved": "{{button}} en {{card}}, por {{program}} (MCP), permitido por {{user}}",
+      "failed": "{{button}} en {{card}} falló, por {{program}} (MCP)",
+      "failedApproved": "{{button}} en {{card}} falló, por {{program}} (MCP), permitido por {{user}}"
     }
   }
 }

@@ -8,6 +8,8 @@
  * same things again.
  */
 import { del, post } from '../api/client'
+import type { Notice } from '../api/types'
+import { tLabel } from '../i18n/texts'
 import { useNotices } from '../stores/notices'
 import type { Fact } from './assistant'
 
@@ -72,6 +74,8 @@ export interface McpRequest {
   board: string
   action: string
   label: string
+  /** The row of the card the button sits on (a container, a guest), empty for a button of the card itself. */
+  row?: string
   danger: boolean
   params: Record<string, unknown>
   impact: Fact[]
@@ -155,6 +159,47 @@ export function jsonConfig(endpoint: string, token: string): string {
  */
 export function toolText(t: (key: string, options?: Record<string, unknown>) => string, tool: McpTool): string {
   return t(`mcp.tool.${tool.name}`, { defaultValue: tool.description })
+}
+
+/** The fields the server sends with a notice about a request or a press over MCP. */
+export interface McpNoticeFacts {
+  kind: 'mcp_request' | 'mcp_press'
+  program: string
+  label: string
+  row?: string
+  card: string
+  board?: string
+  approved_by?: string
+  failed?: boolean
+}
+
+type Words = (key: string, options?: Record<string, unknown>) => string
+
+/** The fields of a notice the bell can word itself, else null: the server's English line stands. */
+export function noticeFacts(notice: Notice, request?: McpRequest): McpNoticeFacts | null {
+  const facts = notice.facts
+  if (facts && (facts.kind === 'mcp_request' || facts.kind === 'mcp_press') && typeof facts.label === 'string' && typeof facts.card === 'string') {
+    return facts as unknown as McpNoticeFacts
+  }
+  // A notice from before the fields were sent: the request it points at has them.
+  if (notice.event === 'mcp_request' && request) {
+    return { kind: 'mcp_request', program: request.key_name, label: request.label, row: request.row, card: request.card, board: request.board }
+  }
+  return null
+}
+
+/**
+ * A notice about MCP in the language on screen: the title, and the body where
+ * there is one to say. The body of a press is the button's own answer and
+ * stays as the service gave it.
+ */
+export function noticeWords(t: Words, facts: McpNoticeFacts): { title: string; body?: string } {
+  const button = facts.row ? t('mcp.notice.what', { button: tLabel(facts.label), row: facts.row }) : tLabel(facts.label)
+  if (facts.kind === 'mcp_request') {
+    return { title: t('mcp.notice.asks', { program: facts.program, button, card: facts.card }), body: facts.board ? t('mcp.notice.board', { board: facts.board }) : '' }
+  }
+  const key = `mcp.notice.${facts.failed ? 'failed' : 'pressed'}${facts.approved_by ? 'Approved' : ''}`
+  return { title: t(key, { button, card: facts.card, program: facts.program, user: facts.approved_by }) }
 }
 
 /** The request a notice points at (`/mcp/requests/<id>`), or null for any other link. */

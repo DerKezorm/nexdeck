@@ -112,7 +112,9 @@
         "declined": "Rifiutata",
         "expired": "Scaduta",
         "failed": "Consentita, ma non ha funzionato"
-      }
+      },
+      "row": "Riga",
+      "up": "{{name}}: {{text}}"
     },
     "chronicle": {
       "pressed": "{{after}} su {{name}} da {{before}}",
@@ -153,6 +155,15 @@
       "container_log": "Le ultime righe del log di un container, con i segreti mascherati.",
       "press_button": "Preme un pulsante offerto da una scheda. Ti chiede prima se non è consentito; i pulsanti pericolosi chiedono sempre.",
       "request_status": "A che punto è una pressione che attende la tua risposta."
+    },
+    "notice": {
+      "asks": "{{program}} vuole premere {{button}} su {{card}}",
+      "board": "Bacheca {{board}}.",
+      "what": "{{button}} ({{row}})",
+      "pressed": "{{button}} su {{card}}, da {{program}} (MCP)",
+      "pressedApproved": "{{button}} su {{card}}, da {{program}} (MCP), consentito da {{user}}",
+      "failed": "{{button}} su {{card}} non riuscito, da {{program}} (MCP)",
+      "failedApproved": "{{button}} su {{card}} non riuscito, da {{program}} (MCP), consentito da {{user}}"
     }
   }
 }

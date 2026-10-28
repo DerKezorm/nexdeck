@@ -112,7 +112,9 @@
         "declined": "Refusée",
         "expired": "Expirée",
         "failed": "Autorisée, mais sans succès"
-      }
+      },
+      "row": "Ligne",
+      "up": "{{name}} : {{text}}"
     },
     "chronicle": {
       "pressed": "{{after}} sur {{name}} par {{before}}",
@@ -153,6 +155,15 @@
       "container_log": "Les dernières lignes du journal d'un conteneur, secrets masqués.",
       "press_button": "Appuie sur un bouton proposé par une carte. Vous demande d'abord sauf autorisation ; les boutons dangereux demandent toujours.",
       "request_status": "Où en est un appui qui attend votre réponse."
+    },
+    "notice": {
+      "asks": "{{program}} veut appuyer sur {{button}} dans {{card}}",
+      "board": "Tableau {{board}}.",
+      "what": "{{button}} ({{row}})",
+      "pressed": "{{button}} sur {{card}}, par {{program}} (MCP)",
+      "pressedApproved": "{{button}} sur {{card}}, par {{program}} (MCP), autorisé par {{user}}",
+      "failed": "{{button}} sur {{card}} a échoué, par {{program}} (MCP)",
+      "failedApproved": "{{button}} sur {{card}} a échoué, par {{program}} (MCP), autorisé par {{user}}"
     }
   }
 }

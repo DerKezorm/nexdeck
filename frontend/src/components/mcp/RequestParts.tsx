@@ -1,11 +1,12 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { AlertTriangle } from 'lucide-react'
 import { useState } from 'react'
+import type { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 
 import { ApiError, get } from '../../api/client'
-import { factText } from '../../lib/assistant'
+import { factText, type Fact } from '../../lib/assistant'
 import { decide, openRequest, resultText, type McpRequest } from '../../lib/mcp'
 import { tLabel } from '../../i18n/texts'
 import { Confirm } from '../ui'
@@ -116,6 +117,11 @@ export function RequestAnswer({ request, inBell = false }: { request: McpRequest
   )
 }
 
+/** One fact of the impact. Docker's words about the container say whose they are: "sonarr: Up 3 days", not "Docker: Up 3 days". */
+function impactText(t: TFunction, fact: Fact, row?: string): string {
+  return fact.fact === 'up' && row ? t('mcp.request.up', { name: row, text: fact.text }) : factText(t, fact)
+}
+
 /** Everything about a request but its buttons: who asks, what it would press, what that would hit, until when. */
 export function RequestFacts({ request }: { request: McpRequest }) {
   const { t } = useTranslation()
@@ -125,6 +131,7 @@ export function RequestFacts({ request }: { request: McpRequest }) {
     [t('mcp.request.program'), request.key_name],
     [t('mcp.request.tool'), request.tool],
     [t('mcp.request.card'), request.card],
+    ...(request.row ? [[t('mcp.request.row'), request.row] as [string, string]] : []),
     [t('mcp.request.board'), request.board],
     [t('mcp.request.button'), tLabel(request.label)],
   ]
@@ -159,7 +166,7 @@ export function RequestFacts({ request }: { request: McpRequest }) {
           <p className="text-xs font-medium text-muted">{t('mcp.request.impact')}</p>
           <ul className="mt-1 text-[12.5px] text-muted" data-testid="mcp-impact">
             {request.impact.map((fact, index) => (
-              <li key={index}>{factText(t, fact)}</li>
+              <li key={index}>{impactText(t, fact, request.row)}</li>
             ))}
           </ul>
         </div>

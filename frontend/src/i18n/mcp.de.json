@@ -112,7 +112,9 @@
         "declined": "Abgelehnt",
         "expired": "Verfallen",
         "failed": "Erlaubt, hat aber nicht geklappt"
-      }
+      },
+      "row": "Zeile",
+      "up": "{{name}}: {{text}}"
     },
     "chronicle": {
       "pressed": "{{after}} auf {{name}} durch {{before}}",
@@ -153,6 +155,15 @@
       "container_log": "Die letzten Zeilen aus dem Log eines Containers, Geheimnisse maskiert.",
       "press_button": "Drückt einen Knopf, den eine Karte anbietet. Fragt dich vorher, wenn nicht erlaubt; gefährliche Knöpfe fragen immer.",
       "request_status": "Wie es um einen Druck steht, der auf deine Antwort wartet."
+    },
+    "notice": {
+      "asks": "{{program}} möchte {{button}} auf {{card}} drücken",
+      "board": "Board {{board}}.",
+      "what": "{{button}} ({{row}})",
+      "pressed": "{{button}} auf {{card}}, durch {{program}} (MCP)",
+      "pressedApproved": "{{button}} auf {{card}}, durch {{program}} (MCP), erlaubt von {{user}}",
+      "failed": "{{button}} auf {{card}} fehlgeschlagen, durch {{program}} (MCP)",
+      "failedApproved": "{{button}} auf {{card}} fehlgeschlagen, durch {{program}} (MCP), erlaubt von {{user}}"
     }
   }
 }

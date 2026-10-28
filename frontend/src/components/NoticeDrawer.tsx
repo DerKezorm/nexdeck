@@ -1,5 +1,5 @@
 import { Check, Trash2 } from 'lucide-react'
-import { lazy, Suspense, useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 
@@ -9,6 +9,18 @@ import { Confirm, Sheet, Toast } from './ui'
 
 // Allow and Decline for an approval request (MCP), fetched only when one is on screen.
 const McpNoticeActions = lazy(() => import('./mcp/McpNoticeActions'))
+// The words of a notice about MCP in the language on screen, likewise.
+const McpNoticeText = lazy(() => import('./mcp/McpNoticeText'))
+
+/** Title and body of a notice. Those about MCP are worded from their fields; the rest come as the server wrote them. */
+function NoticeWords({ notice, render }: { notice: Notice; render: (title: string, body: string) => ReactNode }) {
+  if (!notice.facts && notice.event !== 'mcp_request') return <>{render(notice.title, notice.body)}</>
+  return (
+    <Suspense fallback={render(notice.title, notice.body)}>
+      <McpNoticeText notice={notice} render={render} />
+    </Suspense>
+  )
+}
 
 const LEVEL_DOT: Record<string, string> = { info: 'ok', warn: 'warn', error: 'bad' }
 
@@ -22,8 +34,15 @@ export function NoticeList({ notices, onRead, onRemove }: { notices: Notice[]; o
           <div className="flex items-start gap-2">
             <span className="dot mt-1.5" data-status={LEVEL_DOT[notice.level] ?? 'unknown'} />
             <div className="min-w-0 flex-1">
-              <div className="text-sm font-medium">{notice.title}</div>
-              {notice.body && <div className="text-xs text-muted mt-0.5 whitespace-pre-wrap">{notice.body}</div>}
+              <NoticeWords
+                notice={notice}
+                render={(title, body) => (
+                  <>
+                    <div className="text-sm font-medium">{title}</div>
+                    {body && <div className="text-xs text-muted mt-0.5 whitespace-pre-wrap">{body}</div>}
+                  </>
+                )}
+              />
               {notice.event === 'mcp_request' && (
                 <Suspense fallback={null}>
                   <McpNoticeActions notice={notice} />
@@ -117,8 +136,15 @@ export function NoticeToast() {
   if (!toast) return null
   return (
     <Toast onClose={dismissToast} level={toast.level === 'error' ? 'error' : toast.level === 'warn' ? 'warn' : 'info'}>
-      <div className="font-medium">{toast.title}</div>
-      {toast.body && <div className="text-xs text-muted mt-0.5">{toast.body}</div>}
+      <NoticeWords
+        notice={toast}
+        render={(title, body) => (
+          <>
+            <div className="font-medium">{title}</div>
+            {body && <div className="text-xs text-muted mt-0.5">{body}</div>}
+          </>
+        )}
+      />
     </Toast>
   )
 }

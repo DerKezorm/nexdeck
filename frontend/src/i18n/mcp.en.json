@@ -112,7 +112,9 @@
         "declined": "Declined",
         "expired": "Ran out",
         "failed": "Allowed, but it did not work"
-      }
+      },
+      "row": "Row",
+      "up": "{{name}}: {{text}}"
     },
     "chronicle": {
       "pressed": "{{after}} on {{name}} by {{before}}",
@@ -153,6 +155,15 @@
       "container_log": "The last lines of a container's log, with secrets masked.",
       "press_button": "Presses a button a card offers. Asks you first unless allowed; dangerous buttons always ask.",
       "request_status": "How a press stands that waits for your answer."
+    },
+    "notice": {
+      "asks": "{{program}} asks to press {{button}} on {{card}}",
+      "board": "Board {{board}}.",
+      "what": "{{button}} ({{row}})",
+      "pressed": "{{button}} on {{card}}, by {{program}} (MCP)",
+      "pressedApproved": "{{button}} on {{card}}, by {{program}} (MCP), allowed by {{user}}",
+      "failed": "{{button}} on {{card}} failed, by {{program}} (MCP)",
+      "failedApproved": "{{button}} on {{card}} failed, by {{program}} (MCP), allowed by {{user}}"
     }
   }
 }
