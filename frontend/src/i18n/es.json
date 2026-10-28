@@ -613,7 +613,7 @@
       "loadFailed": "No se pudo leer el aspecto desde el servidor.",
       "retry": "Intentar de nuevo",
       "cardsTitle": "Tarjetas",
-      "cardsHelp": "Cómo se dibuja cada tarjeta, para todos. Un marco rojo o ámbar se mantiene en cada estilo.",
+      "cardsHelp": "Cómo se dibuja cada tarjeta, y con ella los cuadros, paneles, diálogos y menús, para todos. Un marco rojo o ámbar se mantiene en cada estilo.",
       "cardStyle": {
         "glass": "Cristal",
         "flat": "Plana",

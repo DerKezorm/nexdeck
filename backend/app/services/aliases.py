@@ -145,14 +145,18 @@ def seen_cards(db: Session, user: User | None, kiosk: KioskToken | None) -> list
 def opens(db: Session, widget: Widget) -> str:
     """The address a tile opens for this request, as the board would show it; ``""`` if it opens nothing.
 
-    A tile that follows an app with an address for each network makes the
-    same choice the board makes (``apps.tile_view``). ⚠️ Only http and https:
-    whatever else stands in a link is not something to send a browser to.
+    The board's order: the tile's own link, then the address of the app it
+    follows for the network of the request (``apps.tile_view``), then the
+    address of its connection. ⚠️ The last one is what a tile bound to a
+    connection and given no link of its own opens; leaving it out sent such
+    a name to the search bar. Only http and https: whatever else stands in a
+    link is not something to send a browser to.
     """
     from . import apps
+    from .boards import service_link
 
-    _view, address = apps.tile_view(db, widget)
-    address = address or widget.link or ""
+    _view, app_address = apps.tile_view(db, widget)
+    address = widget.link or app_address or service_link(widget)
     parts = urlsplit(address)
     return address if parts.scheme in ("http", "https") and parts.netloc else ""
 

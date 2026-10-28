@@ -1,0 +1,43 @@
+{
+  "node": "3c9cc15ae30d8522",
+  "garageVersion": "v1.3.1",
+  "garageFeatures": [
+    "k2v",
+    "lmdb",
+    "sqlite",
+    "consul-discovery",
+    "kubernetes-discovery",
+    "metrics",
+    "telemetry-otlp",
+    "bundled-libs"
+  ],
+  "rustVersion": "1.91.0",
+  "dbEngine": "sqlite3 v3.50.2 (using rusqlite crate)",
+  "layoutVersion": 1,
+  "nodes": [
+    {
+      "id": "3c9cc15ae30d8522",
+      "role": {
+        "id": "3c9cc15ae30d8522",
+        "zone": "dc1",
+        "capacity": 10737418240,
+        "tags": [
+          "example"
+        ]
+      },
+      "addr": "127.0.0.1:3901",
+      "hostname": "0bfa653ba505",
+      "isUp": true,
+      "lastSeenSecsAgo": null,
+      "draining": false,
+      "dataPartition": {
+        "available": 190492459008,
+        "total": 528223088640
+      },
+      "metadataPartition": {
+        "available": 190492459008,
+        "total": 528223088640
+      }
+    }
+  ]
+}

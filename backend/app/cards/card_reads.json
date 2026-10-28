@@ -49,6 +49,16 @@
    ]
   }
  ],
+ "anchor": [
+  {
+   "path": "/api/notes",
+   "widgets": [
+    "summary",
+    "recent",
+    "reminders"
+   ]
+  }
+ ],
  "arcane": [
   {
    "path": "/api/environments?limit=-1",
@@ -167,6 +177,44 @@
    ]
   }
  ],
+ "bookstack": [
+  {
+   "path": "/api/pages?count=1",
+   "widgets": [
+    "summary"
+   ]
+  },
+  {
+   "path": "/api/pages?count=8&sort=-updated_at",
+   "widgets": [
+    "recent"
+   ]
+  }
+ ],
+ "caddy": [
+  {
+   "path": "/config/apps/http/servers/",
+   "widgets": [
+    "overview",
+    "sites",
+    "upstreams"
+   ]
+  },
+  {
+   "path": "/metrics",
+   "widgets": [
+    "overview",
+    "sites",
+    "upstreams"
+   ]
+  },
+  {
+   "path": "/reverse_proxy/upstreams",
+   "widgets": [
+    "upstreams"
+   ]
+  }
+ ],
  "changedetection": [
   {
    "path": "/api/v1/watch?tag={tag}",
@@ -234,6 +282,21 @@
    ]
   }
  ],
+ "cronicle": [
+  {
+   "path": "/api/app/get_schedule?limit=500",
+   "widgets": [
+    "overview",
+    "events"
+   ]
+  },
+  {
+   "path": "/api/app/get_active_jobs",
+   "widgets": [
+    "runs"
+   ]
+  }
+ ],
  "crowdsec": [
   {
    "path": "/v1/decisions?origins=crowdsec%2Ccscli",
@@ -249,6 +312,27 @@
    "widgets": [
     "updates",
     "summary"
+   ]
+  }
+ ],
+ "dashdot": [
+  {
+   "path": "/load/cpu",
+   "widgets": [
+    "cpu"
+   ]
+  },
+  {
+   "path": "/info",
+   "widgets": [
+    "memory",
+    "storage"
+   ]
+  },
+  {
+   "path": "/load/network",
+   "widgets": [
+    "network"
    ]
   }
  ],
@@ -494,6 +578,37 @@
    ]
   }
  ],
+ "garage": [
+  {
+   "path": "/v2/GetClusterHealth",
+   "widgets": [
+    "cluster",
+    "nodes",
+    "buckets",
+    "storage"
+   ]
+  },
+  {
+   "path": "/v2/GetClusterLayout",
+   "widgets": [
+    "cluster"
+   ]
+  },
+  {
+   "path": "/v2/GetClusterStatus",
+   "widgets": [
+    "nodes",
+    "storage"
+   ]
+  },
+  {
+   "path": "/v2/ListBuckets",
+   "widgets": [
+    "buckets",
+    "storage"
+   ]
+  }
+ ],
  "gatus": [
   {
    "path": "/api/v1/endpoints/statuses?pageSize=20",
@@ -540,6 +655,18 @@
    "path": "/search/issues?q=repo%3A{owner}%2F{repo}%20is%3Aissue%20is%3Aopen&sort=updated&order=desc&per_page=8",
    "widgets": [
     "issues"
+   ]
+  },
+  {
+   "path": "/repos/{owner}/{repo}/pulls?state=open&sort=updated&direction=desc&per_page=6",
+   "widgets": [
+    "pulls"
+   ]
+  },
+  {
+   "path": "/repos/{owner}/{repo}/milestones?state=open&sort=due_on&direction=asc&per_page=20",
+   "widgets": [
+    "milestones"
    ]
   },
   {
@@ -644,6 +771,26 @@
    "path": "/v1/portforwarded",
    "widgets": [
     "vpn"
+   ]
+  }
+ ],
+ "goatcounter": [
+  {
+   "path": "/api/v0/stats/total",
+   "widgets": [
+    "visits"
+   ]
+  },
+  {
+   "path": "/api/v0/stats/hits?limit=8",
+   "widgets": [
+    "pages"
+   ]
+  },
+  {
+   "path": "/api/v0/stats/toprefs?limit=8",
+   "widgets": [
+    "referrers"
    ]
   }
  ],
@@ -821,6 +968,16 @@
    ]
   }
  ],
+ "influxdb": [
+  {
+   "path": "/ping",
+   "widgets": [
+    "status",
+    "buckets",
+    "query"
+   ]
+  }
+ ],
  "jackett": [
   {
    "path": "/api/v2.0/indexers?configured=true",
@@ -931,6 +1088,20 @@
    ]
   }
  ],
+ "jenkins": [
+  {
+   "path": "/queue/api/json?tree=items%5Bid%5D",
+   "widgets": [
+    "overview"
+   ]
+  },
+  {
+   "path": "/computer/api/json?tree=busyExecutors%2CtotalExecutors%2Ccomputer%5BdisplayName%2Coffline%2CtemporarilyOffline%5D",
+   "widgets": [
+    "overview"
+   ]
+  }
+ ],
  "jsonapi": [
   {
    "path": "/{path}",
@@ -962,11 +1133,31 @@
    ]
   }
  ],
+ "keycloak": [
+  {
+   "path": "/admin/realms?briefRepresentation=true",
+   "widgets": [
+    "overview",
+    "realms",
+    "failed"
+   ]
+  }
+ ],
  "kimai": [
   {
    "path": "/api/users/me",
    "widgets": [
     "entries",
+    "summary"
+   ]
+  }
+ ],
+ "kitchenowl": [
+  {
+   "path": "/api/household",
+   "widgets": [
+    "shopping",
+    "plan",
     "summary"
    ]
   }
@@ -1063,6 +1254,20 @@
    ]
   }
  ],
+ "lemmy": [
+  {
+   "path": "/api/v3/site",
+   "widgets": [
+    "instance"
+   ]
+  },
+  {
+   "path": "/api/v3/report_count",
+   "widgets": [
+    "moderation"
+   ]
+  }
+ ],
  "lidarr": [
   {
    "path": "/api/v1/queue?pageSize=100&includeUnknownMovieItems=true",
@@ -1129,6 +1334,30 @@
    ]
   }
  ],
+ "llamacpp": [
+  {
+   "path": "/props",
+   "widgets": [
+    "server",
+    "slots"
+   ]
+  }
+ ],
+ "lubelogger": [
+  {
+   "path": "/api/vehicle/info",
+   "widgets": [
+    "summary",
+    "garage"
+   ]
+  },
+  {
+   "path": "/api/vehicle/reminders/all",
+   "widgets": [
+    "reminders"
+   ]
+  }
+ ],
  "m3ueditor": [
   {
    "path": "/user/playlists",
@@ -1155,6 +1384,42 @@
    "path": "/recordings/",
    "widgets": [
     "recordings"
+   ]
+  }
+ ],
+ "mailcow": [
+  {
+   "path": "/api/v1/get/mailq/all",
+   "widgets": [
+    "overview",
+    "queue"
+   ]
+  },
+  {
+   "path": "/api/v1/get/status/containers",
+   "widgets": [
+    "overview",
+    "containers"
+   ]
+  },
+  {
+   "path": "/api/v1/get/mailbox/all",
+   "widgets": [
+    "overview",
+    "mailboxes"
+   ]
+  },
+  {
+   "path": "/api/v1/get/domain/all",
+   "widgets": [
+    "overview",
+    "domains"
+   ]
+  },
+  {
+   "path": "/api/v1/get/status/vmail",
+   "widgets": [
+    "overview"
    ]
   }
  ],
@@ -1187,6 +1452,50 @@
    ]
   }
  ],
+ "mastodon": [
+  {
+   "path": "/api/v1/instance",
+   "widgets": [
+    "server"
+   ]
+  },
+  {
+   "path": "/api/v2/instance",
+   "widgets": [
+    "server"
+   ]
+  },
+  {
+   "path": "/api/v1/admin/reports?resolved=false&limit=40",
+   "widgets": [
+    "moderation"
+   ]
+  },
+  {
+   "path": "/api/v1/admin/accounts?status=pending&limit=40",
+   "widgets": [
+    "moderation"
+   ]
+  },
+  {
+   "path": "/api/v1/accounts/verify_credentials",
+   "widgets": [
+    "account"
+   ]
+  },
+  {
+   "path": "/api/v1/notifications/unread_count?limit=100",
+   "widgets": [
+    "account"
+   ]
+  },
+  {
+   "path": "/api/v1/markers?timeline%5B%5D=notifications",
+   "widgets": [
+    "account"
+   ]
+  }
+ ],
  "mealie": [
   {
    "path": "/api/households/mealplans?perPage=100",
@@ -1208,6 +1517,26 @@
    "widgets": [
     "indexes",
     "summary"
+   ]
+  }
+ ],
+ "memos": [
+  {
+   "path": "/api/v1/auth/me",
+   "widgets": [
+    "summary"
+   ]
+  },
+  {
+   "path": "/api/v1/memos?pageSize=8",
+   "widgets": [
+    "recent"
+   ]
+  },
+  {
+   "path": "/api/v1/memos?pageSize=200&filter=has_incomplete_tasks",
+   "widgets": [
+    "tasks"
    ]
   }
  ],
@@ -1265,6 +1594,38 @@
   },
   {
    "path": "/server/history/totals",
+   "widgets": [
+    "history"
+   ]
+  }
+ ],
+ "myspeed": [
+  {
+   "path": "/api/speedtests?hours=720&limit=10",
+   "widgets": [
+    "latest"
+   ]
+  },
+  {
+   "path": "/api/speedtests/status",
+   "widgets": [
+    "latest"
+   ]
+  },
+  {
+   "path": "/api/config",
+   "widgets": [
+    "latest"
+   ]
+  },
+  {
+   "path": "/api/speedtests/statistics?days=7",
+   "widgets": [
+    "statistics"
+   ]
+  },
+  {
+   "path": "/api/speedtests?hours=168",
    "widgets": [
     "history"
    ]
@@ -2097,6 +2458,16 @@
    ]
   }
  ],
+ "planka": [
+  {
+   "path": "/api/projects",
+   "widgets": [
+    "summary",
+    "due",
+    "board"
+   ]
+  }
+ ],
  "plex": [
   {
    "path": "/library/sections",
@@ -2209,6 +2580,26 @@
    ]
   }
  ],
+ "proxmenux": [
+  {
+   "path": "/api/health/status",
+   "widgets": [
+    "health"
+   ]
+  },
+  {
+   "path": "/api/health/active-errors",
+   "widgets": [
+    "findings"
+   ]
+  },
+  {
+   "path": "/api/system",
+   "widgets": [
+    "host"
+   ]
+  }
+ ],
  "proxmox": [
   {
    "path": "/api2/json/cluster/resources?type=vm",
@@ -2223,6 +2614,15 @@
     "guests",
     "map",
     "summary"
+   ]
+  }
+ ],
+ "pterodactyl": [
+  {
+   "path": "/api/client?per_page=100",
+   "widgets": [
+    "overview",
+    "servers"
    ]
   }
  ],
@@ -2362,6 +2762,20 @@
    ]
   }
  ],
+ "readeck": [
+  {
+   "path": "/api/bookmarks?limit=1",
+   "widgets": [
+    "summary"
+   ]
+  },
+  {
+   "path": "/api/bookmarks?limit=8&sort=-created&is_archived=false",
+   "widgets": [
+    "recent"
+   ]
+  }
+ ],
  "readmeabook": [
   {
    "path": "/api/admin/metrics",
@@ -2430,6 +2844,15 @@
    ]
   }
  ],
+ "registry": [
+  {
+   "path": "/v2/_catalog?n=100",
+   "widgets": [
+    "overview",
+    "repositories"
+   ]
+  }
+ ],
  "romm": [
   {
    "path": "/api/platforms",
@@ -2489,6 +2912,29 @@
    "widgets": [
     "runs",
     "summary"
+   ]
+  }
+ ],
+ "sftpgo": [
+  {
+   "path": "/api/v2/connections",
+   "widgets": [
+    "overview",
+    "connections"
+   ]
+  },
+  {
+   "path": "/api/v2/users?limit=100&offset=0",
+   "widgets": [
+    "overview",
+    "quotas"
+   ]
+  },
+  {
+   "path": "/api/v2/status",
+   "widgets": [
+    "overview",
+    "banned"
    ]
   }
  ],
@@ -2612,6 +3058,50 @@
    ]
   }
  ],
+ "synapse": [
+  {
+   "path": "/_synapse/admin/v2/users?limit=1&guests=false",
+   "widgets": [
+    "overview"
+   ]
+  },
+  {
+   "path": "/_synapse/admin/v2/users?limit=1&guests=false&deactivated=true",
+   "widgets": [
+    "overview"
+   ]
+  },
+  {
+   "path": "/_synapse/admin/v1/rooms?limit=1",
+   "widgets": [
+    "overview"
+   ]
+  },
+  {
+   "path": "/_synapse/admin/v1/event_reports?limit=1",
+   "widgets": [
+    "overview"
+   ]
+  },
+  {
+   "path": "/_synapse/admin/v1/federation/destinations?limit=200",
+   "widgets": [
+    "overview"
+   ]
+  },
+  {
+   "path": "/_synapse/admin/v1/event_reports?limit=8",
+   "widgets": [
+    "reports"
+   ]
+  },
+  {
+   "path": "/_synapse/admin/v1/rooms?limit=8&order_by=joined_members&dir=f",
+   "widgets": [
+    "rooms"
+   ]
+  }
+ ],
  "syncthing": [
   {
    "path": "/rest/config/folders",
@@ -2636,6 +3126,14 @@
    "path": "/rest/system/version",
    "widgets": [
     "status"
+   ]
+  }
+ ],
+ "syncthingrelay": [
+  {
+   "path": "/status",
+   "widgets": [
+    "relay"
    ]
   }
  ],
@@ -2714,6 +3212,15 @@
    ]
   }
  ],
+ "traccar": [
+  {
+   "path": "/api/devices",
+   "widgets": [
+    "summary",
+    "devices"
+   ]
+  }
+ ],
  "tracearr": [
   {
    "path": "/api/v1/public/stats",
@@ -2745,6 +3252,20 @@
    "path": "/api/http/routers",
    "widgets": [
     "routers"
+   ]
+  }
+ ],
+ "trilium": [
+  {
+   "path": "/etapi/notes?search=note.noteId%20%21%3D%20%27%27",
+   "widgets": [
+    "summary"
+   ]
+  },
+  {
+   "path": "/etapi/notes?search=note.noteId%20%21%3D%20%27%27&orderBy=utcDateModified&orderDirection=desc&limit=9",
+   "widgets": [
+    "recent"
    ]
   }
  ],
@@ -2783,6 +3304,16 @@
    "path": "/api/stats/download/",
    "widgets": [
     "summary"
+   ]
+  }
+ ],
+ "umami": [
+  {
+   "path": "/api/websites?pageSize=100",
+   "widgets": [
+    "site",
+    "websites",
+    "top"
    ]
   }
  ],
@@ -2859,6 +3390,27 @@
    ]
   }
  ],
+ "wazuh": [
+  {
+   "path": "/agents/summary/status",
+   "widgets": [
+    "agents",
+    "silent"
+   ]
+  },
+  {
+   "path": "/agents?status=disconnected%2Cnever_connected%2Cpending&limit=100&select=id%2Cname%2Cip%2Cstatus%2ClastKeepAlive%2Cos.name",
+   "widgets": [
+    "silent"
+   ]
+  },
+  {
+   "path": "/manager/status",
+   "widgets": [
+    "manager"
+   ]
+  }
+ ],
  "wgeasy": [
   {
    "path": "/api/client",
@@ -2889,6 +3441,27 @@
    ]
   }
  ],
+ "woodpecker": [
+  {
+   "path": "/api/user/repos",
+   "widgets": [
+    "overview",
+    "pipelines"
+   ]
+  },
+  {
+   "path": "/api/queue/info",
+   "widgets": [
+    "overview"
+   ]
+  },
+  {
+   "path": "/api/agents",
+   "widgets": [
+    "overview"
+   ]
+  }
+ ],
  "wud": [
   {
    "path": "/api/containers",
@@ -2909,6 +3482,21 @@
    "path": "/spotify/gethistory?number=8&offset=0",
    "widgets": [
     "recent"
+   ]
+  }
+ ],
+ "zerobyte": [
+  {
+   "path": "/api/v1/backups",
+   "widgets": [
+    "backups",
+    "summary"
+   ]
+  },
+  {
+   "path": "/api/v1/repositories",
+   "widgets": [
+    "repositories"
    ]
   }
  ]

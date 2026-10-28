@@ -1773,6 +1773,39 @@
         "Die FRITZ!Box nimmt einen Benutzer an und ist nicht mehr Beta; hinter einer Bridge wird sie nicht mehr rot mit 0 Sekunden Laufzeit.",
         "Menüs auf Zuhause-Seiten bleiben im Bild, und die Schrift auf der Akzentfarbe ist auch auf hellem Akzent lesbar."
       ]
+    },
+    "0.51.0": {
+      "lead": "39 Dienste kommen dazu, und der gewählte Kartenstil reicht jetzt durch ganz nexdeck. 1984 zeichnet den Netzplan mit kräftigen Linien, und der Akzent ist im hellen Modus lesbar.",
+      "sections": [
+        {
+          "title": "39 neue Anbindungen",
+          "body": "Zerobyte (Sicherungspläne mit dem Knopf „Jetzt starten“, gelb, wenn die letzte gute Sicherung zu alt ist), eine USV direkt über NUT, Caddy, Garage, Keycloak, Stalwart 1.0, SFTPGo, Jenkins, Woodpecker CI, eine Container-Registry, Synapse, BookStack, Wiki.js, Trilium, Memos, Readeck, KitchenOwl, LubeLogger, Planka, Traccar und viele mehr, dazu drei neue GitHub-Karten: ein Repository, Pull Requests mit ihren Checks und Meilensteine. Alle starten als Beta.",
+          "path": "System > Anbindungen > Anbindung hinzufügen"
+        },
+        {
+          "title": "Der Kartenstil folgt dir überall hin",
+          "body": "Flach, Umriss, Ruhig, Neonkante und Liquid Glass werden jetzt auch auf den Kästen der Einstellungen und des Systems, auf Blättern, Dialogen, Menüs, der Suche hinter Strg K und dem Assistenten gezeichnet, nicht nur auf den Karten. Ein Board mit eigenem Stil ändert nur seine eigenen Karten.",
+          "path": "System > Aussehen > Karten"
+        },
+        {
+          "title": "Heller Modus: ein Akzent, den man lesen kann",
+          "body": "Auf der hellen Seite wird der Akzent im eigenen Farbton abgedunkelt, bis er als Text lesbar ist, aus Cyan wird ein tieferes Petrol, und mit eigenen Farben ist es genauso. Der dunkle Modus behält, was er hatte.",
+          "path": "System > Aussehen"
+        },
+        {
+          "title": "1984: der Netzplan",
+          "body": "Die Verbindungen des Topologieplans sind durchgezogene schwarze Linien mit Papierrand, dicker, je mehr los ist, gestrichelt, wenn sie ausgefallen sind, auf ruhigem Grau statt auf den Punkten des Schreibtischs.",
+          "path": "System > Aussehen > 1984"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "/go/<name> und Strg K finden jetzt eine App-Kachel, die die Adresse ihrer Anbindung öffnet, statt auf die Suche auszuweichen.",
+        "Die gespeicherten Lesezeichen einer Readeck-Karte lassen sich in Strg K finden.",
+        "Eine USV über NUT meldet sich, wenn sie auf Batterie läuft und wenn der Strom wieder da ist.",
+        "30 weitere Dienste sagen, wenn ihr Projekt eine neuere Version hat.",
+        "Sicherheit: Die zwischengespeicherten Antworten eines Dienstes werden nicht mehr zwischen zwei Anmeldungen geteilt, und eine Fehlerantwort wird nicht behalten. Die Abhängigkeitsprüfung lässt einen Hinweis zu einem Build-Werkzeug bis Jahresende gelten, mit Begründung."
+      ]
     }
   }
 }

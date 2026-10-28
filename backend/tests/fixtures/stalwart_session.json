@@ -1,0 +1,53 @@
+{
+ "capabilities": {
+  "urn:ietf:params:jmap:core": {
+   "maxSizeUpload": 50000000,
+   "maxConcurrentUpload": 4,
+   "maxSizeRequest": 10000000,
+   "maxConcurrentRequests": 4,
+   "maxCallsInRequest": 16,
+   "maxObjectsInGet": 500,
+   "maxObjectsInSet": 500,
+   "collationAlgorithms": [
+    "i;ascii-numeric",
+    "i;ascii-casemap",
+    "i;unicode-casemap"
+   ]
+  },
+  "urn:ietf:params:jmap:sieve": {
+   "implementation": "Stalwart v1.0.0"
+  }
+ },
+ "accounts": {
+  "b": {
+   "name": "admin@example.com",
+   "isPersonal": true
+  }
+ },
+ "primaryAccounts": {
+  "urn:ietf:params:jmap:mail": "b",
+  "urn:ietf:params:jmap:submission": "b",
+  "urn:ietf:params:jmap:vacationresponse": "b",
+  "urn:ietf:params:jmap:contacts": "b",
+  "urn:ietf:params:jmap:contacts:parse": "b",
+  "urn:ietf:params:jmap:calendars": "b",
+  "urn:ietf:params:jmap:calendars:parse": "b",
+  "urn:ietf:params:jmap:websocket": "b",
+  "urn:ietf:params:jmap:sieve": "b",
+  "urn:ietf:params:jmap:blob": "b",
+  "urn:ietf:params:jmap:quota": "b",
+  "urn:ietf:params:jmap:principals": "b",
+  "urn:ietf:params:jmap:principals:availability": "b",
+  "urn:ietf:params:jmap:filenode": "b",
+  "urn:ietf:params:jmap:mail:share": "b",
+  "urn:stalwart:jmap": "b",
+  "urn:ietf:params:jmap:emailpush": "b",
+  "urn:ietf:params:jmap:metadata": "b"
+ },
+ "username": "admin@example.com",
+ "apiUrl": "https://mail.example.com/jmap/",
+ "downloadUrl": "https://mail.example.com/jmap/download/{accountId}/{blobId}/{name}?accept={type}",
+ "uploadUrl": "https://mail.example.com/jmap/upload/{accountId}/",
+ "eventSourceUrl": "https://mail.example.com/jmap/eventsource/?types={types}&closeafter={closeafter}&ping={ping}",
+ "state": "1259fefa"
+}

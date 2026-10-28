@@ -613,7 +613,7 @@
       "loadFailed": "Das Aussehen ließ sich nicht vom Server lesen.",
       "retry": "Erneut versuchen",
       "cardsTitle": "Karten",
-      "cardsHelp": "Wie jede Karte gezeichnet wird, für alle. Ein roter oder gelber Rahmen bleibt in jedem Stil.",
+      "cardsHelp": "Wie jede Karte gezeichnet wird, und mit ihr Kästen, Blätter, Dialoge und Menüs, für alle. Ein roter oder gelber Rahmen bleibt in jedem Stil.",
       "cardStyle": {
         "glass": "Glas",
         "flat": "Flach",
@@ -1101,7 +1101,7 @@
     "kioskRestMinutes_other": "{{count}} Minuten",
     "cardStyle": "Karten",
     "cardStyleHelp": "Die Karten dieses Boards in einem eigenen Stil, für ein Wand-Display oder ein Board mit Bild dahinter.",
-    "cardStyleInstallation": "Wie unter Darstellung",
+    "cardStyleInstallation": "Wie unter Aussehen",
     "number": {
       "number": "Bitte eine Zahl eingeben.",
       "whole": "Bitte eine ganze Zahl eingeben.",

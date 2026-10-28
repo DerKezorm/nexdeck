@@ -5,13 +5,15 @@
  * colour and a style sheet of the operator's own make it belong in the room
  * it hangs in, and all three come from one setting that everybody may read.
  *
- * The accent is written into the four variables the whole interface builds
- * on, in both brightnesses, so a light board follows the same colour.
+ * The accent is written into the variables the whole interface builds on, in
+ * the hue chosen but the shade the brightness on screen can read (see
+ * `readableAccent`), and follows the switch between light and dark.
  */
 import { useEffect } from 'react'
 import { create } from 'zustand'
 
 import { DEFAULT_FONT, fontOf, setFont } from './fonts'
+import { useGround } from './ground'
 import { paintRetro, retroOf, type RetroChoices } from './retro'
 
 export type Palette = Record<string, string>
@@ -88,13 +90,23 @@ export function shownStyle(look: { cards: CardStyle; board: CardStyle | null }):
   return look.board && look.board !== 'window' ? look.board : look.cards
 }
 
-/** The style onto the page: the board's own, else the installation's. Glass needs no mark. */
+/**
+ * The style onto the page: the board's own, else the installation's. Glass needs no mark.
+ *
+ * ``data-cards`` is what the cards are drawn in. ``data-chrome`` is the installation's
+ * style alone, for everything that is not a card (the boxes of the settings, sheets,
+ * dialogs, menus, the search, the assistant): a board that chooses a style of its own
+ * changes its cards and leaves the rest of the app as it was. 1984 draws all of it
+ * itself (``data-cards='window'``), so it leaves no second mark.
+ */
 function paintCards(): void {
   const look = useLook.getState()
   const style = shownStyle(look)
   const root = document.documentElement
   if (style !== 'glass') root.dataset.cards = style
   else delete root.dataset.cards
+  if (look.cards !== 'glass' && look.cards !== 'window') root.dataset.chrome = look.cards
+  else delete root.dataset.chrome
   root.dataset.refract = look.refraction ? 'on' : 'off'
   paintRetro(style === 'window', look.retro)
 }
@@ -124,6 +136,61 @@ const HEX = /^#[0-9a-f]{6}$/i
 export function channels(colour: string): [number, number, number] | null {
   if (!HEX.test(colour)) return null
   return [colour.slice(1, 3), colour.slice(3, 5), colour.slice(5, 7)].map((part) => parseInt(part, 16)) as [number, number, number]
+}
+
+/** Hue, saturation and lightness (each 0 to 1, the hue in turns) of three channels. */
+function toHsl([red, green, blue]: [number, number, number]): [number, number, number] {
+  const [r, g, b] = [red / 255, green / 255, blue / 255]
+  const high = Math.max(r, g, b)
+  const low = Math.min(r, g, b)
+  const lightness = (high + low) / 2
+  if (high === low) return [0, 0, lightness]
+  const spread = high - low
+  const saturation = lightness > 0.5 ? spread / (2 - high - low) : spread / (high + low)
+  let hue: number
+  if (high === r) hue = (g - b) / spread + (g < b ? 6 : 0)
+  else if (high === g) hue = (b - r) / spread + 2
+  else hue = (r - g) / spread + 4
+  return [hue / 6, saturation, lightness]
+}
+
+/** The `#rrggbb` of a hue, saturation and lightness. */
+function fromHsl(hue: number, saturation: number, lightness: number): string {
+  const chroma = (1 - Math.abs(2 * lightness - 1)) * saturation
+  const part = (shift: number) => {
+    const k = (shift + hue * 12) % 12
+    return lightness - (chroma / 2) * Math.max(-1, Math.min(k - 3, 9 - k, 1))
+  }
+  const hex = [part(0), part(8), part(4)].map((value) => Math.round(Math.min(1, Math.max(0, value)) * 255).toString(16).padStart(2, '0'))
+  return `#${hex.join('')}`
+}
+
+/** The least contrast for text, as the themes keep it (`themes.LEAST`). */
+const LEAST = 4.5
+
+/**
+ * The accent in the shade a brightness can read it in: the colour itself if it
+ * already clears 4.5:1 against the grounds text sits on there, otherwise
+ * darkened (light) or lightened (dark) in its own hue and saturation until it
+ * does, and no further. The way `themes.py` treats a known palette's colour
+ * that is too pale to read.
+ *
+ * ⚠️ nexdeck's cyan, `#22d3ee`, is 1.7:1 on the light page. It was written
+ * onto the root as it was in both brightnesses, so links, chips and the
+ * active tab were all but gone in the light look.
+ */
+export function readableAccent(colour: string, mode: 'dark' | 'light', grounds: string[]): string {
+  const parts = channels(colour)
+  if (!parts) return colour
+  const worst = (shade: string) => Math.min(21, ...grounds.map((ground) => contrast(shade, ground)))
+  if (worst(colour) >= LEAST) return colour
+  const [hue, saturation, lightness] = toHsl(parts)
+  const step = mode === 'light' ? -0.002 : 0.002
+  for (let at = lightness + step; at >= 0 && at <= 1; at += step) {
+    const shade = fromHsl(hue, saturation, at)
+    if (worst(shade) >= LEAST) return shade
+  }
+  return mode === 'light' ? '#000000' : '#ffffff'
 }
 
 /** A darker shade of the accent, for the pressed state and the strong border. */
@@ -223,22 +290,49 @@ function tagFor(id: string, css: string, before?: HTMLElement | null): void {
   tag.textContent = css
 }
 
+const ACCENT_NAMES = ['--nd-accent', '--nd-on-accent', '--nd-accent-strong', '--nd-accent-soft', '--nd-accent-glow', '--nd-aurora-1']
+/** The look as it was painted last, so the accent can be painted again when the brightness changes. */
+let painted: Appearance | null = null
+
+/** The grounds text sits on in a brightness: the chosen theme's, else nexdeck's own. */
+function groundsOf(look: Appearance | null, mode: 'dark' | 'light'): string[] {
+  const palette = { ...OWN_PALETTES[mode], ...look?.theme?.[mode] }
+  return GROUNDS.map((ground) => palette[ground]).filter((colour) => channels(colour))
+}
+
+/**
+ * The accent onto the root element, in the shade the brightness on screen can
+ * read. A theme brings an accent for dark and one for light, so with a theme
+ * only a colour of one's own is written, and then it is shaded the same way.
+ */
+function paintAccent(): void {
+  const root = document.documentElement
+  const look = painted
+  const own = HEX.test(look?.accent ?? '')
+  const colour = look?.theme && !own ? '' : (look?.colour ?? '')
+  const mode = root.dataset.theme === 'light' ? 'light' : 'dark'
+  const variables = accentVariables(colour && channels(colour) ? readableAccent(colour, mode, groundsOf(look, mode)) : colour)
+  for (const name of ACCENT_NAMES) {
+    if (variables[name]) root.style.setProperty(name, variables[name])
+    else root.style.removeProperty(name)
+  }
+}
+// ⚠️ The brightness changes while the page is open (the system, the clock, a
+// kiosk link), so the shade follows it; a reload is not what moves it.
+useGround.subscribe(paintAccent)
+
 /**
  * Paint it on. A theme goes into a tag of its own; the operator's style
  * sheet into one after it, so it wins over everything nexdeck ships and over
  * the theme. The accent goes onto the root element, where it beats both
  * brightnesses: the preset's always, a theme's only when a colour of one's
  * own was chosen, since a theme brings an accent for dark and one for light.
+ * It is shaded for the brightness shown (`paintAccent`).
  */
 export function applyAppearance(look: Appearance | null | undefined): void {
   const root = document.documentElement
-  const own = HEX.test(look?.accent ?? '')
-  const colour = look?.theme && !own ? '' : (look?.colour ?? '')
-  const variables = accentVariables(colour)
-  for (const name of ['--nd-accent', '--nd-on-accent', '--nd-accent-strong', '--nd-accent-soft', '--nd-accent-glow', '--nd-aurora-1']) {
-    if (variables[name]) root.style.setProperty(name, variables[name])
-    else root.style.removeProperty(name)
-  }
+  painted = look ?? null
+  paintAccent()
   tagFor(THEME_ID, themeCss(look?.theme), document.getElementById(STYLE_ID))
   tagFor(STYLE_ID, (look?.css ?? '').trim())
   // The cards: a style the sheet answers to, and two sizes. Glass is the

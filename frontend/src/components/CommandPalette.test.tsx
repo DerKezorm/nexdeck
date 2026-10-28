@@ -98,6 +98,37 @@ describe('CommandPalette', () => {
     expect(open).toHaveBeenCalledWith('http://wiki.example.com:3000', '_blank', 'noopener,noreferrer')
   })
 
+  describe('app tiles without a link of their own', () => {
+    const tile = (id: number, link: string, service_link: string): WidgetView => ({
+      id, kind: 'core.app', title: 'Plex', icon: '', link, service_link, renderer: '', options: {}, integration_id: 1, refresh_seconds: null,
+    })
+
+    it('offers a tile bound to a connection and opens the address of the connection', async () => {
+      const opened: string[] = []
+      vi.stubGlobal('open', (url: string) => {
+        opened.push(url)
+        return null
+      })
+      show([tile(1, '', 'https://plex.example.com')])
+      await userEvent.type(screen.getByRole('textbox'), 'Plex{Enter}')
+      expect(opened).toEqual(['https://plex.example.com'])
+    })
+
+    it('prefers the link of the tile, and leaves out a tile with no web address at all', async () => {
+      const opened: string[] = []
+      vi.stubGlobal('open', (url: string) => {
+        opened.push(url)
+        return null
+      })
+      show([tile(1, 'https://mine.example.com', 'https://plex.example.com'), { ...tile(2, '', 'javascript:alert(1)'), title: 'Odd' }])
+      await userEvent.type(screen.getByRole('textbox'), 'Odd')
+      expect(screen.queryAllByRole('option').filter((row) => /^Odd\s*Open/.test(row.textContent ?? ''))).toEqual([])
+      await userEvent.clear(screen.getByRole('textbox'))
+      await userEvent.type(screen.getByRole('textbox'), 'Plex{Enter}')
+      expect(opened).toEqual(['https://mine.example.com'])
+    })
+  })
+
   describe('links on the board (issue #46)', () => {
     const card = (id: number, kind: string, title: string): WidgetView => ({
       id, kind, title, icon: '', link: '', renderer: '', options: {}, integration_id: null, refresh_seconds: null,
@@ -107,6 +138,7 @@ describe('CommandPalette', () => {
       card(2, 'core.button', 'Router'),
       card(3, 'linkding.recent', 'Saved'),
       card(4, 'radarr.queue', 'Downloads'),
+      card(5, 'readeck.recent', 'Reading list'),
     ]
     const DATA: Record<number, WidgetData> = {
       1: { status: 'ok', items: [
@@ -116,6 +148,10 @@ describe('CommandPalette', () => {
       2: { status: 'ok', meta: { kind: 'link', where: 'https://router.example.com', new_tab: true } },
       3: { status: 'ok', items: [{ title: 'DNS cheat sheet', url: 'https://wiki.example.org/dns' }] },
       4: { status: 'ok', items: [{ title: 'Some movie', url: 'https://radarr.example.com/movie/1' }] },
+      5: { status: 'ok', items: [
+        { title: 'ZFS on a small machine', url: 'https://readeck.example.com/bookmarks/a2' },
+        { title: 'Planted', url: 'javascript:alert(2)' },
+      ] },
     }
     let opened: string[]
 
@@ -151,6 +187,16 @@ describe('CommandPalette', () => {
       show(WIDGETS, DATA)
       await userEvent.type(screen.getByRole('textbox'), 'cheat sheet')
       expect(await screen.findByRole('option', { name: /DNS cheat sheet/ })).toBeTruthy()
+    })
+
+    it('offers what a Readeck card has loaded, and not an address nexdeck will not open', async () => {
+      show(WIDGETS, DATA)
+      const box = screen.getByRole('textbox')
+      await userEvent.type(box, 'small machine{Enter}')
+      expect(opened).toEqual(['https://readeck.example.com/bookmarks/a2'])
+      await userEvent.clear(box)
+      await userEvent.type(box, 'Planted')
+      await waitFor(() => expect(screen.getByText(/Nothing matches|Nichts passt/i)).toBeTruthy())
     })
 
     it('leaves out rows of other lists and addresses nexdeck will not open', async () => {

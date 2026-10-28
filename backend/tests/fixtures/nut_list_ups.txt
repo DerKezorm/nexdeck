@@ -1,0 +1,3 @@
+BEGIN LIST UPS
+UPS dummy "Test UPS"
+END LIST UPS

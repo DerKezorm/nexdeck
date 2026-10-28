@@ -1,0 +1,8 @@
+{
+ "access_token": "example-token",
+ "expires_in": 60,
+ "refresh_expires_in": 0,
+ "token_type": "Bearer",
+ "not-before-policy": 0,
+ "scope": "profile email"
+}

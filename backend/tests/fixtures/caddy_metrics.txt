@@ -1,0 +1,10 @@
+caddy_config_last_reload_success_timestamp_seconds 1.7931191737570064e+09
+# HELP caddy_config_last_reload_successful Whether the last configuration reload attempt was successful.
+# TYPE caddy_config_last_reload_successful gauge
+caddy_config_last_reload_successful 1
+# HELP caddy_reverse_proxy_upstreams_healthy Health status of reverse proxy upstreams.
+# TYPE caddy_reverse_proxy_upstreams_healthy gauge
+caddy_reverse_proxy_upstreams_healthy{upstream="127.0.0.1:9001"} 1
+caddy_reverse_proxy_upstreams_healthy{upstream="127.0.0.1:9002"} 1
+caddy_reverse_proxy_upstreams_healthy{upstream="127.0.0.1:9003"} 1
+caddy_reverse_proxy_upstreams_healthy{upstream="127.0.0.1:9999"} 0

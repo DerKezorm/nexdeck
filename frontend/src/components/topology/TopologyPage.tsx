@@ -606,10 +606,10 @@ export function TopologyPage({ pageId, editing, canEdit, onAddPage, onSettings, 
       <div className="absolute top-3 left-3 right-3 flex flex-wrap items-start gap-2 pointer-events-none [&>*]:pointer-events-auto">{chips}</div>
       <div className={`absolute left-3 bottom-3 ${editing ? 'hidden' : 'hidden lg:flex'} flex-wrap items-center gap-x-3.5 gap-y-1 glass-strong rounded-xl px-3 py-2 text-xs text-muted max-w-[calc(100%-15rem)]`} data-no-picture>
         <span>{t('topology.legend')}</span>
-        <Swatch colour="var(--nd-accent)" label={t('topology.calm')} />
-        <Swatch colour="var(--nd-warn)" label={t('topology.busy')} />
-        <Swatch colour="var(--nd-bad)" label={t('topology.full')} />
-        <Swatch colour="repeating-linear-gradient(90deg,var(--nd-unknown) 0 5px,transparent 5px 9px)" label={t('topology.disconnected')} />
+        <Swatch colour="var(--nd-accent)" label={t('topology.calm')} level="calm" />
+        <Swatch colour="var(--nd-warn)" label={t('topology.busy')} level="busy" />
+        <Swatch colour="var(--nd-bad)" label={t('topology.full')} level="full" />
+        <Swatch colour="repeating-linear-gradient(90deg,var(--nd-unknown) 0 5px,transparent 5px 9px)" label={t('topology.disconnected')} level="down" />
       </div>
       {panel && (
         <aside className={`absolute top-3 right-3 ${editing && canEdit ? 'bottom-24' : 'bottom-16'} w-[370px] max-w-[calc(100%-1.5rem)] glass-strong rounded-2xl shadow-2xl flex flex-col overflow-hidden z-10`} data-no-picture>
@@ -643,10 +643,10 @@ function NoteTimer({ note, onDone }: { note: unknown; onDone: () => void }) {
   return null
 }
 
-function Swatch({ colour, label }: { colour: string; label: string }) {
+function Swatch({ colour, label, level }: { colour: string; label: string; level: string }) {
   return (
     <span className="inline-flex items-center gap-1.5">
-      <i className="inline-block w-[18px] h-1 rounded" style={{ background: colour }} />
+      <i className="inline-block w-[18px] h-1 rounded" style={{ background: colour }} data-swatch={level} />
       {label}
     </span>
   )

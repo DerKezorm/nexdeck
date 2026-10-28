@@ -1,0 +1,225 @@
+{
+ "srv0": {
+  "listen": [
+   ":8081"
+  ],
+  "routes": [
+   {
+    "handle": [
+     {
+      "handler": "subroute",
+      "routes": [
+       {
+        "handle": [
+         {
+          "handler": "reverse_proxy",
+          "health_checks": {
+           "active": {
+            "interval": 2000000000,
+            "uri": "/"
+           }
+          },
+          "upstreams": [
+           {
+            "dial": "127.0.0.1:9001"
+           },
+           {
+            "dial": "127.0.0.1:9999"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ],
+    "match": [
+     {
+      "host": [
+       "app.example.com"
+      ]
+     }
+    ],
+    "terminal": true
+   }
+  ]
+ },
+ "srv1": {
+  "listen": [
+   ":8082"
+  ],
+  "routes": [
+   {
+    "handle": [
+     {
+      "handler": "subroute",
+      "routes": [
+       {
+        "handle": [
+         {
+          "handler": "file_server",
+          "hide": [
+           "/etc/caddy/Caddyfile"
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ],
+    "match": [
+     {
+      "host": [
+       "files.example.com"
+      ]
+     }
+    ],
+    "terminal": true
+   }
+  ]
+ },
+ "srv2": {
+  "listen": [
+   ":8083"
+  ],
+  "routes": [
+   {
+    "handle": [
+     {
+      "handler": "subroute",
+      "routes": [
+       {
+        "handle": [
+         {
+          "encodings": {
+           "gzip": {}
+          },
+          "handler": "encode",
+          "prefer": [
+           "gzip"
+          ]
+         }
+        ]
+       },
+       {
+        "group": "group4",
+        "handle": [
+         {
+          "handler": "subroute",
+          "routes": [
+           {
+            "handle": [
+             {
+              "handler": "reverse_proxy",
+              "upstreams": [
+               {
+                "dial": "127.0.0.1:9002"
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ],
+        "match": [
+         {
+          "path": [
+           "/api/*"
+          ]
+         }
+        ]
+       },
+       {
+        "group": "group4",
+        "handle": [
+         {
+          "handler": "subroute",
+          "routes": [
+           {
+            "handle": [
+             {
+              "handler": "reverse_proxy",
+              "transport": {
+               "protocol": "http",
+               "tls": {}
+              },
+              "upstreams": [
+               {
+                "dial": "127.0.0.1:9003"
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ],
+    "match": [
+     {
+      "host": [
+       "plain.example.com"
+      ]
+     }
+    ],
+    "terminal": true
+   }
+  ]
+ },
+ "srv3": {
+  "listen": [
+   ":8084"
+  ],
+  "routes": [
+   {
+    "handle": [
+     {
+      "handler": "subroute",
+      "routes": [
+       {
+        "handle": [
+         {
+          "handler": "static_response",
+          "headers": {
+           "Location": [
+            "https://new.example.com{http.request.uri}"
+           ]
+          },
+          "status_code": 302
+         }
+        ]
+       }
+      ]
+     }
+    ],
+    "match": [
+     {
+      "host": [
+       "old.example.com"
+      ]
+     }
+    ],
+    "terminal": true
+   }
+  ]
+ },
+ "srv4": {
+  "listen": [
+   ":9001"
+  ],
+  "routes": [
+   {
+    "handle": [
+     {
+      "body": "ok",
+      "handler": "static_response"
+     }
+    ]
+   }
+  ]
+ }
+}

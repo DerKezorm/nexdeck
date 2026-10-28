@@ -3,6 +3,30 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## 0.51.0 (2026-10-28)
+
+### Added
+
+- **39 new integrations**, all beta, and three new cards for GitHub: a repository, pull requests with the state of their checks, and milestones. Hosts, containers and backups: **Zerobyte** (every backup schedule with source, destination and next run, a button that runs it now, yellow when the last good backup is older than a limit you set), **NUT** (a UPS read from upsd itself, red while it runs on battery), **Garage**, **InfluxDB** (state, buckets and one Flux or SQL query as a number with history, for versions 2 and 3), **ProxMenux**, **Pterodactyl** and **AMP** (servers with state and use, start and stop), **dashdot**, **llama.cpp**, **ArchiveTeam Warrior**, **GoatCounter**, **Umami**, **Jenkins** (jobs with their last build, and a button that builds one), **Woodpecker CI**, **Cronicle** (a button that runs an event), **Container registry** (repositories, tags and the newest version of an image over the OCI Distribution API) and **Synapse**. Network: **Caddy**, **Keycloak**, **Wazuh**, **MySpeed** and **UptimeRobot**. Home and files: **SFTPGo**, **Syncthing Relay**, **BookStack**, **Wiki.js**, **Trilium**, **Memos**, **KitchenOwl**, **LubeLogger**, **Planka**, **Traccar** and **Anchor**. Feeds and messages: **Readeck**, **Steam**, **Mastodon**, **Lemmy**, **mailcow** and **Stalwart** (1.0 and newer: the mail queue with the reason, accounts and domains over JMAP, retry and remove). Some were built from the documentation of the service and not yet run against a live instance; each wears the beta badge until somebody confirms it.
+- **The saved bookmarks of a Readeck card** can be found in Ctrl K.
+- **Two messages for a UPS**, under Notifications: "A UPS runs on battery" and "A UPS is back on mains", sent when the NUT card sees the mains go and come back.
+- **The version check covers 30 more services.** Their connections say when their project has a newer release, among them BookStack, Memos, Stalwart, SFTPGo, Synapse, Traccar, Trilium, Wazuh and Woodpecker CI, and some of the 0.50 services such as rclone, ESPHome and PeerTube.
+
+### Changed
+
+- **The card style follows you everywhere.** The style chosen under Appearance (Flat, Outline, Calm, Neon edge, Liquid glass) is now drawn on the boxes of the settings and System, on sheets, dialogs, menus, the search behind Ctrl K and the assistant too, as 1984 already did. A board with a style of its own changes its own cards only. Whatever stands over other content keeps a covering ground in every style.
+- **1984: the topology plan.** The links were one pixel, dotted or dashed, and vanished in the dots of the desk. Now each link is a black line of 2 px, 3 px when busy and 4 px when full, with a border of paper, a link that is down is dashed, the tags with the rate are square, and the plan stands on a calm grey. How busy a link is reads from its width, without colour.
+- **The accent in the light theme.** The accent is darkened in its own hue until it reads as text on the light page (cyan becomes `#0b798a`), your own colours included, and lightened the same way in the dark theme when it needs it. The accent a theme brings for light or dark is left as it is. The shade follows the switch between light and dark without a reload.
+
+### Fixed
+
+- **`/go/<name>` and Ctrl K find an app tile that opens the address of its connection.** A tile without a link of its own that follows a connection has its address only from the connection; `/go`, the suggestions of the browser and Ctrl K looked at the tile's own link and fell back to the search.
+
+### Security
+
+- **A kept answer is no longer shared between sign-ins, and an error is not kept.** The request cache of the integrations left the credentials out of its key, so two accounts at one address could be given each other's answer, and it held a 401 or 429 for the seconds of the cache. The key now carries a digest of the credentials, and only answers below 400 are kept.
+- **The dependency audit accepts one advisory, until 31 December 2026.** GHSA-gcqx-w48m-w2h4 (deepmerge lets `__proto__` through) is reached only while the interface is built, through a build tool that merges its own options, nothing of it is in the image, and no fixed version exists. The entry names its package and ends on its day, after which the audit is red again.
+
 ## 0.50.0 (2026-10-28)
 
 ### Added

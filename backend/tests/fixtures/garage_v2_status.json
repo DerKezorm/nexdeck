@@ -1,0 +1,29 @@
+{
+  "layoutVersion": 1,
+  "nodes": [
+    {
+      "id": "1eeb7409d32c8bc2",
+      "garageVersion": "v2.1.0",
+      "addr": "127.0.0.1:3901",
+      "hostname": "6368dbdb357e",
+      "isUp": true,
+      "lastSeenSecsAgo": null,
+      "role": {
+        "zone": "dc1",
+        "tags": [
+          "example"
+        ],
+        "capacity": 10737418240
+      },
+      "draining": false,
+      "dataPartition": {
+        "available": 190458490880,
+        "total": 528223088640
+      },
+      "metadataPartition": {
+        "available": 190458490880,
+        "total": 528223088640
+      }
+    }
+  ]
+}

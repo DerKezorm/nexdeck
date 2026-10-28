@@ -14,6 +14,21 @@ every answer: when only a few requests are left, the cards show what they
 have and wait for the reset instead of spending the last ones, and when the
 limit is used up they say until when, with the last answer still on show.
 
+Three cards read more than the list of a project's issues:
+
+- The repository card needs the repository (stars, forks, ``open_issues_count``
+  with the pull requests in it), the newest release and, for the pull requests
+  alone, one search request: ``/search/issues`` with ``is:pr is:open`` and
+  ``per_page=1`` gives ``total_count``, and the issues are the difference.
+- The pull request card asks, for each pull request shown, ``check-runs`` of
+  its head commit. Measured on 28.10.2026 against two public projects: a
+  project with no CI on a pull request answers ``total_count: 0``, and the
+  combined ``/status`` of such a commit then says ``"state": "pending"`` with
+  ``total_count: 0``. That is *no checks*, not *running*, so a card has to read
+  the count and not the word.
+- The milestone card reads ``/milestones?state=open&sort=due_on``: ``open_issues``,
+  ``closed_issues`` and ``due_on``, which is often null.
+
 What GitHub documents and this relies on: it sends ``x-ratelimit-remaining``,
 ``-limit`` and ``-reset`` (epoch seconds) on every answer, including 304 and
 403, and answers a used-up limit with 403 or 429.
@@ -22,6 +37,8 @@ What GitHub documents and this relies on: it sends ``x-ratelimit-remaining``,
 from __future__ import annotations
 
 import json
+import math
+import re
 import time
 from datetime import datetime
 from typing import Any
@@ -70,6 +87,14 @@ class RateLimited(AdapterError):
     pass
 
 
+def _is_repo(text: str) -> bool:
+    """``owner/name`` in the characters GitHub allows, and neither part ``.`` or ``..``.
+
+    ⚠️ httpx puts ``/repos/../x`` right before it sends it and the request goes to ``/x``.
+    """
+    return bool(re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", text)) and not any(part in (".", "..") for part in text.split("/"))
+
+
 class GithubAdapter(Adapter):
     raw_root = API
     kind = "github"
@@ -115,6 +140,43 @@ class GithubAdapter(Adapter):
                 Field("what", "Show", type="select", default="issues", options=(("issues", "Issues"), ("pulls", "Pull requests"))),
                 Field("limit", "Entries", type="number", default=8),
             ),
+        ),
+        WidgetType(
+            kind="repository",
+            label="Repository",
+            description="One project: stars, forks, open issues and open pull requests, the newest release and the last push.",
+            renderer="stats",
+            default_size=(3, 2),
+            refresh_seconds=1800,
+            metrics=("stars", "issues", "pulls"),
+            options=(Field("repo", "Project", required=True, placeholder="owner/name"),),
+        ),
+        WidgetType(
+            kind="pulls",
+            label="Pull requests",
+            description="Open pull requests of the projects you follow, with the state of their checks: failed, running or passed. Red ones first.",
+            renderer="list",
+            default_size=(4, 3),
+            min_size=(3, 2),
+            refresh_seconds=900,
+            metrics=("failing",),
+            options=(
+                REPOS_FIELD,
+                Field("limit", "Entries", type="number", default=6,
+                      help="Each pull request shown costs one more request for its checks; without a token GitHub allows sixty an hour."),
+                Field("drafts", "Show drafts", type="bool", default=True),
+            ),
+        ),
+        WidgetType(
+            kind="milestones",
+            label="Milestones",
+            description="Open milestones with how much of each is done and when it is due, overdue ones first.",
+            renderer="list",
+            default_size=(4, 3),
+            min_size=(3, 2),
+            refresh_seconds=1800,
+            metrics=("overdue",),
+            options=(REPOS_FIELD, Field("limit", "Entries", type="number", default=8)),
         ),
         WidgetType(
             kind="runs",
@@ -247,6 +309,12 @@ class GithubAdapter(Adapter):
     # -- the cards --------------------------------------------------------------
 
     async def fetch(self, widget_kind: str, config: dict[str, Any], options: dict[str, Any], ctx: Context) -> WidgetData:
+        if widget_kind == "repository":
+            return await self._repository(config, options, ctx)
+        if widget_kind == "pulls":
+            return await self._pulls(config, options, ctx)
+        if widget_kind == "milestones":
+            return await self._milestones(config, options, ctx)
         repos = self._repos(options, presets=widget_kind == "releases")
         if not repos:
             raise AdapterError("No project is set.", code="missing_repo")
@@ -316,6 +384,215 @@ class GithubAdapter(Adapter):
             data.error = "; ".join(failures)
             data.status = "bad"
         return data
+
+    # -- repository, pull requests with their checks, milestones ---------------------------
+
+    def _named(self, options: dict[str, Any]) -> list[str]:
+        repos = self._repos(options, presets=False)
+        if not repos:
+            raise AdapterError("No project is set.", code="missing_repo")
+        bad = [repo for repo in repos if not _is_repo(repo)]
+        if bad:
+            raise AdapterError(f"{bad[0]} is not owner/name.", code="bad_repository")
+        return repos
+
+    async def _repository(self, config: dict[str, Any], options: dict[str, Any], ctx: Context) -> WidgetData:
+        repo = str(options.get("repo") or "").strip().strip("/")
+        if not _is_repo(repo):
+            raise AdapterError(f"{repo or 'The project'} is not owner/name.", code="bad_repository")
+        project, _old = await self._get(config, ctx, f"/repos/{repo}")
+        if not isinstance(project, dict):
+            raise AdapterError(f"{repo} was not found, or the token cannot see it.", code="not_found")
+        release, _ = await self._get(config, ctx, f"/repos/{repo}/releases/latest")
+        pulls: int | None = 0
+        if int(project.get("open_issues_count") or 0) > 0:
+            try:
+                found, _ = await self._get(config, ctx, "/search/issues", {"q": f"repo:{repo} is:pr is:open", "per_page": 1})
+                pulls = int((found or {}).get("total_count") or 0)
+            except RateLimited:
+                # The search has a limit of its own; the number of issues and pull requests together is still true.
+                pulls = None
+        return self.repository_card(project, release if isinstance(release, dict) else None, pulls)
+
+    @staticmethod
+    def repository_card(project: dict[str, Any], release: dict[str, Any] | None, pulls: int | None) -> WidgetData:
+        both = int(project.get("open_issues_count") or 0)
+        secondary: list[dict[str, Any]] = [{"label": "Project", "value": str(project.get("full_name") or "?")},
+                                           {"label": "Forks", "value": int(project.get("forks_count") or 0)}]
+        if pulls is None:
+            secondary.append({"label": "Open issues and pull requests", "value": both})
+        else:
+            secondary += [{"label": "Open issues", "value": max(0, both - pulls)}, {"label": "Open pull requests", "value": pulls}]
+        secondary.append({"label": "Latest release", "value": str(release.get("tag_name") or release.get("name") or "?") if release else "None"})
+        if release and release.get("published_at"):
+            secondary.append({"label": "Released", "value": ago(release.get("published_at"))})
+        if project.get("pushed_at"):
+            secondary.append({"label": "Last push", "value": ago(project.get("pushed_at"))})
+        if project.get("archived"):
+            secondary.append({"label": "Archived", "value": "Yes"})
+        return WidgetData(
+            status="warn" if project.get("archived") else "ok",
+            primary={"label": "Stars", "value": int(project.get("stargazers_count") or 0)},
+            secondary=secondary,
+            metrics={"stars": float(project.get("stargazers_count") or 0), "issues": float(max(0, both - (pulls or 0))), "pulls": float(pulls or 0)},
+            link=str(project.get("html_url") or "") or None,
+        )
+
+    async def _checks(self, config: dict[str, Any], ctx: Context, repo: str, sha: str) -> str:
+        """``bad``, ``running``, ``approval``, ``ok`` or ``none`` for the head commit of a pull request."""
+        if not re.fullmatch(r"[0-9a-f]{7,64}", sha):
+            return "none"
+        runs, _ = await self._get(config, ctx, f"/repos/{repo}/commits/{sha}/check-runs", {"per_page": 100})
+        listed = [one for one in runs.get("check_runs") or [] if isinstance(one, dict)] if isinstance(runs, dict) else []
+        if listed:
+            if any(one.get("conclusion") in ("failure", "timed_out", "startup_failure") for one in listed):
+                return "bad"
+            if any(one.get("conclusion") == "action_required" for one in listed):
+                return "approval"
+            if any(one.get("status") != "completed" for one in listed):
+                return "running"
+            return "ok"
+        status, _ = await self._get(config, ctx, f"/repos/{repo}/commits/{sha}/status")
+        # ⚠️ A commit with no statuses at all answers state "pending": it is the count that says none.
+        if not isinstance(status, dict) or not int(status.get("total_count") or 0):
+            return "none"
+        return {"success": "ok", "failure": "bad", "error": "bad"}.get(str(status.get("state")), "running")
+
+    async def _pulls(self, config: dict[str, Any], options: dict[str, Any], ctx: Context) -> WidgetData:
+        repos = self._named(options)
+        limit = max(1, min(15, int(options.get("limit") or 6)))
+        failures: list[str] = []
+        stale: list[float] = []
+        every: list[tuple[str, dict[str, Any]]] = []
+        full = False
+        for repo in repos:
+            try:
+                answer, old = await self._get(config, ctx, f"/repos/{repo}/pulls", {"state": "open", "sort": "updated", "direction": "desc", "per_page": limit})
+            except (RateLimited, AuthFailed):
+                raise
+            except AdapterError as error:
+                failures.append(f"{repo}: {error.message}")
+                continue
+            if old:
+                stale.append(old)
+            if answer is None:
+                failures.append(f"{repo}: not found, or not visible to this token")
+                continue
+            full = full or len(answer) >= limit
+            every += [(repo, one) for one in answer if isinstance(one, dict) and (options.get("drafts", True) or not one.get("draft"))]
+        every.sort(key=lambda entry: str(entry[1].get("updated_at") or ""), reverse=True)
+        shown = every[:limit]
+        checks: dict[tuple[str, int], str] = {}
+        limited = False
+        for repo, pull in shown:
+            try:
+                checks[(repo, int(pull.get("number") or 0))] = await self._checks(config, ctx, repo, str((pull.get("head") or {}).get("sha") or ""))
+            except RateLimited:
+                # What is known stays on the card; the rest waits for the reset.
+                limited = True
+                break
+            except AuthFailed:
+                raise
+            except AdapterError:
+                continue
+        data = self.pull_rows(shown, checks, full or len(every) > len(shown))
+        data.meta = {**(data.meta or {}), "failures": failures, **({"checks_limited": True} if limited else {})}
+        if stale:
+            data.meta["stale_since"] = int(min(stale))
+        if failures and not data.items:
+            data.error = "; ".join(failures)
+            data.status = "bad"
+        return data
+
+    @staticmethod
+    def pull_rows(shown: list[tuple[str, dict[str, Any]]], checks: dict[tuple[str, int], str], more: bool = False) -> WidgetData:
+        words = {"bad": ("bad", "Checks failed"), "running": ("warn", "Checks running"), "approval": ("warn", "Needs approval"),
+                 "ok": ("ok", "Checks passed"), "none": ("unknown", "No checks")}
+        rows = []
+        for repo, pull in shown:
+            colour, word = words[checks.get((repo, int(pull.get("number") or 0)), "none")]
+            review = "Draft" if pull.get("draft") else ("Review requested" if pull.get("requested_reviewers") or pull.get("requested_teams") else "")
+            rows.append((colour != "bad", str(pull.get("updated_at") or ""), {
+                "title": str(pull.get("title") or "?"),
+                "subtitle": " · ".join(part for part in (word, review, f"{repo.rsplit('/', 1)[-1]}#{pull.get('number')}") if part),
+                "status": colour,
+                "value": ago(pull.get("updated_at")),
+                "url": str(pull.get("html_url") or ""),
+            }))
+        # Red first, then the most recently changed.
+        rows.sort(key=lambda row: row[1], reverse=True)
+        rows.sort(key=lambda row: row[0])
+        failing = sum(1 for entry in rows if not entry[0])
+        return WidgetData(
+            status="bad" if failing else "ok",
+            items=[entry[2] for entry in rows],
+            secondary=[{"label": "Failing checks", "value": failing}, {"label": "Open pull requests", "value": f"{len(rows)}+" if more else len(rows)}],
+            metrics={"failing": float(failing)},
+            meta={"empty": "No open pull requests."},
+        )
+
+    async def _milestones(self, config: dict[str, Any], options: dict[str, Any], ctx: Context) -> WidgetData:
+        repos = self._named(options)
+        failures: list[str] = []
+        stale: list[float] = []
+        found: list[tuple[str, Any]] = []
+        for repo in repos:
+            try:
+                answer, old = await self._get(config, ctx, f"/repos/{repo}/milestones", {"state": "open", "sort": "due_on", "direction": "asc", "per_page": 20})
+            except (RateLimited, AuthFailed):
+                raise
+            except AdapterError as error:
+                failures.append(f"{repo}: {error.message}")
+                continue
+            if old:
+                stale.append(old)
+            if answer is None:
+                failures.append(f"{repo}: not found, or not visible to this token")
+                continue
+            found.append((repo, answer))
+        data = self.milestone_rows(found, max(1, min(30, int(options.get("limit") or 8))))
+        data.meta = {**(data.meta or {}), "failures": failures}
+        if stale:
+            data.meta["stale_since"] = int(min(stale))
+        if failures and not data.items:
+            data.error = "; ".join(failures)
+            data.status = "bad"
+        return data
+
+    @classmethod
+    def milestone_rows(cls, found: list[tuple[str, Any]], limit: int, now: float | None = None) -> WidgetData:
+        moment = now if now is not None else time.time()
+        rows = []
+        for repo, milestones in found:
+            for milestone in milestones if isinstance(milestones, list) else []:
+                if not isinstance(milestone, dict):
+                    continue
+                done, left = int(milestone.get("closed_issues") or 0), int(milestone.get("open_issues") or 0)
+                total = done + left
+                share = 100 * done / total if total else 0.0
+                due = cls._stamp(milestone.get("due_on") or "")
+                days = None if due is None else math.floor((due - moment) / 86400)
+                late = days is not None and days < 0 and left > 0
+                soon = days is not None and 0 <= days <= 7 and left > 0
+                parts = (f"{done} of {total} done" if total else "No issues yet",
+                         "" if days is None else (f"overdue by {-days} d" if late else ("due today" if days == 0 else f"due in {days} d")))
+                rows.append((not late, not soon, due if due is not None else float("inf"), {
+                    "title": f"{repo.rsplit('/', 1)[-1]} {milestone.get('title') or '?'}",
+                    "subtitle": " · ".join(part for part in parts if part),
+                    "status": "bad" if late else ("warn" if soon else "ok"),
+                    "value": f"{share:.0f}%",
+                    "progress": round(share, 1),
+                    "url": str(milestone.get("html_url") or ""),
+                }))
+        rows.sort(key=lambda entry: entry[:3])
+        overdue = sum(1 for entry in rows if not entry[0])
+        return WidgetData(
+            status="bad" if overdue else "ok",
+            items=[entry[3] for entry in rows[:limit]],
+            secondary=[{"label": "Overdue", "value": overdue}, {"label": "Open milestones", "value": len(rows)}],
+            metrics={"overdue": float(overdue)},
+            meta={"empty": "No open milestones."},
+        )
 
     def _releases(self, found: list[tuple[str, Any]], limit: int) -> WidgetData:
         entries = []
@@ -406,6 +683,27 @@ class GithubAdapter(Adapter):
     def demo(self, widget_kind: str, options: dict[str, Any], tick: int) -> WidgetData:
         now = time.time() - tick % 60
         stamp = lambda seconds: time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(now - seconds))  # noqa: E731
+        if widget_kind == "repository":
+            return self.repository_card(
+                {"full_name": "example/project", "stargazers_count": 1840 + tick // 120, "forks_count": 92, "open_issues_count": 31, "pushed_at": stamp(5400),
+                 "html_url": "https://github.com/"}, {"tag_name": "v1.4.0", "published_at": stamp(86400 * 6)}, 9)
+        if widget_kind == "pulls":
+            red = (tick // 300) % 3 == 0
+            pulls = [
+                ("example/project", {"number": 412, "title": "Cards keep their size when moved", "updated_at": stamp(1800), "html_url": "https://github.com/",
+                                     "requested_reviewers": [{"login": "someone"}]}),
+                ("example/project", {"number": 398, "title": "Import from Homepage", "updated_at": stamp(7200), "html_url": "https://github.com/", "draft": True}),
+                ("example/project", {"number": 377, "title": "Weather card shows the wrong unit", "updated_at": stamp(86400), "html_url": "https://github.com/"}),
+                ("example/project", {"number": 371, "title": "Update the base image", "updated_at": stamp(172800), "html_url": "https://github.com/"}),
+            ]
+            checks = {("example/project", 412): "bad" if red else "ok", ("example/project", 398): "none", ("example/project", 377): "running",
+                      ("example/project", 371): "approval"}
+            return self.pull_rows(pulls, checks)
+        if widget_kind == "milestones":
+            return self.milestone_rows([("example/project", [
+                {"title": "1.5.0", "closed_issues": 14, "open_issues": 6, "due_on": stamp(-3 * 86400), "html_url": "https://github.com/"},
+                {"title": "1.4.1", "closed_issues": 5, "open_issues": 2, "due_on": stamp(2 * 86400), "html_url": "https://github.com/"},
+                {"title": "2.0.0", "closed_issues": 3, "open_issues": 21, "due_on": None, "html_url": "https://github.com/"}])], 8, now)
         if widget_kind == "issues":
             pulls = options.get("what") == "pulls"
             items = [

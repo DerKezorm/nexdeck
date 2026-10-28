@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom'
 
 import { get } from '../api/client'
 import type { BoardSummary } from '../api/types'
+import { appTarget } from '../lib/appKeys'
 import { useAssistant } from '../lib/assistant'
 import { serviceLogo } from '../lib/format'
 import { safeUrl } from '../lib/safeUrl'
@@ -66,8 +67,12 @@ export function CommandPalette({ open, onClose, boards, widgets, actions = [], o
       // ⚠️ ``safeUrl`` throws away an address with a scheme nexdeck will not
       // open, and the entry was offered anyway: pressing it opened a blank
       // window. Asked here, so an entry that cannot be opened is not offered.
-      if (safeUrl(widget.link)) {
-        list.push({ id: `w${widget.id}`, title: widget.title, subtitle: t('palette.open'), icon: <ServiceIcon icon={widget.icon} fallback={serviceLogo(widget)} size={16} />, keywords: `${widget.title} ${widget.kind}`.toLowerCase(), outside: true, run: () => window.open(safeUrl(widget.link), '_blank', 'noopener,noreferrer') })
+      // An app tile opens what the board opens: its own link, else the
+      // address its app or its connection gives. Asked only of the link
+      // before, a tile bound to a connection was left out of the palette.
+      const href = widget.kind === 'core.app' ? appTarget(widget, data?.[widget.id]).href : safeUrl(widget.link)
+      if (href) {
+        list.push({ id: `w${widget.id}`, title: widget.title, subtitle: t('palette.open'), icon: <ServiceIcon icon={widget.icon} fallback={serviceLogo(widget)} size={16} />, keywords: `${widget.title} ${widget.kind}`.toLowerCase(), outside: true, run: () => window.open(href, '_blank', 'noopener,noreferrer') })
       }
     }
     for (const { widget, action } of actions) {

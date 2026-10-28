@@ -613,7 +613,7 @@
       "loadFailed": "Impossibile leggere l'aspetto dal server.",
       "retry": "Riprova",
       "cardsTitle": "Schede",
-      "cardsHelp": "Come viene disegnata ogni scheda, per tutti. Una cornice rossa o ambra resta in ogni stile.",
+      "cardsHelp": "Come viene disegnata ogni scheda, e con essa riquadri, pannelli, finestre di dialogo e menu, per tutti. Una cornice rossa o ambra resta in ogni stile.",
       "cardStyle": {
         "glass": "Vetro",
         "flat": "Piatta",

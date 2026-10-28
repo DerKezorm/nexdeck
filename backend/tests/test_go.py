@@ -163,6 +163,38 @@ def test_one_name_with_two_addresses_opens_the_search_bar_instead_of_guessing(cl
     assert _go(client, "/go/plex") == "https://plex.example.com", "the same address twice is one answer"
 
 
+def _connection(client: TestClient, name: str, url: str) -> dict:
+    answer = client.post("/api/v1/integrations", json={"kind": "plex", "name": name, "config": {"url": url, "token": "t"}}, headers=CSRF)
+    assert answer.status_code == 201, answer.text
+    return answer.json()
+
+
+def _bound_tile(client: TestClient, board: dict, connection: dict, title: str, link: str = ""):  # noqa: ANN202
+    return client.post(f"/api/v1/pages/{board['pages'][0]['id']}/widgets",
+                       json={"kind": "core.app", "title": title, "link": link, "integration_id": connection["id"]}, headers=CSRF)
+
+
+def test_a_tile_without_a_link_opens_the_address_of_its_connection(client: TestClient) -> None:
+    setup_admin(client)
+    lab, wall = _board(client, "Lab"), _board(client, "Wall")
+    plex = _connection(client, "Plex", "https://plex.example.com")
+    _made(_bound_tile(client, lab, plex, "Plex"))
+    assert _go(client, "/go/plex") == "https://plex.example.com"
+    _made(_bound_tile(client, wall, plex, "Plex"))
+    assert _go(client, "/go/plex") == "https://plex.example.com", "two tiles, one connection, one address"
+    other = _connection(client, "Second", "https://plex2.example.com")
+    _made(_bound_tile(client, wall, other, "Plex"))
+    assert _go(client, "/go/plex") == "/?find=plex", "two connections are two addresses"
+
+
+def test_a_link_of_its_own_wins_over_the_connection(client: TestClient) -> None:
+    setup_admin(client)
+    board = _board(client, "Lab")
+    plex = _connection(client, "Plex", "https://plex.example.com")
+    _made(_bound_tile(client, board, plex, "Plex", "https://mine.example.com"))
+    assert _go(client, "/go/plex") == "https://mine.example.com"
+
+
 def test_a_link_that_is_not_a_web_address_is_never_followed(client: TestClient) -> None:
     setup_admin(client)
     board = _board(client, "Lab")

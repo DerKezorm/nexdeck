@@ -1,0 +1,18 @@
+[
+  {
+    "id": "6fa347ecb20cd132",
+    "created": "2026-10-27T17:02:13.345Z",
+    "globalAliases": [
+      "media"
+    ],
+    "localAliases": []
+  },
+  {
+    "id": "d7c7a2811d963431",
+    "created": "2026-10-27T17:02:13.314Z",
+    "globalAliases": [
+      "backups"
+    ],
+    "localAliases": []
+  }
+]
