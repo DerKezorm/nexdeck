@@ -460,7 +460,11 @@ def test_karten6_ec3_the_route_serves_only_addresses_the_card_itself_named(stand
     reached = respx.route().mock(return_value=httpx.Response(200, content=b"\x89PNG", headers={"content-type": "image/png"}))
     unsigned = f"{images.EXTERNAL}?u={quote('https://img.example.com/a.jpg', safe='')}&s=" + "0" * 32
     assert client.get(f"/api/v1/widgets/{widget}/image", params={"path": unsigned}).status_code == 400
-    assert client.get(f"/api/v1/widgets/{clock}/image", params={"path": images.reference("https://img.example.com/a.jpg").removeprefix("proxy:")}).status_code == 400
+    named = images.reference("https://img.example.com/a.jpg").removeprefix("proxy:")
+    # A card without a service has nothing to fetch from; a built-in card of a connection takes only the shapes its kind names.
+    assert client.get(f"/api/v1/widgets/{clock}/image", params={"path": named}).status_code == 404
+    queue = place(client, page, sonarr, kind="sonarr.queue", card=None).json()["widget"]["id"]
+    assert client.get(f"/api/v1/widgets/{queue}/image", params={"path": named}).status_code == 400
     assert not reached.called
 
 
