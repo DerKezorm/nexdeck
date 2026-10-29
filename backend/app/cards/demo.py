@@ -132,6 +132,11 @@ def _is_moment(text: str) -> bool:
     return bool(_DATE.match(text) or _TIME.match(text) or _HTTP_DATE.match(text))
 
 
+def is_moment(text: str) -> bool:
+    """Whether a text is a date, a time of day or a time stamp (``12:30:45`` reads like an IPv6 address otherwise)."""
+    return _is_moment(text)
+
+
 def _digits(token: str, stream: bytes) -> str:
     """The same number of digits, every one of them another digit (and no leading zero where there was none)."""
     out = []

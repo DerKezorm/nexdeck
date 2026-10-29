@@ -7,9 +7,9 @@ No values. A key that is data itself (a hash, a host name, a number) becomes ``<
 with the administrator's tick for this one request, cut like the examples of a card (10 entries, 200 characters); the
 answer of any other path or connection that nexdeck asks to check a proposal goes as its shape alone (:func:`_shapes`).
 Never: the address or the name of the connection, a credential, a host name or an address of the network: even with the tick
-the values of fields named like a credential and anything that reads as a key are replaced by ``***``, addresses of the network
-by ``192.0.2.1``, host names and the host of an address by ``example.com``, mail addresses by ``user@example.com``
-(:func:`sendable`).
+the values of fields named like a credential (in every spelling) and anything that reads as a key are replaced by ``***``,
+addresses of the network by ``192.0.2.1``, host names and the host of an address by ``example.com``, mail addresses by
+``user@example.com``, MAC addresses by ``00:00:5e:00:53:01``, also where they stand inside a text (:func:`sendable`).
 
 The provider is the one of the assistant (``providers.turn``); a card has none of its own. Its answer is checked like a
 saved card (``load.load_definition``: schema, secrets, paths, limits). A card that fails is sent back once with its
@@ -57,8 +57,16 @@ _NAME = re.compile(r"^[A-Za-z_][A-Za-z0-9_]{0,40}$")
 _ADDRESS = re.compile(r"\b(https?)://[^\s/?#\"'<>]*([^\s?#\"'<>]*)(?:[?#][^\s\"'<>]*)?", re.IGNORECASE)
 _MAIL = re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+")
 _IPV4 = re.compile(r"(?<![\w.])(?:\d{1,3}\.){3}\d{1,3}(?![\w])")
+#: A word of a text, between spaces, quotes and brackets: a host, an address, a MAC or a key inside a sentence is one.
+_WORD = re.compile(r"[^\s\"'<>()\[\]{},;]+")
 #: What stands in the place of a credential that would have gone with the tick.
 MASK = "***"
+#: What stands with the tick for a value, or a word of a text, of each kind :func:`demo.data_kind` knows (but an address,
+#: whose path stays): never the value itself.
+_STAND_INS = {
+    "ipv4": "192.0.2.1", "ipv6": "192.0.2.1", "host": "example.com", "mail": "user@example.com", "mac": "00:00:5e:00:53:01",
+    "uuid": MASK, "hex": MASK, "base64": MASK,
+}  # fmt: skip
 _FENCE = re.compile(r"```(?:ya?ml)?[ \t]*\r?\n(.*?)```", re.DOTALL)
 _LANG = re.compile(r"^[a-z]{2,3}(-[A-Za-z0-9]{2,8})?$")
 #: Words with which a provider says that the account is at its limit or empty.
@@ -192,7 +200,22 @@ def _is_a_name(key: str) -> bool:
 
 
 def _credential_field(key: str) -> bool:
-    return credential_names.is_credential_name(key) or credentials.bad_name(key)
+    """A name whose value is masked with the tick, in every spelling (``X-Api-Key``, ``auth.token``, ``Api Key``)."""
+    return credential_names.is_credential_name(key) or credential_names.is_access_name(key) or credentials.bad_name(key)
+
+
+def _words(text: str) -> str:
+    """A text with every word that is data (a host, an IPv6 address, a MAC, a key of 16 characters or more) stood in for."""
+
+    def one(found: re.Match[str]) -> str:
+        word = found.group(0)
+        core = word.rstrip(".:!?")
+        if not core or demo.is_moment(core):
+            return word
+        stand_in = _STAND_INS.get(demo.data_kind(core) or "")
+        return word if stand_in is None else stand_in + word[len(core):]
+
+    return _WORD.sub(one, text)
 
 
 def sendable(value: Any, *, secret: bool = False) -> Any:
@@ -208,15 +231,12 @@ def sendable(value: Any, *, secret: bool = False) -> Any:
         return value
     if next(credentials.find(value), None) is not None:
         return MASK
-    kind = demo.data_kind(value)
-    if kind in ("ipv4", "ipv6"):
-        return "192.0.2.1"
-    if kind == "host":
-        return "example.com"
-    if kind == "mail":
-        return "user@example.com"
+    if demo.is_moment(value.strip()):
+        return value
+    if (stand_in := _STAND_INS.get(demo.data_kind(value.strip()) or "")) is not None:
+        return stand_in
     text = _ADDRESS.sub(lambda found: f"{found.group(1).lower()}://example.com{found.group(2)}", value)
-    return _IPV4.sub("192.0.2.1", _MAIL.sub("user@example.com", text))
+    return _words(_IPV4.sub("192.0.2.1", _MAIL.sub("user@example.com", text)))
 
 
 def _stand_ins(node: dict[Any, Any]) -> dict[Any, bool]:
@@ -260,7 +280,8 @@ def shape(answer: Any, *, values: bool = False) -> str:
                 else:
                     stand_ins += 1
                     if stand_ins <= (VALUE_ENTRIES if values else 1):  # the first of them shows what the others are
-                        walk(f"{path}.<key{stand_ins}>" if path else f"<key{stand_ins}>", one, depth + 1, secret)
+                        # ⚠️ The name stays out, but it still says what the value is: X-Api-Key is a credential.
+                        walk(f"{path}.<key{stand_ins}>" if path else f"<key{stand_ins}>", one, depth + 1, secret or _credential_field(name))
             if len(node) > MAX_SHAPE_FIELDS:
                 lines.append(f"{path or '@'}: {len(node) - MAX_SHAPE_FIELDS} more fields not shown")
 
@@ -281,7 +302,7 @@ def clean(node: Any, *, secret: bool = False) -> Any:
                 out[name] = clean(one, secret=secret or _credential_field(name))
             else:
                 stand_ins += 1
-                out[f"<key{stand_ins}>"] = clean(one, secret=secret)
+                out[f"<key{stand_ins}>"] = clean(one, secret=secret or _credential_field(name))
         return out
     if isinstance(node, list):
         return [clean(one, secret=secret) for one in node[:VALUE_ENTRIES]]
