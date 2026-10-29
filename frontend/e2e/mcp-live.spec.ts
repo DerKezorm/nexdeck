@@ -51,6 +51,8 @@ test('a key from its own settings page, a press over HTTP, the bell counting it 
   const trouble: string[] = []
   page.on('pageerror', (error) => trouble.push(String(error)))
   await signIn(page)
+  // The bell shows 9+ from ten on, and the specs before this one leave notices behind: start with an empty bell.
+  expect((await page.request.delete('/api/v1/notices?all=true', { headers: CSRF })).status()).toBe(204)
   const made = await page.request.post('/api/v1/integrations', { data: { kind: 'portainer', name: 'Portainer for MCP', config: {}, demo: true }, headers: CSRF })
   expect(made.status()).toBe(201)
   const press = await offered(page.request)
