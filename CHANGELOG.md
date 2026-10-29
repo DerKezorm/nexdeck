@@ -5,6 +5,11 @@ project uses semantic versioning.
 
 ## Unreleased
 
+### Added
+
+- **Skins.** A skin redraws more than the colours of nexdeck, in three layers: colours, corners and type; building blocks that are only data (little pixel pictures drawn as rows of characters, frames cut from them, a tile for the desk, decorations at the corners of a part, symbols of their own for ok, warning and fault, motions from a fixed list and short synth sounds); and a style sheet of its own. That style sheet names parts of nexdeck such as `card`, `card-titlebar` or `button`, never its classes, and nexdeck writes it anew from what it allows: nothing in a skin fetches from anywhere, covers a dialog or hides a button, and symbols for a fault have to differ in shape, not only in colour. An administrator brings skins in under System, Look (a look or a theme comes in as a skin of colours), chooses the one everybody wears, and every account can wear another one for itself under Profile, with its sounds switched on if it likes. Pages that ask for a password, a key or a confirmation always keep nexdeck's own drawing, with the skin's colours.
+- **1984 is a skin.** It looks exactly as before and keeps its four choices; a look saved before still means 1984.
+
 ### Security
 
 - **The style sheet of the look is read the way a browser reads it.** The check for the administrator's own CSS looked at the text, so `\75 rl(https://…)`, which a browser reads as `url(`, and `image-set("https://…")` or `src("https://…")` went through and could have fetched from a foreign address for everyone who opens a board. The sheet is now taken apart into tokens with CSS escapes decoded, and every address in it, in `url()`, `src()`, the image functions and `@import`, has to be a `data:` address written out, not one handed over by `var()`, `env()` or `attr()`. Sheets that fetch nothing are kept as they were.
