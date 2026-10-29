@@ -412,14 +412,19 @@ async def _send(
         return await _through_the_clients_own_cookies(
             adapter, held, url, config, ctx, params, method=method, json_body=json_body, data=data, max_bytes=max_bytes, acting=acting,
         )
+    signins = adapter.raw_signins(ctx)
     sent = await signed(adapter, config, ctx)
+    # ⚠️ One sign-in per fetch (KARTEN-3 EC-3): a ticket made for this very request, because the one before had run out of its
+    # lifetime, is not signed in for again when the service refuses it.
+    new_ticket = adapter.raw_signins(ctx) != signins
     for attempt in (0, 1):
+        answered: httpx.Response | None = None
         try:
             # ⚠️ Merged into the address here: httpx replaces the query of an address when ``params`` is given, and the
             # card's own question (``?api=...&method=...``) is the point of the request.
             more = {**sent.params, **(params or {})}
             try:
-                response = await ctx.request(
+                response = answered = await ctx.request(
                     method.upper(),
                     str(httpx.URL(url).copy_merge_params(more)) if more else url,
                     headers=_headers_for(sent.headers, acting) or None,
@@ -432,24 +437,35 @@ async def _send(
                     max_bytes=max_bytes,
                 )
             except Unreachable as error:
+                # ⚠️ A request that was cut off (connection lost, no answer) is no refusal: it never signs in again.
                 if not acting:
                     raise
                 raise _no_answer(error) from error.__cause__
             if adapter.raw_expired(response):
-                raise AuthFailed()
+                raise AuthFailed(status=response.status_code)
             adapter.raw_accepted(ctx)
             if attempt == 1:
                 ctx.cache.pop(CHECKED, None)  # the session really had run out: the next time may look again at once
             return response
         except AuthFailed as refusal:
             if adapter.raw_session:
-                # ⚠️ An own connection with a session: only 401 means the ticket ran out. The adapter signs in again, once
-                # per request of a card (attempt 0); a second 401 after that is the end of it (KARTEN-3 EC-3).
-                if refusal.status == 401:
-                    renewed = await adapter.raw_renew(config, ctx, (sent.headers, sent.params, sent.auth), again=attempt == 1)
+                # ⚠️ An own connection with a session: the statuses of ``raw_renew_on`` (401 unless the description says more)
+                # mean the ticket ran out. The adapter signs in again, once per request of a card (attempt 0); a second
+                # refusal after that is the end of it (KARTEN-3 EC-3).
+                odd = refusal.status not in (401, 403)  # a 419, 440 or 500: also an answer of its own when no sign-in helps
+                # ⚠️ A button's request is not sent again after a 500: the service may have done the work before it failed.
+                if refusal.status in adapter.raw_renew_on and not (acting and refusal.status == 500):
+                    try:
+                        renewed = await adapter.raw_renew(config, ctx, (sent.headers, sent.params, sent.auth), again=attempt == 1 or new_ticket)
+                    except AuthFailed:
+                        if odd and answered is not None:
+                            return answered
+                        raise
                     if renewed is not None and attempt == 0:
                         sent = Sent(dict(renewed[0]), dict(renewed[1]), renewed[2])
                         continue
+                if odd and answered is not None:
+                    return answered
                 raise
             # ⚠️ A refusal is not an expired session. Only a kind with a session of its own renews it, by its own function,
             # and a refusal on a path its built-in cards do not need stays the error of this card.

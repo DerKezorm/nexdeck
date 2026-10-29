@@ -166,6 +166,8 @@
       "card_integration_pass_query": "Passing the ticket in the address needs param: the name of the parameter.",
       "card_integration_header_own": "This header belongs to the request itself and cannot be set here.",
       "card_integration_auth_needs": "The sign-in kind {{type}} needs {{what}}.",
+      "card_integration_renew_on": "renew_on lists each of the statuses {{statuses}} at most once.",
+      "card_integration_session_only": "{{what}} belongs to the sign-in kind session.",
       "card_integration_github": "Write the project as owner/name or as https://github.com/owner/name.",
       "card_integration_logo": "The logo is the name of a logo from the collection, or an image uploaded to nexdeck. A picture from the web is not allowed.",
       "import_unknown_document": "This is neither a card (nexdeck-card: 1) nor an integration (nexdeck: integration).",

@@ -36,6 +36,9 @@ FAILURES_BEFORE_PAUSE = 3
 PAUSE = timedelta(minutes=15)
 #: A ticket that was issued a moment ago and is refused at once is not one that ran out: no second sign-in for it.
 FRESH = timedelta(seconds=5)
+#: A ticket with a known lifetime is signed in for again this long before it runs out, and is never held for less than the minimum.
+RENEW_BEFORE = timedelta(seconds=60)
+LEAST_HELD = timedelta(seconds=30)
 #: The most a sign-in answer is read.
 SIGN_IN_AT_MOST = 256 * 1024
 #: The longest ticket taken, and the memory key of a connection's session.
@@ -78,6 +81,8 @@ class Held:
     fingerprint: str
     parts: Parts
     issued: datetime
+    #: When the sign-in is done again whatever the service says; ``None`` when the description names no lifetime.
+    expires: datetime | None = None
 
 
 @dataclass
@@ -88,6 +93,7 @@ class State:
     held: Held | None = None
     failures: int = 0
     paused_until: datetime | None = None
+    signins: int = 0
 
 
 def _state(ctx: Context) -> State:
@@ -154,6 +160,7 @@ class DefinedAdapter(Adapter):
         self.description = definition.description
         self.icon = definition.logo
         self.raw_session = definition.auth.type == "session"
+        self.raw_renew_on = tuple(definition.auth.renew_on or (401,))
         self.fields = self._fields()
         self._digest = hashlib.sha256(source.encode()).hexdigest()
 
@@ -223,6 +230,13 @@ class DefinedAdapter(Adapter):
             return {}, {auth.param: self._fill(auth.value, config)}, None
         return (await self._session(config, ctx)).parts
 
+    def raw_expired(self, response: httpx.Response) -> bool:
+        """A status the description lists in ``renew_on`` besides 401 and 403 (which the request itself turns into a refusal)."""
+        return self.raw_session and response.status_code in self.raw_renew_on and response.status_code not in (401, 403)
+
+    def raw_signins(self, ctx: Context) -> int:
+        return _state(ctx).signins
+
     def raw_accepted(self, ctx: Context) -> None:
         state = ctx.cache.get(STATE)
         if state is not None and state.held is not None:
@@ -256,13 +270,19 @@ class DefinedAdapter(Adapter):
         fingerprint = self._fingerprint(config)
         async with state.lock:
             held = state.held
-            if held is not None and held.fingerprint == fingerprint and not force and (stale is None or held.parts != stale):
+            if (
+                held is not None and held.fingerprint == fingerprint and not force and (stale is None or held.parts != stale)
+                and (held.expires is None or clock() < held.expires)
+            ):
                 return held
             if not force and state.paused_until is not None and clock() < state.paused_until:
                 raise SignInPaused(state.paused_until)
             state.held = None
-            ticket = await self._sign_in(config, ctx, state)
-            state.held = Held(fingerprint, self._passed(ticket, config), clock())
+            ticket, seconds = await self._sign_in(config, ctx, state)
+            issued = clock()
+            expires = None if seconds is None else issued + max(timedelta(seconds=seconds) - RENEW_BEFORE, LEAST_HELD)
+            state.held = Held(fingerprint, self._passed(ticket, config), issued, expires)
+            state.signins += 1
             if force:
                 state.failures = 0
                 state.paused_until = None
@@ -281,8 +301,8 @@ class DefinedAdapter(Adapter):
         assert how.param
         return {}, {how.param: ticket}, None
 
-    async def _sign_in(self, config: dict[str, Any], ctx: Context, state: State) -> str:
-        """The POST to the sign-in path, and the ticket in the answer.
+    async def _sign_in(self, config: dict[str, Any], ctx: Context, state: State) -> tuple[str, float | None]:
+        """The POST to the sign-in path, and the ticket in the answer, with the seconds it holds when the description says.
 
         What counts as a failed sign-in (three in a row pause it): the service refuses with a 4xx, or answers without a
         ticket or with a web page. A service that cannot be reached or fails with a 5xx is not refusing anybody.
@@ -331,7 +351,29 @@ class DefinedAdapter(Adapter):
                 code="sign_in_no_ticket",
                 hint="The sign-in worked but the answer does not hold the ticket where the description says it is.",
             )
-        return ticket
+        return ticket, self._lifetime_of(response, session.lifetime)
+
+    @staticmethod
+    def _lifetime_of(response: httpx.Response, lifetime: int | sch.LifetimeAt | None) -> float | None:
+        """Seconds a ticket holds: the number in the description, or the one in the sign-in answer (``expires_in``).
+
+        An answer without the number, or with one that is no use (zero, negative, not a number), is no lifetime: the ticket
+        is then renewed the way it is without one, when the service refuses it.
+        """
+        if lifetime is None or isinstance(lifetime, int):
+            return lifetime
+        try:
+            found = jmespath.search(lifetime.at, response.json())
+        except Exception:  # noqa: BLE001 - not JSON, or an expression that fits nothing: no lifetime
+            return None
+        if isinstance(found, str):
+            try:
+                found = float(found)
+            except ValueError:
+                return None
+        if isinstance(found, bool) or not isinstance(found, int | float) or not 0 < found <= sch.MAX_LIFETIME:
+            return None
+        return float(found)
 
     @staticmethod
     def _ticket_of(response: httpx.Response, where: sch.TicketAt) -> str | None:

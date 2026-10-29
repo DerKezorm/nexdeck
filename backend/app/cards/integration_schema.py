@@ -156,14 +156,40 @@ def body_texts(body: dict[str, Any], path: tuple[str, ...] = ()) -> list[tuple[t
     return found
 
 
+class LifetimeAt(Part):
+    """Where the sign-in answer says how many seconds the ticket holds (``expires_in``): a value of the JSON answer."""
+
+    from_: Literal["json"] = Field(alias="from")
+    at: Annotated[str, StringConstraints(min_length=1, max_length=200)]
+
+
+#: A ticket that is said to hold longer than a year is taken for a mistake.
+MAX_LIFETIME = 31_536_000
+#: The answers of a service that mean "the ticket ran out" besides the 401 it should say; ``renew_on`` picks among them.
+RENEW_ON = (401, 403, 419, 440, 500)
+Lifetime = Annotated[int, Field(ge=1, le=MAX_LIFETIME, strict=True)] | LifetimeAt
+
+
+def _renew_on_fits(value: list[int] | None) -> list[int] | None:
+    if value is None:
+        return value
+    if not value or len(set(value)) != len(value) or any(isinstance(one, bool) or one not in RENEW_ON for one in value):
+        raise PydanticCustomError(
+            "card_integration_renew_on", "renew_on lists each of the statuses {statuses} at most once.", {"statuses": ", ".join(map(str, RENEW_ON))}
+        )
+    return value
+
+
 class Session(Part):
-    """Sign in once, keep the ticket, sign in again when the service says 401."""
+    """Sign in once, keep the ticket, sign in again before it runs out (``lifetime``) or when the service refuses it (401)."""
 
     login: Path
     send: Literal["json", "form"] = "json"
     body: Body = Field(default_factory=dict)
     ticket: TicketAt
     pass_: PassOn = Field(alias="pass")
+    lifetime: Lifetime | None = None
+    renew_on: Annotated[list[Annotated[int, Field(strict=True)]], AfterValidator(_renew_on_fits)] | None = None
 
 
 class Auth(Part):
@@ -184,6 +210,8 @@ class Auth(Part):
     body: Body | None = None
     ticket: TicketAt | None = None
     pass_: PassOn | None = Field(default=None, alias="pass")
+    lifetime: Lifetime | None = None
+    renew_on: Annotated[list[Annotated[int, Field(strict=True)]], AfterValidator(_renew_on_fits)] | None = None
 
     @model_validator(mode="after")
     def _has_what_its_type_needs(self) -> Auth:
@@ -200,11 +228,18 @@ class Auth(Part):
                 raise PydanticCustomError("card_integration_auth_needs", "The sign-in type {type} needs {what}.", {"type": self.type, "what": shown})
         if self.header and self.header.lower() in OWN_HEADERS:
             raise PydanticCustomError("card_integration_header_own", "This header belongs to the request itself and cannot be set here.")
+        if self.type != "session":
+            for name in ("lifetime", "renew_on"):
+                if getattr(self, name) is not None:
+                    raise PydanticCustomError("card_integration_session_only", "{what} belongs to the sign-in type session.", {"what": name})
         return self
 
     def session(self) -> Session:
         assert self.login and self.ticket and self.pass_
-        return Session(login=self.login, send=self.send or "json", body=self.body or {}, ticket=self.ticket, **{"pass": self.pass_})
+        return Session(
+            login=self.login, send=self.send or "json", body=self.body or {}, ticket=self.ticket, lifetime=self.lifetime,
+            renew_on=self.renew_on, **{"pass": self.pass_},
+        )
 
 
 class Read(Part):

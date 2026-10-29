@@ -166,6 +166,8 @@
       "card_integration_pass_query": "Das Ticket in der Adresse mitzuschicken braucht param: den Namen des Parameters.",
       "card_integration_header_own": "Diese Kopfzeile gehört zur Anfrage selbst und lässt sich hier nicht setzen.",
       "card_integration_auth_needs": "Die Anmeldeart {{type}} braucht {{what}}.",
+      "card_integration_renew_on": "renew_on nennt jeden der Status {{statuses}} höchstens einmal.",
+      "card_integration_session_only": "{{what}} gehört zur Anmeldeart session.",
       "card_integration_github": "Schreibe das Projekt als owner/name oder als https://github.com/owner/name.",
       "card_integration_logo": "Das Logo ist der Name eines Logos aus der Sammlung oder ein nach nexdeck hochgeladenes Bild. Ein Bild aus dem Netz ist nicht erlaubt.",
       "import_unknown_document": "Das ist weder eine Karte (nexdeck-card: 1) noch eine Anbindung (nexdeck: integration).",

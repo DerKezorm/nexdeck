@@ -2219,6 +2219,15 @@ class Adapter:
     #: :func:`.rawread.ask` leaves renewing the session to :meth:`raw_renew` and never runs the kind's connection test.
     raw_session: bool = False
 
+    #: The statuses of an answer that make a kind with a session sign in again (and ask once more). Only 401 for all but an
+    #: own connection, whose description may name more (``renew_on``).
+    raw_renew_on: tuple[int, ...] = (401,)
+
+    def raw_signins(self, ctx: Context) -> int:
+        """How many times this connection signed in so far: a request that finds it higher after it was signed knows its
+        ticket is new, and a refusal of a new ticket is no reason to sign in a second time for the same fetch."""
+        return 0
+
     async def raw_signed(
         self, config: dict[str, Any], ctx: Context
     ) -> tuple[dict[str, str], dict[str, Any], tuple[str, str] | None] | None:

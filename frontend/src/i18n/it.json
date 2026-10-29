@@ -166,6 +166,8 @@
       "card_integration_pass_query": "Inviare il ticket nell'indirizzo richiede param: il nome del parametro.",
       "card_integration_header_own": "Questa intestazione appartiene alla richiesta stessa e non si può impostare qui.",
       "card_integration_auth_needs": "Il tipo di accesso {{type}} richiede {{what}}.",
+      "card_integration_renew_on": "renew_on elenca ciascuno degli stati {{statuses}} al massimo una volta.",
+      "card_integration_session_only": "{{what}} appartiene al tipo di accesso session.",
       "card_integration_github": "Scrivi il progetto come owner/name oppure come https://github.com/owner/name.",
       "card_integration_logo": "Il logo è il nome di un logo della raccolta o un'immagine caricata su nexdeck. Un'immagine dal web non è ammessa.",
       "import_unknown_document": "Non è né una scheda (nexdeck-card: 1) né un'integrazione (nexdeck: integration).",

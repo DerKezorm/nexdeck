@@ -121,6 +121,8 @@ def _semantic(definition: sch.IntegrationDefinition, lines: dict[Path, int], sav
             add("card_integration_pass_cookie", "Passing the ticket as a cookie needs name: the name of the cookie.", ("auth", "pass", "name"))
         if auth.ticket.from_ == "json" and auth.ticket.at:
             _expression(add, ("auth", "ticket", "at"), auth.ticket.at)
+        if isinstance(auth.lifetime, sch.LifetimeAt):
+            _expression(add, ("auth", "lifetime", "at"), auth.lifetime.at)
     if definition.version is not None:
         _expression(add, ("version", "at"), definition.version.at)
 
@@ -207,6 +209,9 @@ fields:
 #   session: login: /api/login  send: json  body: {username: "{username}", password: "{password}"}
 #            ticket: {from: json, at: accessToken}     # or {from: cookie, name: session}
 #            pass: {as: header, header: Authorization, value: "Bearer {ticket}"}   # or {as: cookie} or {as: query, param: sid}
+#            Optional: how long a ticket holds, so nexdeck signs in again a minute before it runs out (at least 30 seconds are kept):
+#            lifetime: 3600     # seconds, or {from: json, at: expires_in} for the number in the sign-in answer
+#            renew_on: [401, 500]   # the answers that also mean "signed out" (401, 403, 419, 440, 500; 401 when left out)
 auth:
   type: header
   header: Authorization
