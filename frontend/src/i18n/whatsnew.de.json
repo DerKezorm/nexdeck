@@ -1835,6 +1835,32 @@
         "Die Chronik zeigt keine Kartenzeilen eines Boards mehr, das du nicht öffnen darfst, wenn sich zwei Boards eine Anbindung teilen.",
         "Die Fußleiste der Glocke bricht im schmalen Fenster und auf dem Handy um, statt ihre Beschriftungen zu zerteilen."
       ]
+    },
+    "1.0.0": {
+      "lead": "nexdeck 1.0: Baue eigene Karten aus jedem Dienst, ohne Code, und teile sie im Kartenladen, oder nimm eine, die jemand anderes gebaut hat.",
+      "sections": [
+        {
+          "title": "Eigene Karten",
+          "body": "Wähle eine Verbindung, frag sie einmal und klick in ihrer Antwort die Werte an, die du willst. Die Karte zeigt sie als Zahl, mehrere Zahlen, Liste, Bilderwand oder frei aus zwölf Bausteinen, auf Wunsch mit Knöpfen. Der Editor zeigt eine Vorschau mit echten Daten, und eine YAML-Ansicht zeigt dieselbe Karte für Sonderfälle. Nur Admins bauen Karten; Nutzer sehen sie auf den Boards, die für sie freigegeben sind.",
+          "path": "System > Eigene Karten"
+        },
+        {
+          "title": "Eigene Anbindungen",
+          "body": "Für eine App, die nexdeck nicht kennt, beschreibst du Adresse, Formular und Anmeldung: Schlüssel, Benutzer und Passwort oder Sitzung. Karten lesen sie dann wie jede andere Verbindung, und sie kann zeigen, ob der Dienst läuft und welche Version er hat.",
+          "path": "System > Eigene Karten > Anbindungen"
+        },
+        {
+          "title": "Der Kartenladen",
+          "body": "Schalte ihn ein, um Karten anderer zu durchstöbern, eine mit deinen eigenen Daten anzusehen, bevor du sie nimmst, sie zu installieren und ihre Updates zu bekommen. Teile deine eigenen direkt aus nexdeck unter deinem GitHub-Namen, oder fang eine neue Karte mit einem der Beispiele an.",
+          "path": "System > Eigene Karten > Kartenladen"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Mit eingerichteter KI entwirft der Editor eine Karte aus einem Satz, ändert sie und übersetzt ihre Texte, und „Frag nexdeck“ legt einen Entwurf aus dem Chat an.",
+        "Eigene Karten und Anbindungen gehen als Datei hinaus, und ein Board-Export nimmt seine eigenen Karten mit.",
+        "Eine eigene Karte liest nur, fragt nur die Adresse ihrer Verbindung und bekommt nie deren Schlüssel."
+      ]
     }
   }
 }

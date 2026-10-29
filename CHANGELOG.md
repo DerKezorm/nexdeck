@@ -3,6 +3,27 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## 1.0.0 (2026-10-29)
+
+The first stable version. nexdeck now takes cards of your own, built without code, and shares them in the Card shop.
+
+### Added
+
+- **Custom cards.** An administrator builds a card of their own out of the answers of a service: pick a connection, ask it once, click the values you want in the tree of the answer, and the card shows them as a number, a few numbers, a list or a wall of pictures, with the same look, colours and rules as the built-in cards. Values can be filtered, sorted, counted, added up and formatted, and a rule colours a card or a row. Nothing in a card is code: a card is a definition that nexdeck checks, with a small closed language for sums and conditions. Everything lives under System, Custom cards, with the tabs Cards, Integrations, Card shop and My submissions. A card is placed like any other through Add widget, and it reaches users and guests only on a board that is shared with them. At most 200 custom cards.
+- **The card editor.** Steps from the source to the finished card, a probe that shows the real answer of the service as a tree, a preview with live data and with made-up data, and a YAML view that shows the same definition: a change on either side shows on the other, and whatever the editor cannot show stays in the YAML. Names and texts can carry five languages.
+- **Free cards from twelve blocks.** Rows, columns and dividers, text, values, badges, symbols and pictures, bars, sparklines and lists, and buttons, in four groups, arranged freely when none of the ready forms fits.
+- **Buttons on custom cards.** A card or each row of its list can carry buttons that act on the service, with blanks the user fills in, and and a button asks before it runs when it says so; a dangerous one is red and asks twice. Reading never acts: a request that would restart, delete or pause something is refused.
+- **Integrations of your own.** For an app nexdeck does not know, an administrator describes the connection: the address, the fields of the form, and how it signs in, with no sign-in, a key in a header or in the address, a user and password, or a session (sign in, keep the ticket, sign in again before it runs out or when the service turns it down). A connection test says what came back. An integration of your own can also say whether the service is up, read its version, show as an app tile and bring card templates of its own.
+- **Export and import.** A custom card or integration goes out as a file and comes back in on another nexdeck, and a board export carries the custom cards on it, so a board moves with everything it needs. A board file in `data/boards` brings its custom cards and integrations along.
+- **The Card shop.** Off until an administrator switches it on. It lists the cards and integrations others have shared in the [nexdeck Workshop](https://github.com/DerKezorm/nexdeck-workshop), by category, with pictures and thumbs, shows a card with your own data before you take it, says which connection and which rights it needs, and installs it. An installed card gets updates, with what changed in its rights, and a card that was removed from the shop keeps running and says so. With a GitHub sign-in you put your thumb on an entry.
+- **Share in the Card shop.** An administrator shares a card or integration straight from nexdeck, signed in to GitHub under their own name. It goes in as an issue in the Workshop, where GitHub Actions check it, render its picture and add it to the catalog; My submissions follows it. Demo data with something that looks like a key are refused, and nothing of the connections goes along.
+- **Start from an example.** A new card or integration can start from one of the examples of the Card shop, opened as a draft of your own: Server at a glance (Proxmox), Next episodes (Sonarr), Missing movies (Radarr), Recently added (Jellyfin), Active downloads (qBittorrent), Library (Immich), and integrations for Wallabag, Shiori and NocoDB.
+- **AI in the editor.** With an AI set up for the instance, the editor drafts a card from one sentence, changes it on request and translates its texts, and "Ask nexdeck" makes a draft from the chat. The AI only ever writes a definition, which is checked like any other; it never sees the keys of a connection.
+
+### Security
+
+- A custom card asks only the address of its connection, only with GET, follows no redirect, reads at most 2 MB, and every key, password or ticket of the connection is removed from what it gets before anything else sees it. A link built from a template keeps its scheme and host fixed.
+
 ## 0.52.0 (2026-10-29)
 
 ### Added

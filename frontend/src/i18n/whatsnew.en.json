@@ -1835,6 +1835,32 @@
         "The chronicle no longer lists the card lines of a board you may not open when two boards share a connection.",
         "The foot of the bell wraps on a narrow drawer and a phone instead of breaking its labels."
       ]
+    },
+    "1.0.0": {
+      "lead": "nexdeck 1.0: build cards of your own out of any service, without code, and share them in the Card shop, or take one somebody else made.",
+      "sections": [
+        {
+          "title": "Custom cards",
+          "body": "Pick a connection, ask it once and click the values you want in its answer. The card shows them as a number, a few numbers, a list, a wall of pictures or a free layout of twelve blocks, with buttons if you like. The editor shows a live preview, and a YAML view shows the same card for the special cases. Only administrators build cards; users see them on the boards shared with them.",
+          "path": "System > Custom cards"
+        },
+        {
+          "title": "Integrations of your own",
+          "body": "For an app nexdeck does not know, describe the address, the form and how it signs in: a key, a user and password or a session. Cards then read it like any other connection, and it can show whether the service is up and its version.",
+          "path": "System > Custom cards > Integrations"
+        },
+        {
+          "title": "The Card shop",
+          "body": "Switch it on to browse the cards others shared, see one with your own data before you take it, install it and get its updates. Share your own straight from nexdeck with your GitHub name, or start a new card from one of the examples.",
+          "path": "System > Custom cards > Card shop"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "With an AI set up, the editor drafts a card from one sentence, changes it and translates its texts, and Ask nexdeck makes a draft from the chat.",
+        "Custom cards and integrations go out as a file, and a board export takes the custom cards on it along.",
+        "A custom card only reads, asks only the address of its connection and never gets its keys."
+      ]
     }
   }
 }
