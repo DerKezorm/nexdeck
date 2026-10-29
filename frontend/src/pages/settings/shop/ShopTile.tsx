@@ -87,7 +87,7 @@ export function ShopTile({ entry, onOpen }: { entry: ShopEntry; onOpen?: (entry:
         </div>
         <div className="flex flex-wrap items-center gap-1.5">
           {hasDiscussion(entry) ? (
-            <ThumbButton entry={entry} thumb={thumb} onPress={() => void press()} tile />
+            <ThumbButton thumb={thumb} onPress={() => void press()} tile />
           ) : (
             <span className="inline-flex items-center gap-1 text-[12px] text-muted" role="img" aria-label={t('cards.shop.thumbs', { count: entry.thumbs })} title={t('cards.shop.thumbs', { count: entry.thumbs })}>
               <ThumbsUp size={12} aria-hidden="true" />

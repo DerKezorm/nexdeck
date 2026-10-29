@@ -100,7 +100,7 @@ export function ShopDetailPage({
             <Fact label={t('cards.shop.facts.author')}>{entry.author.login}</Fact>
             <Fact label={t('cards.shop.facts.thumbs')}>
               {hasDiscussion(entry) ? (
-                <ThumbButton entry={entry} thumb={thumb} onPress={() => void thumb.toggle()} />
+                <ThumbButton thumb={thumb} onPress={() => void thumb.toggle()} />
               ) : (
                 <span className="inline-flex items-center gap-1">
                   <ThumbsUp size={13} aria-hidden="true" /> {entry.thumbs}

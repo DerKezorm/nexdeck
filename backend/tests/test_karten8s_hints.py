@@ -60,7 +60,7 @@ def test_karten8s_hint_a_an_id_of_a_discussion_of_the_workshop_still_gets_it(sho
     named = hub.open_discussion()
     hub.publish(card_text(), author=str(ME), discussion=named)
     sign_in(shop, hub, moment, hub.person("someone", ME))
-    assert shop.put(THUMB, json={"on": True}, headers=CSRF).json() == {"on": True}
+    assert shop.put(THUMB, json={"on": True}, headers=CSRF).json() == {"on": True, "count": 1}
     assert hub.discussions[named["id"]]["thumbs"] == {"someone"}
 
 

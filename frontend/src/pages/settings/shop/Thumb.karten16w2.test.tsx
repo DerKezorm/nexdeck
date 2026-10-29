@@ -56,6 +56,21 @@ describe('the detail page', () => {
     expect(within(page).getByRole('link', { name: 'Rate on GitHub' })).toHaveAttribute('target', '_blank')
   })
 
+  it('karten16w2_live: signed in, the number is the one GitHub counts now, after a change too, and the once-a-day sentence stays away', async () => {
+    world.given[`GET ${THUMB}`] = { status: 200, body: { signed_in: true, on: false, count: 3 } }
+    world.given[`PUT ${THUMB}`] = (asked) => ({ status: 200, body: { on: asked.body?.on, count: asked.body?.on ? 4 : 3 } })
+    const page = await openDetail()
+    const thumb = await within(page).findByRole('button', { name: '3 thumbs up' })
+    await userEvent.click(thumb)
+    await waitFor(() => expect(thumb).toHaveAttribute('aria-pressed', 'true'))
+    expect(thumb).toHaveTextContent('4')
+    expect(thumb).toHaveAccessibleName('4 thumbs up')
+    expect(within(page).queryByTestId('thumb-counted')).toBeNull()
+    await userEvent.click(thumb)
+    await waitFor(() => expect(thumb).toHaveTextContent('3'))
+    expect(within(page).queryByTestId('thumb-counted')).toBeNull()
+  })
+
   it('karten16w2_detail: when the thumb is already up the button shows it pressed', async () => {
     world.given[`GET ${THUMB}`] = { status: 200, body: { signed_in: true, on: true } }
     const page = await openDetail()
@@ -146,6 +161,19 @@ describe('the tile', () => {
     expect(calls('GET', THUMB)).toHaveLength(0)
     expect(within(tile).getByTestId('thumb-counted')).toBeInTheDocument()
     expect(screen.queryByTestId('shop-detail')).toBeNull()
+  })
+
+  it('karten16w2_live: the tile shows the number GitHub answers to the thumb at once, without reading the thumb first', async () => {
+    reset([entry({ discussion: DISCUSSION, thumbs: 0 })], STATE_ON)
+    world.given[`PUT ${THUMB}`] = { status: 200, body: { on: true, count: 1 } }
+    renderWith(<ShopTab />)
+    const tile = await screen.findByTestId('shop-tile-123/queue-size')
+    const thumb = within(tile).getByRole('button', { name: '0 thumbs up' })
+    await userEvent.click(thumb)
+    await waitFor(() => expect(thumb).toHaveTextContent('1'))
+    expect(thumb).toHaveAttribute('aria-pressed', 'true')
+    expect(calls('GET', THUMB)).toHaveLength(0)
+    expect(within(tile).queryByTestId('thumb-counted')).toBeNull()
   })
 
   it('karten16w2_tile: nobody signed in: the thumb opens the detail page', async () => {

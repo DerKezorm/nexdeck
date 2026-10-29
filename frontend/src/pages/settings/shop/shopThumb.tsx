@@ -12,6 +12,8 @@ import { GithubSignIn, signInFailure } from '../share/GithubSignIn'
 export interface ThumbState {
   signed_in: boolean
   on: boolean | null
+  /** How many thumbs up GitHub counts now; missing when GitHub was not asked or did not say. */
+  count?: number | null
 }
 
 export const thumbKey = (id: string) => ['workshop-thumb', id]
@@ -24,8 +26,9 @@ export function hasDiscussion(entry: ShopEntry): boolean {
 
 /**
  * The thumb of an entry in nexdeck (W2): reading whether the administrator has put his thumb up (the page of one entry
- * only, never the tiles of the list) and setting it in his own GitHub name. The number that is shown stays the catalog's,
- * which the Workshop counts once a day; after a change the page says so.
+ * only, never the tiles of the list) and setting it in his own GitHub name. The number that is shown is the one GitHub
+ * counts now when it was asked (reading, or the answer to a change), else the catalog's, which the Workshop counts once a
+ * day; after a change without a number from GitHub the page says so.
  */
 export function useThumb(entry: ShopEntry, read: boolean) {
   const { t } = useTranslation()
@@ -46,6 +49,7 @@ export function useThumb(entry: ShopEntry, read: boolean) {
 
   const readError = known.error instanceof ApiError && known.error.code === 'github_no_discussions' ? known.error : null
   const on = known.data?.on === true
+  const live = known.data?.count
   const signedOut = known.data?.signed_in === false
 
   const words = (failure: unknown) => (failure instanceof ApiError && failure.code === 'github_no_discussions' ? t('cards.shop.thumb.noRight') : signInFailure(t, failure))
@@ -55,9 +59,9 @@ export function useThumb(entry: ShopEntry, read: boolean) {
     setBusy(true)
     setError('')
     try {
-      const answer = await put<{ on: boolean }>(thumbPath(entry), { on: next })
-      queryClient.setQueryData<ThumbState>(thumbKey(entry.id), { signed_in: true, on: answer.on })
-      setCounted(true)
+      const answer = await put<{ on: boolean; count?: number | null }>(thumbPath(entry), { on: next })
+      queryClient.setQueryData<ThumbState>(thumbKey(entry.id), { signed_in: true, on: answer.on, count: answer.count })
+      setCounted(typeof answer.count !== 'number')
       setSignIn(false)
       return 'ok'
     } catch (failure) {
@@ -75,6 +79,8 @@ export function useThumb(entry: ShopEntry, read: boolean) {
 
   return {
     on,
+    /** The number to show: GitHub's when it was asked, else the catalog's. */
+    count: typeof live === 'number' ? live : entry.thumbs,
     busy,
     counted,
     signIn,
@@ -101,9 +107,9 @@ export function useThumb(entry: ShopEntry, read: boolean) {
 }
 
 /** The thumb as a button with the number; `aria-pressed` says whether this administrator has put his up. */
-export function ThumbButton({ entry, thumb, onPress, tile }: { entry: ShopEntry; thumb: ReturnType<typeof useThumb>; onPress: () => void; tile?: boolean }) {
+export function ThumbButton({ thumb, onPress, tile }: { thumb: ReturnType<typeof useThumb>; onPress: () => void; tile?: boolean }) {
   const { t } = useTranslation()
-  const label = t('cards.shop.thumbs', { count: entry.thumbs })
+  const label = t('cards.shop.thumbs', { count: thumb.count })
   return (
     <button
       type="button"
@@ -115,7 +121,7 @@ export function ThumbButton({ entry, thumb, onPress, tile }: { entry: ShopEntry;
       className={`inline-flex items-center gap-1 rounded ${tile ? 'relative z-10 text-[12px] text-muted hover:text-accent' : 'hover:text-accent'} ${thumb.on ? 'text-accent' : ''} focus-visible:outline-2 focus-visible:outline-accent`}
     >
       <ThumbsUp size={tile ? 12 : 13} aria-hidden="true" fill={thumb.on ? 'currentColor' : 'none'} />
-      {entry.thumbs}
+      {thumb.count}
     </button>
   )
 }

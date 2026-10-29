@@ -140,7 +140,8 @@ class Hub(GitHub):
             if found is None:
                 return httpx.Response(200, json={"data": None, "errors": [{"type": "NOT_FOUND", "message": "Could not resolve to a node"}]})
             (found["thumbs"].add if "addReaction" in query else found["thumbs"].discard)(who["login"])
-            return httpx.Response(200, json={"data": {"addReaction" if "addReaction" in query else "removeReaction": {"reaction": {"content": "THUMBS_UP"}}}})
+            groups = [{"content": "THUMBS_UP", "reactors": {"totalCount": len(found["thumbs"])}}, {"content": "HEART", "reactors": {"totalCount": 2}}]
+            return httpx.Response(200, json={"data": {"addReaction" if "addReaction" in query else "removeReaction": {"reactionGroups": groups}}})
         if "resource(" in query:
             # As GitHub: a discussion is no UniformResourceLocatable, the whole question is refused.
             return httpx.Response(200, json={"errors": [{"extensions": {"code": "cannotSpreadFragment"}, "message": "Fragment on Discussion can't be spread inside UniformResourceLocatable"}]})
@@ -155,8 +156,8 @@ class Hub(GitHub):
         if node is None:
             return httpx.Response(200, json={"data": {"node": None}})
         groups = [
-            {"content": "THUMBS_UP", "viewerHasReacted": who["login"] in self.discussions[node]["thumbs"]},
-            {"content": "HEART", "viewerHasReacted": False},
+            {"content": "THUMBS_UP", "viewerHasReacted": who["login"] in self.discussions[node]["thumbs"], "reactors": {"totalCount": len(self.discussions[node]["thumbs"])}},
+            {"content": "HEART", "viewerHasReacted": False, "reactors": {"totalCount": 2}},
         ]
         home = "/".join(self.discussions[node]["url"].split("/")[3:5])
         found = {"id": node, "repository": {"nameWithOwner": home}, "reactionGroups": groups}

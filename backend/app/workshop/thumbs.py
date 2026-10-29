@@ -28,15 +28,15 @@ CONTENT = "THUMBS_UP"
 NO_DISCUSSIONS = "The Workshop app may not react to discussions yet. Rate it on GitHub instead."
 
 #: ⚠️ With the repository: a catalog may name the id of any discussion, and the thumb goes only on one of the Workshop.
-READ = "query($id: ID!) { node(id: $id) { ... on Discussion { id repository { nameWithOwner } reactionGroups { content viewerHasReacted } } } }"
+READ = "query($id: ID!) { node(id: $id) { ... on Discussion { id repository { nameWithOwner } reactionGroups { content viewerHasReacted reactors { totalCount } } } } }"
 #: For a catalog that names the address of the discussion and not its id. ⚠️ Not ``resource(url:)``: a discussion is no
 #: ``UniformResourceLocatable``, and GitHub refuses the whole question.
 READ_BY_NUMBER = (
     "query($owner: String!, $name: String!, $number: Int!) { repository(owner: $owner, name: $name) "
-    "{ discussion(number: $number) { id repository { nameWithOwner } reactionGroups { content viewerHasReacted } } } }"
+    "{ discussion(number: $number) { id repository { nameWithOwner } reactionGroups { content viewerHasReacted reactors { totalCount } } } } }"
 )
-ADD = "mutation($id: ID!) { addReaction(input: {subjectId: $id, content: THUMBS_UP}) { reaction { content } } }"
-REMOVE = "mutation($id: ID!) { removeReaction(input: {subjectId: $id, content: THUMBS_UP}) { reaction { content } } }"
+ADD = "mutation($id: ID!) { addReaction(input: {subjectId: $id, content: THUMBS_UP}) { reactionGroups { content reactors { totalCount } } } }"
+REMOVE = "mutation($id: ID!) { removeReaction(input: {subjectId: $id, content: THUMBS_UP}) { reactionGroups { content reactors { totalCount } } } }"
 
 _locks: dict[tuple[int, str], asyncio.Lock] = {}
 #: Locks that nobody holds are dropped once there are this many.
@@ -133,8 +133,17 @@ async def _look(db: Session, user: User, named: tuple[str, str], repo: str) -> d
     return found
 
 
+def _count(groups: Any) -> int | None:
+    """How many thumbs up GitHub counts on the discussion now; none when the answer does not say."""
+    for one in groups if isinstance(groups, list) else []:
+        if isinstance(one, dict) and one.get("content") == CONTENT:
+            total = (one.get("reactors") or {}).get("totalCount")
+            return total if isinstance(total, int) and total >= 0 else None
+    return None
+
+
 async def read(db: Session, user: User, entry: catalog.Entry, repo: str) -> dict[str, Any]:
-    """Whether this administrator is signed in and has put his thumb on the entry. GitHub is asked only when he is signed in and the entry has a discussion."""
+    """Whether this administrator is signed in and has put his thumb on the entry, and the number GitHub counts now (``count``). GitHub is asked only when he is signed in and the entry has a discussion."""
     if not github_login.status(db, user.id)["signed_in"]:
         return {"signed_in": False, "on": None}
     named = target(entry, repo)
@@ -150,11 +159,11 @@ async def read(db: Session, user: User, entry: catalog.Entry, repo: str) -> dict
         return {"signed_in": True, "on": None}
     groups = found.get("reactionGroups")
     on = any(isinstance(one, dict) and one.get("content") == CONTENT and one.get("viewerHasReacted") is True for one in groups) if isinstance(groups, list) else False
-    return {"signed_in": True, "on": on}
+    return {"signed_in": True, "on": on, "count": _count(groups)}
 
 
 async def put(db: Session, user: User, entry: catalog.Entry, repo: str, on: bool) -> dict[str, Any]:
-    """Set (or take away) the thumb of this administrator. Asked twice at once, the second waits for the first and then does the same again, which GitHub takes as it is."""
+    """Set (or take away) the thumb of this administrator; ``count`` is the number GitHub counts after it. Asked twice at once, the second waits for the first and then does the same again, which GitHub takes as it is."""
     named = target(entry, repo)
     if named is None:
         raise GithubError("no_discussion", "This entry has no discussion on GitHub to react to.", 409)
@@ -162,6 +171,7 @@ async def put(db: Session, user: User, entry: catalog.Entry, repo: str, on: bool
         found = await _look(db, user, named, repo)
         if found is None:
             raise GithubError("no_discussion", "This entry has no discussion on GitHub to react to.", 409)
-        await _ask(db, user, ADD if on else REMOVE, {"id": str(found["id"])})
+        done = await _ask(db, user, ADD if on else REMOVE, {"id": str(found["id"])})
     logger.info("%s %s the thumb on %s.", user.username, "set" if on else "took away", entry.id)
-    return {"on": on}
+    answer = done.get("addReaction" if on else "removeReaction")
+    return {"on": on, "count": _count(answer.get("reactionGroups") if isinstance(answer, dict) else None)}

@@ -88,15 +88,15 @@ def test_karten16w2_the_thumb_is_set_read_and_taken_away_with_the_token_of_the_a
     named = hub.open_discussion()
     hub.publish(card_text(), discussion=named)
     sign_in(shop, hub, moment, hub.person("someone", 4242))
-    assert shop.get(THUMB).json() == {"signed_in": True, "on": False}
-    assert shop.put(THUMB, json={"on": True}, headers=CSRF).json() == {"on": True}
+    assert shop.get(THUMB).json() == {"signed_in": True, "on": False, "count": 0}
+    assert shop.put(THUMB, json={"on": True}, headers=CSRF).json() == {"on": True, "count": 1}
     assert hub.discussions[named["id"]]["thumbs"] == {"someone"}
-    assert shop.get(THUMB).json() == {"signed_in": True, "on": True}
-    assert shop.put(THUMB, json={"on": True}, headers=CSRF).json() == {"on": True}, "setting it again changes nothing"
+    assert shop.get(THUMB).json() == {"signed_in": True, "on": True, "count": 1}
+    assert shop.put(THUMB, json={"on": True}, headers=CSRF).json() == {"on": True, "count": 1}, "setting it again changes nothing"
     assert hub.discussions[named["id"]]["thumbs"] == {"someone"}
-    assert shop.put(THUMB, json={"on": False}, headers=CSRF).json() == {"on": False}
+    assert shop.put(THUMB, json={"on": False}, headers=CSRF).json() == {"on": False, "count": 0}
     assert hub.discussions[named["id"]]["thumbs"] == set()
-    assert shop.get(THUMB).json() == {"signed_in": True, "on": False}
+    assert shop.get(THUMB).json() == {"signed_in": True, "on": False, "count": 0}
     token = next(iter(hub.tokens))
     assert graphql(hub) and all(one["token"] == token for one in graphql(hub)), "never the key of the shop"
     assert {one["variables"]["id"] for one in graphql(hub)} == {named["id"]}
@@ -106,10 +106,10 @@ def test_karten16w2_a_catalog_that_names_only_the_address_is_looked_up_by_it(sho
     named = hub.open_discussion("D_kwDOother9", 9)
     hub.publish(card_text(), discussion=named["url"])
     sign_in(shop, hub, moment, hub.person("someone", 4242))
-    assert shop.get(THUMB).json() == {"signed_in": True, "on": False}
-    assert shop.put(THUMB, json={"on": True}, headers=CSRF).json() == {"on": True}
+    assert shop.get(THUMB).json() == {"signed_in": True, "on": False, "count": 0}
+    assert shop.put(THUMB, json={"on": True}, headers=CSRF).json() == {"on": True, "count": 1}
     assert hub.discussions["D_kwDOother9"]["thumbs"] == {"someone"}
-    assert shop.get(THUMB).json() == {"signed_in": True, "on": True}
+    assert shop.get(THUMB).json() == {"signed_in": True, "on": True, "count": 1}
     # The entry as shown keeps the address, whichever way the catalog names it.
     assert shop.get(f"{BASE}/entries/{ENTRY}").json()["discussion"] == named["url"]
 
@@ -146,7 +146,7 @@ def test_karten16w2_a_subject_id_in_the_request_is_never_used(shop: TestClient, 
     hub.publish(card_text(), discussion=named)
     sign_in(shop, hub, moment, hub.person("someone", 4242))
     put = shop.put(THUMB, json={"on": True, "subjectId": stranger["id"], "id": stranger["id"], "discussion": stranger}, headers=CSRF)
-    assert put.status_code == 200 and put.json() == {"on": True}
+    assert put.status_code == 200 and put.json() == {"on": True, "count": 1}
     assert hub.discussions[stranger["id"]]["thumbs"] == set()
     assert hub.discussions[named["id"]]["thumbs"] == {"someone"}
     assert [one["variables"] for one in graphql(hub)] == [{"id": named["id"]}] * 2, "looked at, then the thumb set"
@@ -167,7 +167,7 @@ def test_karten16w2_an_administrator_never_uses_the_sign_in_of_another(shop: Tes
     assert shop.put(THUMB, json={"on": True}, headers=CSRF).status_code == 200
     assert hub.discussions[named["id"]]["thumbs"] == {"second-account"}
     login(shop, ADMIN["username"], ADMIN["password"])
-    assert shop.get(THUMB).json() == {"signed_in": True, "on": False}, "the first one has no thumb of his own there"
+    assert shop.get(THUMB).json() == {"signed_in": True, "on": False, "count": 1}, "the first one has no thumb of his own there, and counts the one of the second"
     assert {one["login"] for one in graphql(hub)} == {"first", "second-account"}
 
 
