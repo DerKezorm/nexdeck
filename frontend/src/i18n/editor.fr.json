@@ -4,6 +4,28 @@
       "gone": "Ce brouillon du chat n'existe plus. Les brouillons restent aussi longtemps que leur conversation, 30 jours au plus. Tu commences avec une nouvelle carte.",
       "failed": "Le brouillon du chat n'a pas pu être chargé. Tu commences avec une nouvelle carte."
     },
+    "examples": {
+      "bar": {
+        "card": "Commencez ci-dessous avec une carte vide ou avec un exemple.",
+        "integration": "Le modèle standard se trouve ci-dessous. Vous pouvez aussi commencer avec un exemple."
+      },
+      "button": "Commencer avec un exemple",
+      "title": "Commencer avec un exemple",
+      "lead": {
+        "card": "Un exemple s'ouvre ici comme un nouveau brouillon à vous. Rien n'est installé ni enregistré tant que vous n'enregistrez pas.",
+        "integration": "Un exemple s'ouvre ici comme un nouveau brouillon à vous. Rien n'est enregistré tant que vous n'enregistrez pas."
+      },
+      "offLead": "Les exemples viennent du Card shop. Activez-le pour les voir.",
+      "turnOn": "Activer le Card shop",
+      "use": "Commencer avec celui-ci",
+      "noConnection": "Vous n'avez pas encore de connexion que cette carte puisse lire. Vous pouvez quand même commencer avec elle et en créer une plus tard.",
+      "none": {
+        "card": "Le Card shop n'a pas de carte en exemple pour le moment.",
+        "integration": "Le Card shop n'a pas de connexion en exemple pour le moment."
+      },
+      "failed": "Les exemples n'ont pas pu être chargés depuis le Card shop.",
+      "pickFailed": "Cet exemple n'a pas pu être ouvert : {{why}}"
+    },
     "ai": {
       "button": "Demander à l'IA",
       "title": "Demander à l'IA",

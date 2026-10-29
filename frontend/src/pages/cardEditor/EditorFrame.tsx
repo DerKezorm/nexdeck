@@ -11,6 +11,7 @@ import { resendIssue, resendNumber } from '../settings/share/resend'
 import { AdjustedBlock } from './AdjustedBlock'
 import { useCardAi } from './ai'
 import { AiButton, AiPanel, useAiReady } from './AiPanel'
+import { ExampleStart, withShortName, type Example } from './ExampleStart'
 import { dropDraft, writeDraft, type CardDraft } from './draft'
 import { GuidedWay } from './guided/GuidedWay'
 import { Preview } from './Preview'
@@ -163,6 +164,12 @@ export function EditorFrame({ offer, onOfferDone }: { offer: CardDraft | null; o
     onOfferDone()
   }
 
+  // An example opens as a new draft with a short name of its own; nothing is saved before the administrator saves (KARTEN-19 AC-4).
+  const startFrom = (example: Example) => {
+    useCardEditor.getState().open({ slug: null, text: withShortName(example.text, 'slug', example.slug), base: null, saved: null })
+    useCardEditor.setState({ guidedStep: 'finish' })
+  }
+
   const Step = STEP_PAGES[step]
   // A new card in the guided way is saved once it has something to show and a name, like the mock-up; the other views
   // leave that to the server's check.
@@ -216,6 +223,8 @@ export function EditorFrame({ offer, onOfferDone }: { offer: CardDraft | null; o
 
       <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 grid gap-4 min-w-0">
         {aiReady && aiOpen && <AiPanel />}
+
+        {slug === null && text === NEW_CARD && !offer && <ExampleStart kind="card" onPick={startFrom} />}
 
         {offer && (
           <div className="rounded-xl border border-accent/40 px-3 py-2 flex flex-wrap items-center gap-2" role="status">

@@ -91,6 +91,8 @@ export interface ShopEntry {
   updated_at: string
   license: string | null
   removed: ShopRemoved | null
+  /** The Workshop holds this entry up as an example to start from in the editor (KARTEN-19 AC-4). */
+  starter?: boolean
   /** nexdeck here is older than `min_nexdeck` (EC-2). */
   needs_newer: boolean
   /** At least one connection of a kind in `requires` exists here (the filter "Fits my connections"). */

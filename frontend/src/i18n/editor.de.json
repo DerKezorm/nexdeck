@@ -4,6 +4,28 @@
       "gone": "Dieser Entwurf aus dem Chat ist nicht mehr da. Entwürfe bleiben so lange wie ihre Unterhaltung, höchstens 30 Tage. Du beginnst mit einer neuen Karte.",
       "failed": "Der Entwurf aus dem Chat konnte nicht geladen werden. Du beginnst mit einer neuen Karte."
     },
+    "examples": {
+      "bar": {
+        "card": "Beginne unten mit einer leeren Karte oder mit einem Beispiel.",
+        "integration": "Unten steht die Standardvorlage. Du kannst auch mit einem Beispiel beginnen."
+      },
+      "button": "Mit einem Beispiel beginnen",
+      "title": "Mit einem Beispiel beginnen",
+      "lead": {
+        "card": "Ein Beispiel öffnet sich hier als neuer, eigener Entwurf. Es wird nichts installiert oder gespeichert, bis du speicherst.",
+        "integration": "Ein Beispiel öffnet sich hier als neuer, eigener Entwurf. Es wird nichts gespeichert, bis du speicherst."
+      },
+      "offLead": "Beispiele kommen aus dem Card shop. Schalte ihn ein, um sie zu sehen.",
+      "turnOn": "Card shop einschalten",
+      "use": "Hiermit beginnen",
+      "noConnection": "Es gibt noch keine Anbindung, aus der diese Karte lesen kann. Du kannst trotzdem damit beginnen und später eine anlegen.",
+      "none": {
+        "card": "Der Card shop hat gerade keine Karten als Beispiel.",
+        "integration": "Der Card shop hat gerade keine Anbindungen als Beispiel."
+      },
+      "failed": "Die Beispiele konnten nicht aus dem Card shop geladen werden.",
+      "pickFailed": "Dieses Beispiel ließ sich nicht öffnen: {{why}}"
+    },
     "ai": {
       "button": "KI fragen",
       "title": "KI fragen",

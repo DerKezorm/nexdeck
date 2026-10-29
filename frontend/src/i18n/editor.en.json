@@ -4,6 +4,28 @@
       "gone": "This draft of the chat is gone. Drafts stay as long as their conversation, 30 days at most. You start with a new card.",
       "failed": "The draft of the chat could not be loaded. You start with a new card."
     },
+    "examples": {
+      "bar": {
+        "card": "Begin below with an empty card, or take an example.",
+        "integration": "Below is the standard template. You can also begin with an example."
+      },
+      "button": "Start from an example",
+      "title": "Start from an example",
+      "lead": {
+        "card": "An example opens here as a new draft of your own. Nothing is installed or saved until you save it.",
+        "integration": "An example opens here as a new draft of your own. Nothing is saved until you save it."
+      },
+      "offLead": "Examples come from the Card shop. Turn it on to see them.",
+      "turnOn": "Turn on the Card shop",
+      "use": "Start from this",
+      "noConnection": "You have no connection this card can read from yet. You can start from it anyway and add one later.",
+      "none": {
+        "card": "The Card shop has no card examples right now.",
+        "integration": "The Card shop has no connection examples right now."
+      },
+      "failed": "The examples could not be loaded from the Card shop.",
+      "pickFailed": "This example could not be opened: {{why}}"
+    },
     "ai": {
       "button": "Ask AI",
       "title": "Ask AI",

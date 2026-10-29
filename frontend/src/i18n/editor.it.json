@@ -4,6 +4,28 @@
       "gone": "Questa bozza della chat non c'è più. Le bozze restano finché dura la loro conversazione, al massimo 30 giorni. Parti con una scheda nuova.",
       "failed": "Non è stato possibile caricare la bozza della chat. Parti con una scheda nuova."
     },
+    "examples": {
+      "bar": {
+        "card": "Inizia qui sotto con una carta vuota o con un esempio.",
+        "integration": "Qui sotto c'è il modello standard. Puoi anche iniziare da un esempio."
+      },
+      "button": "Inizia da un esempio",
+      "title": "Inizia da un esempio",
+      "lead": {
+        "card": "Un esempio si apre qui come una nuova bozza tutta tua. Non viene installato né salvato nulla finché non salvi.",
+        "integration": "Un esempio si apre qui come una nuova bozza tutta tua. Non viene salvato nulla finché non salvi."
+      },
+      "offLead": "Gli esempi arrivano dal Card shop. Attivalo per vederli.",
+      "turnOn": "Attiva il Card shop",
+      "use": "Inizia da questo",
+      "noConnection": "Non hai ancora una connessione da cui questa carta possa leggere. Puoi comunque iniziare da qui e crearne una più tardi.",
+      "none": {
+        "card": "Al momento il Card shop non ha carte di esempio.",
+        "integration": "Al momento il Card shop non ha connessioni di esempio."
+      },
+      "failed": "Non è stato possibile caricare gli esempi dal Card shop.",
+      "pickFailed": "Non è stato possibile aprire questo esempio: {{why}}"
+    },
     "ai": {
       "button": "Chiedi all'IA",
       "title": "Chiedi all'IA",

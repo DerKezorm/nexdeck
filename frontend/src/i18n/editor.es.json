@@ -4,6 +4,28 @@
       "gone": "Este borrador del chat ya no existe. Los borradores duran lo que su conversación, 30 días como máximo. Empiezas con una tarjeta nueva.",
       "failed": "No se pudo cargar el borrador del chat. Empiezas con una tarjeta nueva."
     },
+    "examples": {
+      "bar": {
+        "card": "Empieza abajo con una tarjeta vacía o con un ejemplo.",
+        "integration": "Abajo está la plantilla estándar. También puedes empezar con un ejemplo."
+      },
+      "button": "Empezar con un ejemplo",
+      "title": "Empezar con un ejemplo",
+      "lead": {
+        "card": "Un ejemplo se abre aquí como un borrador nuevo y propio. No se instala ni se guarda nada hasta que lo guardes.",
+        "integration": "Un ejemplo se abre aquí como un borrador nuevo y propio. No se guarda nada hasta que lo guardes."
+      },
+      "offLead": "Los ejemplos vienen del Card shop. Actívalo para verlos.",
+      "turnOn": "Activar el Card shop",
+      "use": "Empezar con este",
+      "noConnection": "Todavía no tienes ninguna conexión de la que esta tarjeta pueda leer. Puedes empezar igualmente y crear una más tarde.",
+      "none": {
+        "card": "Ahora mismo el Card shop no tiene tarjetas de ejemplo.",
+        "integration": "Ahora mismo el Card shop no tiene conexiones de ejemplo."
+      },
+      "failed": "No se pudieron cargar los ejemplos del Card shop.",
+      "pickFailed": "No se pudo abrir este ejemplo: {{why}}"
+    },
     "ai": {
       "button": "Preguntar a la IA",
       "title": "Preguntar a la IA",

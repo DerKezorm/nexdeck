@@ -7,6 +7,7 @@ import { ApiError, get, post, serverUrl } from '../../api/client'
 import { Confirm, Dialog, Spinner, Toast } from '../../components/ui'
 import { readAt } from '../../lib/cardDocument'
 import type { CardProblem } from '../../lib/customCards'
+import { ExampleStart, withShortName, type Example } from '../cardEditor/ExampleStart'
 import { useLeaveGuard } from '../cardEditor/useLeaveGuard'
 import { localProblemText, serverProblemText } from '../cardEditor/problems'
 import { dropDraft, writeDraft, type IntegrationDraft } from './draft'
@@ -154,6 +155,12 @@ export function IntegrationFrame({ offer, onOfferDone }: { offer: IntegrationDra
     onOfferDone()
   }
 
+  // An example opens as a new draft with a short name of its own; nothing is saved before the administrator saves (KARTEN-19 AC-4).
+  const startFrom = (example: Example) => {
+    const saved = useIntegrationEditor.getState().saved
+    useIntegrationEditor.getState().open({ short: null, text: withShortName(example.text, 'short', example.slug), base: null, saved })
+  }
+
   const canSave = card !== null && !busy && (dirty || short === null)
 
   return (
@@ -191,6 +198,8 @@ export function IntegrationFrame({ offer, onOfferDone }: { offer: IntegrationDra
       </div>
 
       <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 grid gap-4 min-w-0">
+        {short === null && !dirty && !offer && <ExampleStart kind="integration" onPick={startFrom} />}
+
         {offer && (
           <div className="rounded-xl border border-accent/40 px-3 py-2 flex flex-wrap items-center gap-2" role="status">
             <div className="min-w-0 flex-1 basis-60">
