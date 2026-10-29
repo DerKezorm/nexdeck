@@ -1875,7 +1875,8 @@
       "small": [
         "Years show as 2005, not 2,005, on every custom card.",
         "The step Data offers only paths a card can read; paths that need a window of dates are gone.",
-        "The hint under a failure of a custom card is in your language, and the selection in the YAML editors is readable in the dark."
+        "The hint under a failure of a custom card is in your language, and the selection in the YAML editors is readable in the dark.",
+        "The look's own CSS is checked the way a browser reads it, so no hidden address in it fetches from elsewhere."
       ]
     }
   }

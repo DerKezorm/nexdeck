@@ -14,6 +14,10 @@ project uses semantic versioning.
 - **The step Data offers only paths a card can read.** Paths that the built-in cards ask only with a window of dates (nexcrate's calendar answered 422 without one) and Prometheus text are no longer offered.
 - **Readable in every language.** The hint under a failure of a custom card is translated, the selection in the YAML editors is readable in the dark theme, and the note under a proposal says that the tick for sample values is used up with the request it went with.
 
+### Security
+
+- **The style sheet of the look is read the way a browser reads it.** The check for the administrator's own CSS looked at the text, so `\75 rl(https://…)`, which a browser reads as `url(`, and `image-set("https://…")` or `src("https://…")` went through and could have fetched from a foreign address for everyone who opens a board. The sheet is now taken apart into tokens with CSS escapes decoded, and every address in it, in `url()`, `src()`, the image functions and `@import`, has to be a `data:` address written out, not one handed over by `var()`, `env()` or `attr()`. Sheets that fetch nothing are kept as they were.
+
 ## 1.0.0 (2026-10-29)
 
 The first stable version. nexdeck now takes cards of your own, built without code, and shares them in the Card shop.

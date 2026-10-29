@@ -1875,7 +1875,8 @@
       "small": [
         "Jahreszahlen stehen auf jeder eigenen Karte als 2005, nicht als 2.005.",
         "Der Schritt „Daten“ bietet nur noch Adressen an, die eine Karte lesen kann; Adressen, die ein Datumsfenster brauchen, sind weg.",
-        "Der Hinweis unter einem Fehler einer eigenen Karte steht in deiner Sprache, und die Markierung in den YAML-Editoren ist im Dunkeln lesbar."
+        "Der Hinweis unter einem Fehler einer eigenen Karte steht in deiner Sprache, und die Markierung in den YAML-Editoren ist im Dunkeln lesbar.",
+        "Das eigene CSS eines Looks wird so geprüft, wie ein Browser es liest, damit keine versteckte Adresse darin etwas von woanders lädt."
       ]
     }
   }

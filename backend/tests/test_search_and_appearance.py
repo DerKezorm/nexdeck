@@ -153,6 +153,19 @@ def test_a_colour_that_is_not_one_is_refused(admin_client: TestClient) -> None:
     "@IMPORT 'https://evil.example.com/theme.css';",
     ".a { background: url(javascript:alert(1)); }",
     ".a { width: expression(alert(1)); }",
+    # The same doors, read as a browser reads them: escapes decoded, other functions that fetch.
+    r".a { background: \75 rl(https://evil.example.com/a.png); }",
+    r".a { background: u\72l('https://evil.example.com/a.png'); }",
+    r"@\69mport 'https://evil.example.com/theme.css';",
+    ".a { background-image: image-set('https://evil.example.com/a.png' 1x); }",
+    ".a { background-image: -webkit-image-set(\"https://evil.example.com/a.png\" 1x); }",
+    ".a { background-image: src('https://evil.example.com/a.png'); }",
+    ".a { --x: 'https://evil.example.com/a.png'; background-image: src(var(--x)); }",
+    ".a { background-image: cross-fade('https://evil.example.com/a.png' 50%, red); }",
+    "@font-face { font-family: x; src: url(https://evil.example.com/x.woff2); }",
+    ".a { --x: 'https://evil.example.com/a.png'; background-image: image-set(var(--x) 1x); }",
+    ".a { background-image: src(if(style(--on: 1): 'https://evil.example.com/a.png'; else: 'data:,')); }",
+    r".a { b: \75 rl(https://evil.example.com/a b); }",
 ])
 def test_a_style_sheet_that_reaches_out_is_refused(css: str, admin_client: TestClient) -> None:
     """CSS runs no code, but @import fetches, and a closed tag is a hole. The
@@ -166,6 +179,18 @@ def test_an_ordinary_style_sheet_is_kept(admin_client: TestClient) -> None:
     css = ".card { border-radius: 4px; }\n.dot { box-shadow: none; }\n/* a comment about style */"
     answer = admin_client.put("/api/v1/settings/appearance", headers=CSRF, json={"preset": "cyan", "accent": "", "css": css})
     assert answer.status_code == 200 and answer.json()["css"] == css
+
+
+@pytest.mark.parametrize("css", [
+    ".a { background: url(data:image/png;base64,iVBORw0KGgo=); }",
+    ".a { background: url('data:image/svg+xml,%3Csvg%3E%3C/svg%3E'); }",
+    ".a { background-image: image-set('data:image/png;base64,iVBORw0KGgo=' 1x); }",
+    ".a { background: linear-gradient(#000, #fff), repeating-conic-gradient(#000 0 25%, #fff 0 50%); }",
+    ".a { color: var(--nd-accent); } @media (max-width: 640px) { .a { color: red; } }",
+])
+def test_a_style_sheet_that_fetches_nothing_is_kept(css: str) -> None:
+    """The token scan refuses what fetches, not what merely looks like it: data: and gradients stay."""
+    assert appearance.check_css(css) == css
 
 
 def test_a_style_sheet_longer_than_the_cap_is_refused() -> None:

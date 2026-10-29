@@ -20,7 +20,7 @@ from typing import Any
 from sqlalchemy.orm import Session as DbSessionType
 
 from ..models import Setting
-from . import themes
+from . import css_scan, themes
 
 KEY = "appearance"
 #: Long enough for a real style sheet, short enough not to be a payload.
@@ -160,6 +160,9 @@ def check_css(css: str) -> str:
     for pattern, why in FORBIDDEN:
         if pattern.search(text):
             raise AppearanceError(why, "css_refused")
+    # The patterns read text; a browser reads tokens, with escapes decoded (css_scan).
+    if why := css_scan.what_fetches(text):
+        raise AppearanceError(why, "css_refused")
     return text
 
 
