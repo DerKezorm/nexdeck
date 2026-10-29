@@ -160,6 +160,41 @@
       "tablet": "Tablette",
       "desktop": "Large",
       "label": "Largeur"
+    },
+    "ai": {
+      "tab": {
+        "file": "Le skin",
+        "ai": "IA"
+      },
+      "help": "Décrivez l’apparence voulue du skin. L’assistant le crée ou le modifie, la scène le porte puis lui dit ce qui se lit mal.",
+      "helpSees": "Décrivez l’apparence voulue du skin. L’assistant le crée ou le modifie, regarde une fois la scène et corrige ce qui ne va pas encore.",
+      "prompt": "L’apparence voulue du skin",
+      "placeholder": "Comme une console de jeu des années 90 : couleurs vives, cadres épais et arrondis, briques derrière les cartes",
+      "send": "Créer",
+      "cancel": "Arrêter",
+      "making": "L’assistant crée le skin …",
+      "lookingNow": "L’assistant regarde la scène …",
+      "looking": "La scène est montrée à l’assistant.",
+      "checking": "La scène a trouvé {{count}} points qu’elle signale à l’assistant.",
+      "improved": "Corrigé après un regard sur la scène.",
+      "unchanged": "Après un regard sur la scène, il reste tel quel.",
+      "failed": "Le skin de l’assistant ne peut pas être porté :",
+      "locks": "Verrouillé pour l’IA",
+      "locksHelp": "Ce qui est verrouillé reste exactement tel quel, quoi que fasse l’assistant.",
+      "lockedForAi": "Verrouillé pour l’IA",
+      "section": {
+        "tokens": "Couleurs",
+        "options": "Options",
+        "sprites": "Sprites",
+        "frames": "Cadres",
+        "desk": "Bureau",
+        "decorations": "Décorations",
+        "status": "Symboles d’état",
+        "parts": "Parties",
+        "sounds": "Sons",
+        "switches": "Interrupteurs",
+        "css": "Feuille de style"
+      }
     }
   }
 }

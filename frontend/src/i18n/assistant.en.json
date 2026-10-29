@@ -94,7 +94,9 @@
       "test": "Save and test",
       "testCosts": "The test asks one short question and costs a few tokens.",
       "testOk": "{{model}} answers.",
-      "loadModels": "Load models"
+      "loadModels": "Load models",
+      "vision": "The model understands pictures",
+      "visionHelp": "Then the skin editor shows it the stage, so it can see what it made. Claude always can; of the models of Ollama only some (llava, qwen-vl, gemma3)."
     }
   }
 }

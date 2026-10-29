@@ -160,6 +160,41 @@
       "tablet": "Tablet",
       "desktop": "Breit",
       "label": "Breite"
+    },
+    "ai": {
+      "tab": {
+        "file": "Der Skin",
+        "ai": "KI"
+      },
+      "help": "Beschreib, wie der Skin aussehen soll. Der Assistent baut oder ändert ihn, die Bühne trägt ihn und sagt ihm danach, was sich schlecht liest.",
+      "helpSees": "Beschreib, wie der Skin aussehen soll. Der Assistent baut oder ändert ihn, schaut sich dann die Bühne einmal an und bessert nach, was noch nicht passt.",
+      "prompt": "Wie der Skin aussehen soll",
+      "placeholder": "Wie eine Spielkonsole aus den 90ern: kräftige Farben, dicke runde Rahmen, Ziegel hinter den Karten",
+      "send": "Bauen",
+      "cancel": "Abbrechen",
+      "making": "Der Assistent baut den Skin …",
+      "lookingNow": "Der Assistent schaut sich die Bühne an …",
+      "looking": "Der Assistent bekommt die Bühne gezeigt.",
+      "checking": "Die Bühne hat {{count}} Dinge gefunden, die sie dem Assistenten sagt.",
+      "improved": "Nach einem Blick auf die Bühne nachgebessert.",
+      "unchanged": "Nach einem Blick auf die Bühne bleibt er so.",
+      "failed": "Der Skin des Assistenten lässt sich nicht tragen:",
+      "locks": "Für die KI gesperrt",
+      "locksHelp": "Was gesperrt ist, bleibt genau so, egal was der Assistent macht.",
+      "lockedForAi": "Für die KI gesperrt",
+      "section": {
+        "tokens": "Farben",
+        "options": "Optionen",
+        "sprites": "Sprites",
+        "frames": "Rahmen",
+        "desk": "Desk",
+        "decorations": "Deko",
+        "status": "Status-Symbole",
+        "parts": "Teile",
+        "sounds": "Töne",
+        "switches": "Schalter",
+        "css": "Stylesheet"
+      }
     }
   }
 }

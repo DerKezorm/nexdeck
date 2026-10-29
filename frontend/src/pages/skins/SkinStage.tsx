@@ -17,11 +17,15 @@ import { Dialog, Select, Switch } from '../../components/ui'
 import { DEMO_DATA, DEMO_LAYOUTS, DEMO_SERIES, DEMO_VIEWS } from '../../demo/board'
 import { setLanguage, storedLanguage } from '../../i18n'
 import { applyAppearance, type Appearance } from '../../lib/appearance'
+import { audit, capture } from '../../lib/skin/look'
 import { elementsOf, partAt, type Parts } from '../../lib/skin/partAt'
 
 export const STAGE_MESSAGE = 'nexdeck-skin-stage'
 export const PICK_MESSAGE = 'nexdeck-skin-pick'
 export const READY_MESSAGE = 'nexdeck-skin-stage-ready'
+/** The editor asks the stage to look at itself; the answer carries the same id. */
+export const LOOK_MESSAGE = 'nexdeck-skin-look'
+export const LOOKED_MESSAGE = 'nexdeck-skin-looked'
 
 export interface StageState {
   type: typeof STAGE_MESSAGE
@@ -60,8 +64,19 @@ export function SkinStage() {
     style.textContent = OWN_STYLE
     document.head.append(style)
     const listen = (event: MessageEvent) => {
-      if (event.origin !== window.location.origin || event.data?.type !== STAGE_MESSAGE) return
-      setState(event.data as StageState)
+      if (event.origin !== window.location.origin) return
+      if (event.data?.type === STAGE_MESSAGE) setState(event.data as StageState)
+      if (event.data?.type === LOOK_MESSAGE) {
+        const { id, picture, parts } = event.data as { id: number; picture: boolean; parts: Parts }
+        // Without the marks of the inspector: they are the editor's, not the skin's.
+        const marked = [...document.querySelectorAll('[data-stage-pick]')]
+        marked.forEach((element) => element.removeAttribute('data-stage-pick'))
+        mark('data-stage-hover', [])
+        void (picture ? capture(document) : Promise.resolve('')).then((image) => {
+          marked.forEach((element) => element.setAttribute('data-stage-pick', ''))
+          window.parent.postMessage({ type: LOOKED_MESSAGE, id, findings: audit(document, parts), image }, window.location.origin)
+        })
+      }
     }
     window.addEventListener('message', listen)
     window.parent.postMessage({ type: READY_MESSAGE }, window.location.origin)

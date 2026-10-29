@@ -4,7 +4,7 @@
  * undo takes back exactly what was changed and the server says what is wrong
  * with it. Nothing here decides what is allowed; the server does.
  */
-import { Play, Plus, Trash2 } from 'lucide-react'
+import { Lock, Play, Plus, Trash2 } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -22,10 +22,14 @@ const record = (value: unknown): Record_ => (value && typeof value === 'object' 
 const list = (value: unknown): Record_[] => (Array.isArray(value) ? (value as Record_[]) : [])
 const text = (value: unknown) => (typeof value === 'string' ? value : '')
 
-export function Section({ title, children, open = false }: { title: string; children: ReactNode; open?: boolean }) {
+export function Section({ title, children, open = false, locked = false }: { title: string; children: ReactNode; open?: boolean; locked?: boolean }) {
+  const { t } = useTranslation()
   return (
     <details open={open} className="rounded-lg border border-line">
-      <summary className="cursor-pointer select-none px-3 py-2 text-sm font-medium">{title}</summary>
+      <summary className="cursor-pointer select-none px-3 py-2 text-sm font-medium flex items-center gap-1">
+        <span className="flex-1">{title}</span>
+        {locked && <Lock size={12} className="text-muted" aria-label={t('skinEditor.ai.lockedForAi')} />}
+      </summary>
       <div className="px-3 pb-3 flex flex-col gap-3">{children}</div>
     </details>
   )
@@ -59,7 +63,7 @@ export function SpriteSelect({ doc, value, onChange, label, empty = true }: { do
   )
 }
 
-export function FilePanels({ doc, draft, schema, base, advanced, weak, keyLocked }: { doc: SkinDoc; draft: Draft; schema: SkinSchema; base: Appearance; advanced: boolean; weak: { mode: string; token: string; ratio: number }[]; keyLocked: boolean }) {
+export function FilePanels({ doc, draft, schema, base, advanced, weak, keyLocked, locked = [] }: { doc: SkinDoc; draft: Draft; schema: SkinSchema; base: Appearance; advanced: boolean; weak: { mode: string; token: string; ratio: number }[]; keyLocked: boolean; locked?: string[] }) {
   const { t } = useTranslation()
   const tokens = record(doc.tokens)
   const sprites = record(doc.sprites) as Record<string, SpriteData>
@@ -92,7 +96,7 @@ export function FilePanels({ doc, draft, schema, base, advanced, weak, keyLocked
         </Field>
       </Section>
 
-      <Section title={t('skinEditor.section.tokens')}>
+      <Section title={t('skinEditor.section.tokens')} locked={locked.includes('tokens')}>
         <Field label={t('skinEditor.cardStyle')} htmlFor="skin-card-style">
           <Select
             id="skin-card-style"
@@ -150,7 +154,7 @@ export function FilePanels({ doc, draft, schema, base, advanced, weak, keyLocked
         )}
       </Section>
 
-      <Section title={t('skinEditor.section.sprites')}>
+      <Section title={t('skinEditor.section.sprites')} locked={locked.includes('sprites')}>
         <div className="flex flex-wrap gap-1">
           {Object.keys(sprites).map((name) => (
             <button key={name} type="button" className="btn btn-flat" aria-pressed={sprite === name} onClick={() => setSprite(name)}>
@@ -183,7 +187,7 @@ export function FilePanels({ doc, draft, schema, base, advanced, weak, keyLocked
         )}
       </Section>
 
-      <Section title={t('skinEditor.section.frames')}>
+      <Section title={t('skinEditor.section.frames')} locked={locked.includes('frames')}>
         <p className="text-xs text-muted">{t('skinEditor.framesHelp')}</p>
         {Object.entries(frames).map(([name, value]) => {
           const frame = record(value)
@@ -206,12 +210,12 @@ export function FilePanels({ doc, draft, schema, base, advanced, weak, keyLocked
         </button>
       </Section>
 
-      <Section title={t('skinEditor.section.desk')}>
+      <Section title={t('skinEditor.section.desk')} locked={locked.includes('desk')}>
         <SpriteSelect doc={doc} label={t('skinEditor.tile')} value={record(doc.desk).tile} onChange={(value) => draft.at(['desk'], value ? { tile: value, scale: (record(doc.desk).scale as number) ?? 2 } : undefined)} />
         {doc.desk ? <NumberField label={t('skinEditor.scale')} value={record(doc.desk).scale as number} min={1} max={8} onChange={(value) => draft.at(['desk', 'scale'], value)} /> : null}
       </Section>
 
-      <Section title={t('skinEditor.section.status')}>
+      <Section title={t('skinEditor.section.status')} locked={locked.includes('status')}>
         <p className="text-xs text-muted">{t('skinEditor.statusHelp')}</p>
         {(['ok', 'warn', 'bad', 'unknown'] as const).map((state) => (
           <SpriteSelect
@@ -228,7 +232,7 @@ export function FilePanels({ doc, draft, schema, base, advanced, weak, keyLocked
         ))}
       </Section>
 
-      <Section title={t('skinEditor.section.sounds')}>
+      <Section title={t('skinEditor.section.sounds')} locked={locked.includes('sounds')}>
         {Object.entries(sounds).map(([name, value]) => {
           const sound = record(value)
           return (
@@ -264,7 +268,7 @@ export function FilePanels({ doc, draft, schema, base, advanced, weak, keyLocked
         </button>
       </Section>
 
-      <Section title={t('skinEditor.section.options')}>
+      <Section title={t('skinEditor.section.options')} locked={locked.includes('options')}>
         <p className="text-xs text-muted">{t('skinEditor.optionsHelp')}</p>
         {list(doc.options).map((option, index) => (
           <div key={index} className="flex flex-col gap-1 rounded border border-line p-2">
@@ -296,14 +300,14 @@ export function FilePanels({ doc, draft, schema, base, advanced, weak, keyLocked
         </button>
       </Section>
 
-      <Section title={t('skinEditor.section.switches')}>
+      <Section title={t('skinEditor.section.switches')} locked={locked.includes('switches')}>
         <Switch checked={switches.corners === 'square'} onChange={(on) => draft.at(['switches', 'corners'], on ? 'square' : undefined)} label={t('skinEditor.switch.corners')} />
         <Switch checked={switches.shadows === 'none'} onChange={(on) => draft.at(['switches', 'shadows'], on ? 'none' : undefined)} label={t('skinEditor.switch.shadows')} />
         <Switch checked={switches.blur === 'off'} onChange={(on) => draft.at(['switches', 'blur'], on ? 'off' : undefined)} label={t('skinEditor.switch.blur')} />
       </Section>
 
       {advanced && (
-        <Section title={t('skinEditor.section.css')} open>
+        <Section title={t('skinEditor.section.css')} open locked={locked.includes('css')}>
           <p className="text-xs text-muted">{t('skinEditor.cssHelp')}</p>
           <textarea id="skin-css" className="input font-mono text-xs h-72" spellCheck={false} value={text(doc.css)} maxLength={schema.limits.css} onChange={(event) => draft.at(['css'], event.target.value || undefined)} aria-label={t('skinEditor.section.css')} />
         </Section>

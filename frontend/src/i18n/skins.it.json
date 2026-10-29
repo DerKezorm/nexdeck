@@ -160,6 +160,41 @@
       "tablet": "Tablet",
       "desktop": "Largo",
       "label": "Larghezza"
+    },
+    "ai": {
+      "tab": {
+        "file": "Lo skin",
+        "ai": "IA"
+      },
+      "help": "Descrivi come deve apparire lo skin. L’assistente lo crea o lo modifica, il palco lo indossa e poi gli dice cosa si legge male.",
+      "helpSees": "Descrivi come deve apparire lo skin. L’assistente lo crea o lo modifica, guarda una volta il palco e corregge ciò che non va ancora.",
+      "prompt": "Come deve apparire lo skin",
+      "placeholder": "Come una console degli anni Novanta: colori vivaci, cornici spesse e arrotondate, mattoni dietro le schede",
+      "send": "Crea",
+      "cancel": "Ferma",
+      "making": "L’assistente sta creando lo skin …",
+      "lookingNow": "L’assistente guarda il palco …",
+      "looking": "Il palco viene mostrato all’assistente.",
+      "checking": "Il palco ha trovato {{count}} cose che dice all’assistente.",
+      "improved": "Migliorato dopo uno sguardo al palco.",
+      "unchanged": "Dopo uno sguardo al palco resta com’è.",
+      "failed": "Lo skin dell’assistente non si può indossare:",
+      "locks": "Bloccato per l’IA",
+      "locksHelp": "Ciò che è bloccato resta esattamente com’è, qualunque cosa faccia l’assistente.",
+      "lockedForAi": "Bloccato per l’IA",
+      "section": {
+        "tokens": "Colori",
+        "options": "Opzioni",
+        "sprites": "Sprite",
+        "frames": "Cornici",
+        "desk": "Scrivania",
+        "decorations": "Decorazioni",
+        "status": "Simboli di stato",
+        "parts": "Parti",
+        "sounds": "Suoni",
+        "switches": "Interruttori",
+        "css": "Foglio di stile"
+      }
     }
   }
 }

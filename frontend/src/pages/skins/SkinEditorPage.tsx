@@ -24,7 +24,8 @@ import type { Parts } from '../../lib/skin/partAt'
 import { wear, type CompiledSkin } from '../../lib/skin/wear'
 import { FilePanels } from './FilePanels'
 import { Inspector } from './Inspector'
-import { PICK_MESSAGE, READY_MESSAGE, STAGE_MESSAGE, type StageState } from './SkinStage'
+import { AiTab, type LookAtStage } from './AiTab'
+import { LOOK_MESSAGE, LOOKED_MESSAGE, PICK_MESSAGE, READY_MESSAGE, STAGE_MESSAGE, type StageState } from './SkinStage'
 
 export interface SkinSchema {
   parts: Parts
@@ -34,6 +35,8 @@ export interface SkinSchema {
   anchors: string[]
   card_styles: string[]
   limits: { css: number; sprites: number; side: number; colours: number; animation_ms: number[] }
+  /** Whether the assistant is set up (the tab AI) and whether it is shown the stage as a picture. */
+  ai: { ready: boolean; vision: boolean }
 }
 
 export interface Starter {
@@ -103,6 +106,8 @@ function Editor({ initial, saved, schema, base }: { initial: SkinDoc; saved: str
   const arrived = (useLocation().state as { saved?: boolean } | null)?.saved
   const [toast, setToast] = useState<{ text: string; level: 'ok' | 'error' } | null>(arrived ? { text: t('skinEditor.saved'), level: 'ok' } : null)
   const [saving, setSaving] = useState(false)
+  const [tab, setTab] = useState<'file' | 'ai'>('file')
+  const [locked, setLocked] = useState<string[]>([])
   const frame = useRef<HTMLIFrameElement>(null)
   const [stageReady, setStageReady] = useState(false)
   const text = useMemo(() => JSON.stringify(doc, null, 2), [doc])
@@ -132,11 +137,27 @@ function Editor({ initial, saved, schema, base }: { initial: SkinDoc; saved: str
   }, [text])
 
   // The stage: told when it is there, and picks come back from it.
+  const looks = useRef(new Map<number, (seen: { findings: string[]; image: string }) => void>())
+  const lookAtStage: LookAtStage = (picture) =>
+    new Promise((resolve) => {
+      const id = Date.now() + Math.random()
+      looks.current.set(id, resolve)
+      frame.current?.contentWindow?.postMessage({ type: LOOK_MESSAGE, id, picture, parts: schema.parts }, window.location.origin)
+      // A stage that does not answer in time is not waited for: the first answer stands.
+      window.setTimeout(() => {
+        if (looks.current.delete(id)) resolve({ findings: [], image: '' })
+      }, 15_000)
+    })
   useEffect(() => {
+    const waiting = looks.current
     const listen = (event: MessageEvent) => {
       if (event.origin !== window.location.origin || event.source !== frame.current?.contentWindow) return
       if (event.data?.type === READY_MESSAGE) setStageReady(true)
       if (event.data?.type === PICK_MESSAGE && typeof event.data.part === 'string') setSelected(event.data.part)
+      if (event.data?.type === LOOKED_MESSAGE) {
+        const resolve = waiting.get(event.data.id)
+        if (resolve && waiting.delete(event.data.id)) resolve({ findings: event.data.findings ?? [], image: event.data.image ?? '' })
+      }
     }
     window.addEventListener('message', listen)
     return () => window.removeEventListener('message', listen)
@@ -224,8 +245,23 @@ function Editor({ initial, saved, schema, base }: { initial: SkinDoc; saved: str
       )}
       <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[320px_minmax(0,1fr)_300px]">
         <aside className="min-h-0 overflow-y-auto border-r border-line p-3 flex flex-col gap-2" aria-label={t('skinEditor.file')}>
-          <Switch checked={advanced} onChange={setAdvanced} label={t('skinEditor.advanced')} description={t('skinEditor.advancedHelp')} />
-          <FilePanels doc={doc} draft={draft} schema={schema} base={base} advanced={advanced} weak={checked?.compiled?.weak ?? []} keyLocked={saved !== null} />
+          {schema.ai.ready && (
+            <div className="flex gap-1" role="tablist">
+              {(['file', 'ai'] as const).map((name) => (
+                <button key={name} type="button" role="tab" aria-selected={tab === name} className="btn btn-flat flex-1" onClick={() => setTab(name)}>
+                  {t(`skinEditor.ai.tab.${name}`)}
+                </button>
+              ))}
+            </div>
+          )}
+          {tab === 'ai' && schema.ai.ready ? (
+            <AiTab doc={doc} draft={draft} locked={locked} onLocked={setLocked} sees={schema.ai.vision} look={lookAtStage} />
+          ) : (
+            <>
+              <Switch checked={advanced} onChange={setAdvanced} label={t('skinEditor.advanced')} description={t('skinEditor.advancedHelp')} />
+              <FilePanels doc={doc} draft={draft} schema={schema} base={base} advanced={advanced} weak={checked?.compiled?.weak ?? []} keyLocked={saved !== null} locked={locked} />
+            </>
+          )}
         </aside>
         <section className="min-h-0 flex flex-col" aria-label={t('skinEditor.stage')}>
           <div className="flex flex-wrap items-center gap-1 px-2 py-1.5 border-b border-line text-xs">

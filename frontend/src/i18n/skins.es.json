@@ -160,6 +160,41 @@
       "tablet": "Tableta",
       "desktop": "Ancho",
       "label": "Ancho"
+    },
+    "ai": {
+      "tab": {
+        "file": "El skin",
+        "ai": "IA"
+      },
+      "help": "Di cómo debe verse el skin. El asistente lo crea o lo cambia, el escenario lo lleva y luego le dice qué se lee mal.",
+      "helpSees": "Di cómo debe verse el skin. El asistente lo crea o lo cambia, mira una vez el escenario y mejora lo que aún no encaja.",
+      "prompt": "Cómo debe verse el skin",
+      "placeholder": "Como una consola de los noventa: colores vivos, marcos gruesos y redondos, ladrillos detrás de las tarjetas",
+      "send": "Crear",
+      "cancel": "Detener",
+      "making": "El asistente está creando el skin …",
+      "lookingNow": "El asistente mira el escenario …",
+      "looking": "Se le muestra el escenario al asistente.",
+      "checking": "El escenario encontró {{count}} cosas que le dice al asistente.",
+      "improved": "Mejorado tras mirar el escenario.",
+      "unchanged": "Tras mirar el escenario se queda como está.",
+      "failed": "El skin del asistente no se puede llevar:",
+      "locks": "Bloqueado para la IA",
+      "locksHelp": "Lo bloqueado se queda exactamente igual, haga lo que haga el asistente.",
+      "lockedForAi": "Bloqueado para la IA",
+      "section": {
+        "tokens": "Colores",
+        "options": "Elecciones",
+        "sprites": "Sprites",
+        "frames": "Marcos",
+        "desk": "Escritorio",
+        "decorations": "Adornos",
+        "status": "Símbolos de estado",
+        "parts": "Partes",
+        "sounds": "Sonidos",
+        "switches": "Interruptores",
+        "css": "Hoja de estilo"
+      }
     }
   }
 }

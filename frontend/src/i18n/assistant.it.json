@@ -94,7 +94,9 @@
       "test": "Salva e prova",
       "testCosts": "Il test fa una domanda breve e costa pochi token.",
       "testOk": "{{model}} risponde.",
-      "loadModels": "Carica modelli"
+      "loadModels": "Carica modelli",
+      "vision": "Il modello capisce le immagini",
+      "visionHelp": "Allora l’editor degli skin gli mostra il palco, così vede ciò che ha fatto. Claude può sempre; dei modelli di Ollama solo alcuni (llava, qwen-vl, gemma3)."
     }
   }
 }

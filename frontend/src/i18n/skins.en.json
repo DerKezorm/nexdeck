@@ -160,6 +160,41 @@
       "tablet": "Tablet",
       "desktop": "Wide",
       "label": "Width"
+    },
+    "ai": {
+      "tab": {
+        "file": "The skin",
+        "ai": "AI"
+      },
+      "help": "Say what the skin should look like. The assistant makes or changes it, the stage wears it, and the stage then tells it what reads badly.",
+      "helpSees": "Say what the skin should look like. The assistant makes or changes it, then looks at the stage once and improves what does not fit yet.",
+      "prompt": "What the skin should look like",
+      "placeholder": "Like a game console of the nineties: bold colours, thick round frames, bricks behind the cards",
+      "send": "Make it",
+      "cancel": "Stop",
+      "making": "The assistant is making the skin …",
+      "lookingNow": "The assistant looks at the stage …",
+      "looking": "Showing the assistant the stage.",
+      "checking": "The stage found {{count}} things to tell the assistant.",
+      "improved": "Improved after a look at the stage.",
+      "unchanged": "After a look at the stage it stays as it is.",
+      "failed": "The assistant's skin could not be worn:",
+      "locks": "Locked for the AI",
+      "locksHelp": "What is locked stays exactly as it is, whatever the assistant does.",
+      "lockedForAi": "Locked for the AI",
+      "section": {
+        "tokens": "Colours",
+        "options": "Options",
+        "sprites": "Sprites",
+        "frames": "Frames",
+        "desk": "Desk",
+        "decorations": "Decorations",
+        "status": "Status symbols",
+        "parts": "Parts",
+        "sounds": "Sounds",
+        "switches": "Switches",
+        "css": "Style sheet"
+      }
     }
   }
 }
