@@ -28,6 +28,7 @@
     "menu": {"group": "frame", "label": "A menu that drops down", "selectors": ["[role='menu']"], "pseudo": [], "container": true},
     "menu-item": {"group": "frame", "label": "One entry of a menu", "selectors": ["[role='menuitem']"], "pseudo": []},
     "desk": {"group": "frame", "label": "The ground behind the cards", "selectors": ["[data-background]"], "pseudo": ["::before", "::after"], "container": true},
+    "desk-tile": {"group": "frame", "label": "A layer over the desk for a pattern or a picture of the skin's own", "selectors": ["[data-desk-tile]"], "pseudo": ["::before", "::after"]},
     "page-window": {"group": "frame", "label": "A page that is not a board (settings, notices, chronicle)", "selectors": ["main[data-shell]"], "pseudo": [], "container": true},
     "page-nav": {"group": "frame", "label": "The list of sections beside a settings page", "selectors": ["main[data-shell] nav a"], "pseudo": [], "states": {"current": ["main[data-shell] nav a[aria-current]"]}},
     "panel": {"group": "frame", "label": "A box of settings", "selectors": ["main[data-shell] .glass.p-5"], "pseudo": [], "container": true},

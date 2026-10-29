@@ -864,6 +864,25 @@
       "tiles": "Jede App-Kachel hat einen Kurznamen, einstellbar in ihren Einstellungen: {{example}} öffnet die Kachel mit dem Kurznamen plex, auf den Boards, die du öffnen darfst.",
       "engines": "Chrome, Edge und Firefox können nexdeck als Suchmaschine aufnehmen. Ein Kurzname dort öffnet seine Kachel, andere Wörter öffnen hier die Suche mit den Wörtern darin, und beim Tippen schlägt die Adresszeile Kacheln und Karten vor. Chrome und Edge führen es unter Einstellungen, Suchmaschine, Suchmaschinen verwalten, wo es eingeschaltet werden kann; Firefox bietet es im Menü der Adresszeile an.",
       "safari": "Safari kann Suchmaschinen so nicht aufnehmen. Dort hilft ein Lesezeichen auf eine Kurzadresse."
+    },
+    "skins": {
+      "title": "Skin",
+      "help": "Ein Skin zeichnet mehr als die Farben neu: Rahmen, kleine Bilder, Bewegung und Töne. Seiten, die nach einem Passwort, einem Schlüssel oder einer Bestätigung fragen, behalten immer nexdecks eigene Zeichnung, in den Farben des Skins.",
+      "none": "Keiner",
+      "installation": "Der der Installation",
+      "off": "Abgeschaltet, er passt nicht mehr zu dieser Version",
+      "yours": "Dein Skin",
+      "yoursHelp": "Trag einen Skin dieser Installation für dich, oder den, den alle tragen.",
+      "sounds": "Töne des Skins",
+      "soundsHelp": "Kurze Töne, wenn du ein Teil drückst, dem der Skin einen gibt. Nie auf Seiten, die nach einem Passwort fragen.",
+      "import": "Skin hereinholen",
+      "importHelp": "Füge eine Skin-Datei, einen Look oder ein Farbschema ein. Ein Look oder ein Farbschema wird ein Skin aus Farben und Formen.",
+      "importButton": "Hereinholen",
+      "imported": "Der Skin ist da. Wähl ihn oben aus, um ihn zu tragen.",
+      "download": "{{name}} als Datei",
+      "delete": "{{name}} löschen",
+      "deleteTitle": "{{name}} löschen?",
+      "deleteBody": "Wer ihn trägt, trägt wieder den Skin der Installation."
     }
   },
   "menu": {

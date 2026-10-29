@@ -8,8 +8,10 @@ import { Field, Spinner, Switch, Toast } from '../../components/ui'
 import { accentVariables, applyAppearance, CARD_STYLES, type Appearance, type CardStyle } from '../../lib/appearance'
 import { canRefract } from '../../lib/refraction'
 import { RETRO_CHOICES, retroOf, type RetroChoices } from '../../lib/retro'
+import { NATIVE_1984 } from '../../lib/skin/wear'
 import { BrandSettings } from './BrandSettings'
 import { SettingsCard } from './SettingsCard'
+import { SkinChooser, SkinShelf } from './SkinChooser'
 import { FontPicker } from './FontPicker'
 import { LookShare } from './LookShare'
 import { ThemeChooser } from './ThemeChooser'
@@ -36,6 +38,15 @@ const SAMPLE: Record<CardStyle, React.CSSProperties> = {
     boxShadow: '2px 2px 0 #000',
     borderRadius: 0,
   },
+}
+
+/**
+ * The skin to store with the look. ⚠️ Always sent: a save without it would take the installation's skin off.
+ * 1984 is chosen here as the card style window, so it is that style that says so, not the list of skins.
+ */
+function skinOf(form: Appearance): { key?: string; options?: Record<string, string> } {
+  if (form.card_style === 'window') return { key: NATIVE_1984, options: { ...retroOf(form.retro) } }
+  return form.skin?.key && form.skin.key !== NATIVE_1984 ? form.skin : {}
 }
 
 /**
@@ -68,7 +79,7 @@ export function AppearanceSettings() {
 
   const store = async () => {
     try {
-      const answer = await put<Appearance>('/settings/appearance', { preset: form.preset, accent: form.accent, css: form.css, theme: form.theme ?? null, card_style: form.card_style ?? 'glass', radius: form.radius ?? 16, gap: form.gap ?? 12, refraction: form.refraction !== false, font: form.font ?? 'inter', retro: retroOf(form.retro) })
+      const answer = await put<Appearance>('/settings/appearance', { preset: form.preset, accent: form.accent, css: form.css, theme: form.theme ?? null, card_style: form.card_style ?? 'glass', radius: form.radius ?? 16, gap: form.gap ?? 12, refraction: form.refraction !== false, font: form.font ?? 'inter', retro: retroOf(form.retro), skin: skinOf(form) })
       setForm(answer)
       applyAppearance(answer)
       client.setQueryData(['appearance'], answer)
@@ -111,6 +122,18 @@ export function AppearanceSettings() {
           {t('common.save')}
         </button>
       </SettingsCard>
+      <SettingsCard title={t('settings.skins.title')} description={t('settings.skins.help')}>
+        <SkinChooser
+          value={form.card_style === 'window' ? {} : (form.skin ?? {})}
+          onChange={(skin) => setForm((current) => ({ ...current, skin, card_style: skin.key && current.card_style === 'window' ? 'glass' : current.card_style }))}
+        />
+        <button className="btn btn-accent mt-4" onClick={store}>
+          {t('common.save')}
+        </button>
+        <div className="mt-5 border-t border-line pt-4">
+          <SkinShelf onMessage={(text, level) => setToast({ text, level })} />
+        </div>
+      </SettingsCard>
       <SettingsCard title={t('settings.appearance.cardsTitle')} description={t('settings.appearance.cardsHelp')}>
         <ul className="grid gap-2 grid-cols-3 sm:grid-cols-7" aria-label={t('settings.appearance.cardsTitle')}>
           {(form.card_styles ?? CARD_STYLES).filter((style) => style in SAMPLE).map((style) => {
@@ -120,7 +143,8 @@ export function AppearanceSettings() {
                 <button
                   type="button"
                   aria-pressed={chosen}
-                  onClick={() => setForm((current) => ({ ...current, card_style: style }))}
+                  // 1984 is a skin of its own; choosing it puts any other skin off.
+                  onClick={() => setForm((current) => ({ ...current, card_style: style, skin: style === 'window' ? {} : current.skin }))}
                   className={`w-full text-left rounded-xl border p-2 ${chosen ? 'border-accent bg-accent-soft' : 'border-line hover:bg-surface-hover'}`}
                 >
                   <span className="block h-12 p-1.5" aria-hidden="true">

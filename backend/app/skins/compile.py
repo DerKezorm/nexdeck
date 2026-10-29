@@ -77,7 +77,8 @@ def _second_layer(skin: SkinFile) -> str:
     if skin.desk:
         tile = skin.sprites[skin.desk.tile]
         width, height = len(tile.rows[0]) * skin.desk.scale, len(tile.rows) * skin.desk.scale
-        rules.append(f"[data-part=desk] {{ background-image: sprite({skin.desk.tile}); background-size: {width}px {height}px; background-repeat: repeat }}")
+        # On a layer of its own above nexdeck's light, which the desk carries inline and nothing may reach.
+        rules.append(f"[data-part=desk-tile] {{ background-image: sprite({skin.desk.tile}); background-size: {width}px {height}px; background-repeat: repeat }}")
     used: dict[str, list[str]] = {}
     for decoration in skin.decorations:
         free = [slot for slot in css.registry()["parts"][decoration.part]["pseudo"] if slot not in used.get(decoration.part, [])]

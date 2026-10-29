@@ -864,6 +864,25 @@
       "tiles": "Every app tile answers to a short name, set in its settings: {{example}} opens the tile with the short name plex, on the boards you may open.",
       "engines": "Chrome, Edge and Firefox can add nexdeck as a search engine. A short name typed there opens its tile, other words open the search bar here with the words in it, and the address bar suggests tiles and cards while you type. Chrome and Edge list it under Settings, Search engine, Manage search engines, where it can be switched on; Firefox offers it in the menu of the address bar.",
       "safari": "Safari cannot add search engines this way. A bookmark to a short address works there."
+    },
+    "skins": {
+      "title": "Skin",
+      "help": "A skin redraws more than the colours: frames, little pictures, motion and sounds. Pages that ask for a password, a key or a confirmation always keep nexdeck's own drawing, with the skin's colours.",
+      "none": "None",
+      "installation": "The installation's",
+      "off": "Switched off, it no longer fits this version",
+      "yours": "Your skin",
+      "yoursHelp": "Wear a skin of this installation for yourself, or the one everybody wears.",
+      "sounds": "Sounds of the skin",
+      "soundsHelp": "Short tones when you press a part the skin gives a sound. Never on pages that ask for a password.",
+      "import": "Bring in a skin",
+      "importHelp": "Paste a skin file, a look or a theme. A look or a theme becomes a skin of colours and shapes.",
+      "importButton": "Bring in",
+      "imported": "The skin is here. Choose it above to wear it.",
+      "download": "{{name}} as a file",
+      "delete": "Delete {{name}}",
+      "deleteTitle": "Delete {{name}}?",
+      "deleteBody": "Whoever wears it wears the installation's skin again."
     }
   },
   "menu": {

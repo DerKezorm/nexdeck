@@ -22,5 +22,5 @@
   },
   "sounds": {"blip": {"wave": "square", "from": 520, "to": 1040, "ms": 120, "volume": 0.06}},
   "switches": {"blur": "off"},
-  "css": "[data-part=card-titlebar] { background: #e52521; color: #ffffff; border-bottom: 3px solid #1a1a1a }\n[data-part=desk]:option(desk=plain) { background-image: none }\n[data-part=button]:active { transform: translateY(3px); box-shadow: none }"
+  "css": "[data-part=card-titlebar] { background: #e52521; color: #ffffff; border-bottom: 3px solid #1a1a1a }\n[data-part=desk-tile]:option(desk=plain) { background-image: none }\n[data-part=button]:active { transform: translateY(3px); box-shadow: none }"
 }

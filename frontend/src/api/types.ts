@@ -15,6 +15,8 @@ export interface User {
   dark_from?: string
   /** Whether a card tips towards the mouse pointer; off on the profile page. */
   tilt?: boolean
+  /** A skin of one's own, or {} for the installation's (lib/skin/wear.ts). */
+  skin?: { key?: string; options?: Record<string, string>; sounds?: boolean }
   start_board_id: number | null
   disabled: boolean
   seen_version: string

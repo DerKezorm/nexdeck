@@ -12,6 +12,9 @@ import { PlayerHost } from './components/player/PlayerHost'
 import { Spinner } from './components/ui'
 import { setLanguage, storedLanguage } from './i18n'
 import { applyAppearance, type Appearance } from './lib/appearance'
+import { SkinGuard } from './lib/skin/guard'
+import { listenForPresses } from './lib/skin/sound'
+import { chosenSkin, lookWithSkin, wear, type SkinChoice } from './lib/skin/wear'
 import { loadBrand, useBrand } from './lib/brand'
 import { BoardPage } from './pages/BoardPage'
 import { HomeRedirect } from './pages/HomeRedirect'
@@ -63,22 +66,29 @@ function Guard({ children }: { children: React.ReactNode }) {
 function Look() {
   const user = useAuth((s) => s.user)
   const open = useBrand((s) => s.look)
+  // Only the skin itself and the sounds, not every change of the account, ask the server again.
+  const skin = JSON.stringify(user?.skin ?? {})
   useEffect(() => {
     if (user || !open || window.location.pathname.startsWith('/k/')) return
-    applyAppearance(open)
+    // Signed out the brand names a skin only when it is 1984, which needs nothing more from the server.
+    applyAppearance(wear(open, chosenSkin(null, open.skin), null))
   }, [user, open])
   useEffect(() => {
     if (!user) return
     let dropped = false
+    const own = JSON.parse(skin) as SkinChoice
     void get<Appearance>('/settings/appearance')
-      .then((look) => {
-        if (!dropped) applyAppearance(look)
+      .then((look) => lookWithSkin(look, own))
+      .then(({ look, compiled, choice }) => {
+        if (dropped) return
+        applyAppearance(look)
+        listenForPresses(choice.sounds ? compiled : null)
       })
       .catch(() => undefined)
     return () => {
       dropped = true
     }
-  }, [user])
+  }, [user, skin])
   return null
 }
 
@@ -98,6 +108,7 @@ export function App() {
           no message and no button, on a wall display nobody is standing at. */}
       <ErrorBoundary>
       <BrowserRouter>
+        <SkinGuard />
         {/* Outside Suspense and the routes: the bar stands while a page loads
             and when one page gives way to the next (issues #27, #40). */}
         <AppBarFrame>

@@ -350,6 +350,8 @@ function Panel({ open }: { open: boolean }) {
       className={`glass-strong fixed top-12 right-0 bottom-0 z-40 flex w-full flex-col rounded-none border-y-0 border-r-0 shadow-2xl sm:w-[420px] ${open ? '' : 'hidden'}`}
       aria-label={t('assistant.title')}
       data-testid="assistant-panel"
+      // ⚠️ Its proposals to act stand inline, with the red button; no skin may dim or cover them (lib/skin/guard.ts).
+      data-skin-guard=""
     >
       <header className="flex items-center gap-1 border-b border-line px-3 py-2">
         <Sparkles size={15} className="text-accent" />

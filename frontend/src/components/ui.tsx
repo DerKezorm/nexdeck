@@ -72,7 +72,8 @@ export function Dialog({ open, onClose, title, children, footer, size = 'md', al
   // be squeezed into the sheet's column.
   return createPortal(
     // The title names the dialog, so a screen reader says what it is about when it opens.
-    <div className="overlay fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby={heading}>
+    // A confirmation is never a skin's to redraw (lib/skin/guard.ts): what it asks has to read as nexdeck says it.
+    <div className="overlay fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby={heading} data-skin-guard={alert ? '' : undefined}>
       <div className="absolute inset-0 bg-black/50" onClick={onClose} aria-hidden="true" />
       <div ref={panel} className={`relative glass-strong rounded-2xl w-full ${width} max-h-[90vh] flex flex-col shadow-2xl`} data-alert={alert || undefined}>
         <header className="flex items-center gap-2 px-5 h-12 border-b border-line">

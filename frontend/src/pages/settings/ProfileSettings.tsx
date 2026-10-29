@@ -12,6 +12,7 @@ import { accountPair, LANGUAGES } from '../../i18n'
 import { useAuth } from '../../stores/auth'
 import { oidcErrorKey } from '../../vendor/nexoidc/oidc'
 import { SettingsCard } from './SettingsCard'
+import { SkinChooser } from './SkinChooser'
 
 export function ProfileSettings() {
   const { t } = useTranslation()
@@ -149,6 +150,11 @@ export function ProfileSettings() {
           <ThemePlanField id="p-theme" value={user} onChange={(plan) => void update(plan).catch(failed)} />
         </div>
         <Switch checked={user.tilt !== false} onChange={(tilt) => void update({ tilt })} label={t('settings.profile.tilt')} description={t('settings.profile.tiltHelp')} />
+        <div className="mt-4">
+          <p className="text-sm font-medium">{t('settings.skins.yours')}</p>
+          <p className="text-xs text-muted mb-2">{t('settings.skins.yoursHelp')}</p>
+          <SkinChooser forAccount value={user.skin ?? {}} onChange={(skin) => void update({ skin })} />
+        </div>
         <div className="grid sm:grid-cols-3 gap-3">
           <Field label={t('settings.profile.barLanguages')} htmlFor="p-pair-1" help={t('settings.profile.barLanguagesHelp')}>
             <div id="p-pair" className="flex gap-2">

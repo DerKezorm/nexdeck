@@ -154,6 +154,8 @@ def test_a_key_that_could_leave_its_quotes_is_refused() -> None:
 
 def test_the_example_skin_is_a_skin() -> None:
     compiled = skin_compile.compile_skin(SkinFile.model_validate(console()))
+    # The tile lies on a layer of its own over nexdeck's light, which a skin cannot reach.
+    assert f":where([data-desk-tile]){FENCE} {{ background-image: var(--sk-sprite-brick)" in compiled.css
     assert compiled.css.startswith("@layer retro, skin;\n@layer skin {")
     assert compiled.fonts == ["pixel"]
     assert compiled.presses == [{"part": "button", "selectors": [".btn"], "sound": "blip"}]

@@ -864,6 +864,25 @@
       "tiles": "Ogni riquadro di app risponde a un nome breve, impostato nelle sue impostazioni: {{example}} apre il riquadro con il nome breve plex, nelle bacheche che puoi aprire.",
       "engines": "Chrome, Edge e Firefox possono aggiungere nexdeck come motore di ricerca. Un nome breve digitato lì apre il suo riquadro, altre parole aprono qui la ricerca con quelle parole, e la barra degli indirizzi suggerisce riquadri e schede mentre scrivi. Chrome ed Edge lo mostrano in Impostazioni, Motore di ricerca, Gestisci motori di ricerca, dove si può attivare; Firefox lo offre nel menu della barra degli indirizzi.",
       "safari": "Safari non può aggiungere motori di ricerca in questo modo. Lì basta un segnalibro a un indirizzo breve."
+    },
+    "skins": {
+      "title": "Skin",
+      "help": "Uno skin ridisegna più dei colori: cornici, piccole immagini, movimento e suoni. Le pagine che chiedono una password, una chiave o una conferma mantengono sempre il disegno proprio di nexdeck, con i colori dello skin.",
+      "none": "Nessuno",
+      "installation": "Quello dell’installazione",
+      "off": "Disattivato, non è più adatto a questa versione",
+      "yours": "Il tuo skin",
+      "yoursHelp": "Indossa uno skin di questa installazione solo per te, o quello che indossano tutti.",
+      "sounds": "Suoni dello skin",
+      "soundsHelp": "Brevi toni quando premi una parte a cui lo skin dà un suono. Mai sulle pagine che chiedono una password.",
+      "import": "Portare uno skin",
+      "importHelp": "Incolla un file di skin, un look o un tema. Un look o un tema diventa uno skin di colori e forme.",
+      "importButton": "Porta",
+      "imported": "Lo skin è qui. Sceglilo sopra per indossarlo.",
+      "download": "{{name}} come file",
+      "delete": "Elimina {{name}}",
+      "deleteTitle": "Eliminare {{name}}?",
+      "deleteBody": "Chi lo indossa torna a indossare lo skin dell’installazione."
     }
   },
   "menu": {

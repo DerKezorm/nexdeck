@@ -864,6 +864,25 @@
       "tiles": "Chaque tuile d’app répond à un nom court, réglé dans ses paramètres : {{example}} ouvre la tuile au nom court plex, sur les tableaux que vous pouvez ouvrir.",
       "engines": "Chrome, Edge et Firefox peuvent ajouter nexdeck comme moteur de recherche. Un nom court saisi là ouvre sa tuile, d’autres mots ouvrent ici la recherche avec ces mots, et la barre d’adresse propose des tuiles et des cartes pendant la saisie. Chrome et Edge l’affichent sous Paramètres, Moteur de recherche, Gérer les moteurs de recherche, où il peut être activé ; Firefox le propose dans le menu de la barre d’adresse.",
       "safari": "Safari ne peut pas ajouter de moteurs de recherche de cette façon. Un signet vers une adresse courte y fait l’affaire."
+    },
+    "skins": {
+      "title": "Skin",
+      "help": "Un skin redessine plus que les couleurs : cadres, petites images, mouvement et sons. Les pages qui demandent un mot de passe, une clé ou une confirmation gardent toujours le dessin propre de nexdeck, aux couleurs du skin.",
+      "none": "Aucun",
+      "installation": "Celui de l’installation",
+      "off": "Désactivé, il ne convient plus à cette version",
+      "yours": "Votre skin",
+      "yoursHelp": "Portez un skin de cette installation pour vous seul, ou celui que tout le monde porte.",
+      "sounds": "Sons du skin",
+      "soundsHelp": "De courts sons quand vous appuyez sur une partie à laquelle le skin en donne un. Jamais sur les pages qui demandent un mot de passe.",
+      "import": "Importer un skin",
+      "importHelp": "Collez un fichier de skin, un look ou un thème. Un look ou un thème devient un skin de couleurs et de formes.",
+      "importButton": "Importer",
+      "imported": "Le skin est là. Choisissez-le ci-dessus pour le porter.",
+      "download": "{{name}} en fichier",
+      "delete": "Supprimer {{name}}",
+      "deleteTitle": "Supprimer {{name}} ?",
+      "deleteBody": "Qui le porte reprend le skin de l’installation."
     }
   },
   "menu": {
