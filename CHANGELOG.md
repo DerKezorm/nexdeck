@@ -3,6 +3,17 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## 1.0.1 (2026-10-29)
+
+### Fixed
+
+- **The card help no longer guesses.** Asked for a card, the AI is shown the paths nexdeck's own cards read from that kind of service, and nexdeck asks every path of its proposal of a connection of that kind before it is shown. A path the service does not answer goes back to the AI once with the paths that work, and an answer the AI chose without seeing it goes back once with its shape (field names and types, values only with the tick), so the card reads fields the service really has. Asked for a card about missing episodes in nexcrate, it had taken Sonarr's address and counted fields that were not there. The chat's drafts are checked the same way.
+- **The preview beside a proposal of the card help is drawn.** It needs example answers, which the AI leaves out; they are now made from the service's answers and made up the way a card's demo data is, so nothing real goes into them. Before, the editor's preview of a proposal could never be drawn.
+- **Formulas and names only you know.** The AI is told how a formula refers to the answer (in braces) and leaves a name only the administrator knows, such as a status page, open in the path instead of inventing one.
+- **Years are written as years.** A whole number in a field named for a year (year, productionYear, release_year) shows as 2005, not 2,005, on every custom card.
+- **The step Data offers only paths a card can read.** Paths that the built-in cards ask only with a window of dates (nexcrate's calendar answered 422 without one) and Prometheus text are no longer offered.
+- **Readable in every language.** The hint under a failure of a custom card is translated, the selection in the YAML editors is readable in the dark theme, and the note under a proposal says that the tick for sample values is used up with the request it went with.
+
 ## 1.0.0 (2026-10-29)
 
 The first stable version. nexdeck now takes cards of your own, built without code, and shares them in the Card shop.

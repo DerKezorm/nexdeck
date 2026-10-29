@@ -1861,6 +1861,22 @@
         "Custom cards and integrations go out as a file, and a board export takes the custom cards on it along.",
         "A custom card only reads, asks only the address of its connection and never gets its keys."
       ]
+    },
+    "1.0.1": {
+      "lead": "The card help now builds cards that work: it reads your service before it shows you a proposal.",
+      "sections": [
+        {
+          "title": "Ask AI checks its own card",
+          "body": "The AI is shown the paths nexdeck already reads from the service, and nexdeck asks every path of its proposal before you see it. A path the service does not know, or fields the answer does not have, go back to the AI once, so the card reads what your service really sends. The preview beside the proposal now shows the card with example data made from that answer.",
+          "path": "System > Custom cards > Build a card > Ask AI"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "Years show as 2005, not 2,005, on every custom card.",
+        "The step Data offers only paths a card can read; paths that need a window of dates are gone.",
+        "The hint under a failure of a custom card is in your language, and the selection in the YAML editors is readable in the dark."
+      ]
     }
   }
 }
