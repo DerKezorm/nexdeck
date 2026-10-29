@@ -367,6 +367,13 @@ def _semantic(definition: Any, lines: dict[Path, int], running: str) -> list[Pro
                 "A picture is a value of the answer, or a path on the connection that starts with a single /.",
                 (*path, "formula" if shown.formula is not None else "template"),
             )
+    link = getattr(getattr(definition, "item", None), "link", None)
+    if not pipeline.fixed_place(link):
+        add(
+            "card_link_address",
+            "A link is a value of the answer, a path that starts with a single /, or an address with http or https and the host written out before any {placeholder}.",
+            ("item", "link", "formula" if link.formula is not None else "template"),
+        )
     for path, code, message, params in buttons.problems(definition):
         add(code, message, path, **params)
     for path, code, message, params in blocks.problems(definition):

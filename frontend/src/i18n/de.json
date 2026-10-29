@@ -116,6 +116,7 @@
       "card_demo_unknown_request": "Die Demo-Antwort {{id}} gehört zu keiner Abfrage.",
       "card_rule_subject": "Eine Regel an der Karte muss sagen, worauf sie schaut: einen Wert oder eine Formel.",
       "card_picture_address": "Ein Bild ist ein Wert der Antwort oder ein Pfad der Verbindung, der mit einem einzelnen / beginnt.",
+      "card_link_address": "Ein Link ist ein Wert der Antwort, ein Pfad, der mit einem einzelnen / beginnt, oder eine Adresse mit http oder https, deren Host vor jedem {Platzhalter} ausgeschrieben ist.",
       "card_expression": "{{reason}}",
       "card_expression_at": "{{reason}} (Zeichen {{position}})",
       "card_secret_value": "Das sieht aus wie {{what}}. Eine Karte enthält keine Geheimnisse: Die Verbindung bewahrt sie auf und fügt sie der Abfrage hinzu.",

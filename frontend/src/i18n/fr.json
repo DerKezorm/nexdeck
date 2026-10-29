@@ -116,6 +116,7 @@
       "card_demo_unknown_request": "La réponse de démonstration {{id}} n'appartient à aucune requête.",
       "card_rule_subject": "Une règle de la carte doit dire ce qu'elle regarde : une valeur ou une formule.",
       "card_picture_address": "Une image est une valeur de la réponse ou un chemin de la connexion qui commence par un seul /.",
+      "card_link_address": "Un lien est une valeur de la réponse, un chemin qui commence par un seul / ou une adresse en http ou https dont l'hôte est écrit avant tout {espace réservé}.",
       "card_expression": "{{reason}}",
       "card_expression_at": "{{reason}} (caractère {{position}})",
       "card_secret_value": "Cela ressemble à {{what}}. Une carte ne contient aucun secret : la connexion les garde et les ajoute à la requête.",

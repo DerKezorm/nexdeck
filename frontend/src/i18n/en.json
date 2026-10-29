@@ -116,6 +116,7 @@
       "card_demo_unknown_request": "The demo answer {{id}} belongs to no request.",
       "card_rule_subject": "A rule on the card has to say what it looks at: a value or a formula.",
       "card_picture_address": "A picture is a value of the answer, or a path on the connection that starts with a single /.",
+      "card_link_address": "A link is a value of the answer, a path that starts with a single /, or an address with http or https and the host written out before any {placeholder}.",
       "card_expression": "{{reason}}",
       "card_expression_at": "{{reason}} (character {{position}})",
       "card_secret_value": "This looks like {{what}}. A card holds no secrets: the connection keeps them and adds them to the request.",
