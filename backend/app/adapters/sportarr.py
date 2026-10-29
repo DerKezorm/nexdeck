@@ -41,6 +41,7 @@ from .base import (
     ago,
     base_url,
 )
+from .ical import at_moment
 
 SPORTARR_TIME = "%Y-%m-%dT%H:%M:%SZ"
 
@@ -137,12 +138,12 @@ class SportarrAdapter(Adapter):
     def _calendar(events: list[dict[str, Any]]) -> WidgetData:
         items = []
         for event in events:
-            start = str(event.get("eventDate") or "")
-            if len(start) < 10:
+            # eventDate is the start in UTC; the card puts it on the viewer's own day (#56).
+            when = at_moment(event.get("eventDate"))
+            if when is None:
                 continue
             items.append({
-                # The day in UTC, like the other calendars; eventDate is the start in UTC.
-                "date": start[:10],
+                **when,
                 "title": str(event.get("title") or "?"),
                 "subtitle": str(event.get("leagueName") or event.get("sport") or ""),
                 "status": "ok" if event.get("hasFile") else "unknown",

@@ -29,6 +29,7 @@ nexdeck belongs to the nexapps family, next to [Nexview](https://github.com/DerK
 - **Users, roles and sharing.** Administrators, users and guests. Boards are private, shared with people or with a whole role, at view, edit or act level.
 - **What changed, and since when.** A chronicle of every card that turned yellow or red, every outage, new version and restarted container, and what was changed in nexdeck. A card that needs a look says since when, one card gathers everything that does, a daily report sums up the day, and maintenance keeps a planned restart quiet.
 - **Ask nexdeck.** A chat for administrators that answers from the cards, the chronicle and the history, and shows a button with what it would hit instead of pressing it. Claude, or a model on your own network such as Ollama; off until you choose one.
+- **Your boards for MCP programs.** Claude Code, claude.ai or another MCP program reads your boards with a key of its own or as a connector over OAuth, with the rights of your account and only the boards you give it. It presses a card's button only after you allow it in the bell, unless you let it press without asking, and a dangerous button always asks. Off until an administrator switches it on; see [docs/mcp.md](docs/mcp.md).
 - **What runs on what, and why it broke.** nexdeck learns which service runs in which container on which machine, from Docker, Portainer, a Synology, Proxmox and Nginx Proxy Manager. A host that goes down is one message naming what it took with it, and a red card's "Why?" opens a page with since when, what happened before, the container's log on asking and a runbook of your own.
 - **History over months.** Every number kept as hours for 90 days and days for two years, charts over a year, and a forecast of when a volume is full.
 - **Reachability and notifications.** App tiles carry a check with uptime bars; outages reach you through Telegram, e-mail, Web Push, ntfy, Gotify, Discord, Slack or Apprise.
@@ -164,6 +165,22 @@ Signing in on the home network (System → Home network) needs the browser's rea
 
 Adapters that have not been confirmed against a live instance yet carry a *beta* badge in the interface. If one misbehaves, please open an issue with the service's version.
 
+## When a service fails
+
+Every card asks its service on its own, so a slow or hanging service holds up only its own cards. A request gives up after 15 seconds unless its integration says otherwise, and a card's whole round after a minute. When several cards of one connection ask the same address at the same time, nexdeck sends one request and hands the answer to all of them, also while a slow service is still thinking. A card whose service keeps failing asks less often, its interval doubling up to five minutes, and asks at its own pace again as soon as an answer comes. Until then it keeps its last good numbers under the error, marked "Showing the last good values".
+
+Measured with 100 connections to a made-up Proxmox, three cards each (node, guests, summary), every 30 seconds, for two minutes healthy and then two minutes with one service answering in 3 seconds and one hanging for 40 seconds:
+
+| | Before sharing | With sharing |
+|---|---|---|
+| Requests a minute, every service healthy | 1005 | 880 |
+| The same request at one service at the same time, at most | 3 | 1 |
+| Requests to the hanging service in two minutes (`/nodes`) | 6 | 3 |
+| `/nodes` a minute to each healthy service, healthy and then during the fault | 4.18 and 4.22 | 4.17 and 4.19 |
+| nexdeck itself | 8 to 9 % of one core, 284 MB | 8 to 9 % of one core, 282 MB |
+
+The healthy services kept their pace while one hung. The hanging service still held requests nexdeck had already given up on; they are not counted above. Several browsers on the live stream were not part of the test.
+
 ## Documentation
 
 - [Running nexdeck: backups, restoring, updating](docs/operating.md)
@@ -172,6 +189,7 @@ Adapters that have not been confirmed against a live instance yet carry a *beta*
 - [Boards as files and provisioning](docs/provisioning.md)
 - [Kiosk displays](docs/kiosk.md)
 - [API](docs/api.md)
+- [AI from outside: MCP](docs/mcp.md)
 
 ## Development
 

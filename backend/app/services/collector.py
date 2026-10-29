@@ -3,10 +3,11 @@
 The server asks every service in the widget's interval, keeps the result in
 the live state, records metrics for history and pushes the change to every
 browser that shows the board. Ten open tabs cost the service one request,
-not ten.
+not ten, and cards of one connection that ask for the same address at the
+same time share one request (``Context._together``).
 
 Failures back off: after repeated errors the interval doubles, up to five
-minutes, and the widget shows the last error instead of stale numbers.
+minutes, and the widget keeps its last numbers, greyed out, with the error.
 """
 
 from __future__ import annotations
@@ -146,6 +147,11 @@ class Collector:
                 pass
         self._tasks.clear()
         self._pressed.clear()
+        # Requests the cards shared and nobody waits for any more (``Context._together``).
+        for cache in self._caches.values():
+            for value in list(cache.values()):
+                if isinstance(value, asyncio.Future):
+                    value.cancel()
         await self._say_goodbye()
         if self._client is not None:
             await self._client.aclose()

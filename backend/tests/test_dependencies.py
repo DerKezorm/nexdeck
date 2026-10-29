@@ -216,6 +216,26 @@ def test_a_service_is_proposed_on_its_main_container_never_on_a_helper(client: T
     assert {parent for child, parent in proposed if child == f"integration:{login_service}"} == {f"container:{engine}:authentik-server-1"}
 
 
+def test_a_device_is_never_proposed_in_a_container_named_after_it(client: TestClient) -> None:
+    """⚠️ Seen on 28.10.2026: "FRITZ!Box probably runs in the container fritz-rekorder", a recorder that talks to the box."""
+    setup_admin(client)
+    engine = _connection(client, "portainer", "Portainer", "https://10.0.0.66:9443")
+    _things(engine, _container("fritz-rekorder", image="example/callrecorder:latest"), _container("fritz", image="example/fritz-callmonitor"))
+    box = _connection(client, "fritzbox", "FRITZ!Box", "http://192.0.2.1:49000")
+    _match({engine: ["10.0.0.66"]})
+    assert not any(child == f"integration:{box}" for child, *_ in _relations())
+
+
+def test_part_of_a_name_is_not_enough_when_the_image_is_other_software(client: TestClient) -> None:
+    setup_admin(client)
+    engine = _connection(client, "docker", "docker-dev", "tcp://10.0.0.66:2375")
+    _things(engine, _container("grafana-sicherung", image="example/rclone:latest"), _container("grafana-oss", image="grafana/grafana-oss"))
+    named = _connection(client, "grafana", "Grafana", "http://grafana.example.invalid:3000")
+    _match({engine: ["10.0.0.66"]})
+    proposed = {parent for child, parent, origin, _state in _relations() if child == f"integration:{named}" and origin == "suggested"}
+    assert proposed == {f"container:{engine}:grafana-oss"}, "the image says grafana-oss is Grafana, the other one only shares a word"
+
+
 def test_an_app_tile_of_a_connected_service_hangs_on_the_connection(client: TestClient) -> None:
     """⚠️ Seen on 25.10.2026: "Jellyfin probably runs on jellyfin" twice, once for the connection and once for its tile."""
     setup_admin(client)

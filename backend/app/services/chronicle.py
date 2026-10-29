@@ -58,6 +58,7 @@ KINDS: dict[str, str] = {
     "card_removed": "A card was removed",
     "signed_in": "Somebody signed in",
     "sign_in_refused": "A sign-in was refused",
+    "mcp_call": "A program pressed a button over MCP",
 }
 
 #: The filters of the chronicle page and of the card.
@@ -65,7 +66,8 @@ GROUPS: dict[str, tuple[str, ...]] = {
     "cards": ("card", "outage", "recovery", "maintenance", "maintenance_end", "forecast"),
     "versions": ("version", "container_restarted", "container_recreated"),
     "nexdeck": ("connection_added", "connection_changed", "connection_removed",
-               "card_definition_added", "card_definition_changed", "card_definition_removed", "card_probe", "card_added", "card_copied", "card_removed", "signed_in", "sign_in_refused"),
+               "card_definition_added", "card_definition_changed", "card_definition_removed", "card_probe", "card_added", "card_copied", "card_removed", "signed_in", "sign_in_refused",
+               "mcp_call"),
 }
 
 #: Lines only administrators see: they are about the installation, not about a board.
@@ -235,12 +237,18 @@ def _owner_boards(db: Session, owner_id: int | None, board_id: int) -> set[int]:
 
 
 def _within(boards: set[int], db: Session):  # noqa: ANN202 - an SQL condition
-    """Lines about these boards: a card on one of them, or a connection one of their cards uses."""
+    """Lines about these boards: a card on one of them, or a connection one of their cards uses.
+
+    ⚠️ A line about a card belongs to the card's board and to no other. It carries its
+    connection too, and a connection can be used on a second board that the reader may
+    not open: the way through the connection is only for lines that are about no card.
+    """
     integrations = set(db.scalars(
         select(Widget.integration_id).join(Page, Widget.page_id == Page.id)
         .where(Page.board_id.in_(list(boards) or [-1]), Widget.integration_id.is_not(None))
     ))
-    return or_(Event.board_id.in_(list(boards) or [-1]), Event.integration_id.in_(list(integrations) or [-1]))
+    return or_(Event.board_id.in_(list(boards) or [-1]),
+               and_(Event.widget_id.is_(None), Event.integration_id.in_(list(integrations) or [-1])))
 
 
 def query(db: Session, *, user: User | None = None, boards: set[int] | None = None, kinds: tuple[str, ...] | None = None,

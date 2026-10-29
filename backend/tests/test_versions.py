@@ -103,11 +103,11 @@ def release(monkeypatch: pytest.MonkeyPatch, client: TestClient) -> dict[str, An
 
 
 def test_a_reading_is_kept_for_six_hours(release: dict[str, Any], monkeypatch: pytest.MonkeyPatch) -> None:
-    service = _Fake()
+    service = _Fake("4.0.11.2680")
     clock = [1_000_000.0]
     monkeypatch.setattr(versions.time, "time", lambda: clock[0])
     first = asyncio.run(versions.read(1, "sonarr", _resolver(service), Context(None)))  # type: ignore[arg-type]
-    assert (first.running, first.newest, first.state) == ("4.0.9", "4.0.11.2680", "behind")
+    assert (first.running, first.newest, first.state) == ("4.0.11.2680", "4.0.11.2680", "current")
     clock[0] += versions.TTL - 60
     asyncio.run(versions.read(1, "sonarr", _resolver(service), Context(None)))  # type: ignore[arg-type]
     assert service.asked == 1 and release["asked"] == 1, "neither the service nor GitHub is asked again within six hours"
@@ -127,6 +127,46 @@ def test_a_failed_look_is_tried_again_sooner(release: dict[str, Any], monkeypatc
     clock[0] += versions.RETRY + 1
     asyncio.run(versions.read(1, "sonarr", _resolver(service), Context(None)))  # type: ignore[arg-type]
     assert service.asked == 2
+
+
+def test_an_updated_service_shows_as_current_after_half_an_hour(release: dict[str, Any], monkeypatch: pytest.MonkeyPatch) -> None:
+    """⚠️ Seen with nexpaper: updated to 1.4.2, and the card still said "1.4.2 is out" next to "runs 1.4.1" for hours."""
+    service = _Fake("4.0.9")
+    clock = [1_000_000.0]
+    monkeypatch.setattr(versions.time, "time", lambda: clock[0])
+    assert asyncio.run(versions.read(1, "sonarr", _resolver(service), Context(None))).state == "behind"  # type: ignore[arg-type]
+    service.answer = "4.0.11.2680"
+    clock[0] += versions.BEHIND - 60
+    assert asyncio.run(versions.read(1, "sonarr", _resolver(service), Context(None))).state == "behind"  # type: ignore[arg-type]
+    assert service.asked == 1
+    clock[0] += 120
+    reading = asyncio.run(versions.read(1, "sonarr", _resolver(service), Context(None)))  # type: ignore[arg-type]
+    assert (reading.running, reading.state) == ("4.0.11.2680", "current")
+    assert service.asked == 2 and release["asked"] == 1, "the service is asked again, GitHub still once per six hours"
+
+
+def test_a_service_that_is_current_is_not_asked_more_often(release: dict[str, Any], monkeypatch: pytest.MonkeyPatch) -> None:
+    service = _Fake("4.0.11.2680")
+    clock = [1_000_000.0]
+    monkeypatch.setattr(versions.time, "time", lambda: clock[0])
+    asyncio.run(versions.read(1, "sonarr", _resolver(service), Context(None)))  # type: ignore[arg-type]
+    for later in (versions.BEHIND + 1, versions.TTL - 60):
+        clock[0] = 1_000_000.0 + later
+        asyncio.run(versions.read(1, "sonarr", _resolver(service), Context(None)))  # type: ignore[arg-type]
+    assert service.asked == 1
+
+
+def test_the_six_hour_round_does_not_hide_that_a_service_is_behind(release: dict[str, Any], monkeypatch: pytest.MonkeyPatch) -> None:
+    """⚠️ The round asks without GitHub, and the shared reading then names no newest release."""
+    service = _Fake("4.0.9")
+    clock = [1_000_000.0]
+    monkeypatch.setattr(versions.time, "time", lambda: clock[0])
+    assert asyncio.run(versions.read(1, "sonarr", _resolver(service), Context(None))).state == "behind"  # type: ignore[arg-type]
+    clock[0] += 60
+    assert asyncio.run(versions.read(1, "sonarr", _resolver(service), Context(None), allowed=False)).newest is None  # type: ignore[arg-type]
+    service.answer = "4.0.11.2680"
+    clock[0] += versions.BEHIND + 1
+    assert asyncio.run(versions.read(1, "sonarr", _resolver(service), Context(None))).state == "current"  # type: ignore[arg-type]
 
 
 def test_a_service_off_github_is_read_but_not_compared(release: dict[str, Any]) -> None:

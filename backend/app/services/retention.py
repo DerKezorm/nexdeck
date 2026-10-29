@@ -33,6 +33,10 @@ def prune_old_records(db: Session) -> dict[str, int]:
     if settings.keep_action_log_days > 0:
         cutoff = utcnow() - timedelta(days=settings.keep_action_log_days)
         gone["action_log"] = db.execute(delete(ActionLog).where(ActionLog.created_at < cutoff)).rowcount or 0
+        # MCP requests as long as the presses they led to.
+        from . import mcp
+
+        gone["mcp_requests"] = mcp.sweep(db, settings.keep_action_log_days)
 
     if settings.keep_notices_days > 0:
         cutoff = utcnow() - timedelta(days=settings.keep_notices_days)

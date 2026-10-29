@@ -114,6 +114,24 @@ def on_this_clock(event: dict[str, Any], day: date, here: tzinfo | None = None) 
     return begins.date(), f"{begins:%H:%M}", begins + length if length else begins
 
 
+def at_moment(value: Any, here: tzinfo | None = None) -> dict[str, str] | None:
+    """``date`` and ``at`` of an entry that names its moment, such as an episode's ``airDateUtc``.
+
+    ``at`` is the moment with its offset: the card puts it on the day of
+    whoever looks at it, so a show at seven in the evening in Chicago is not
+    listed under tomorrow because it is past midnight in UTC (#56). ``date``
+    is the day on this server's clock, for what reads the day alone. A moment
+    without an offset is taken as UTC, which is what the *arr write.
+    """
+    try:
+        moment = datetime.fromisoformat(str(value or "").strip().replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if moment.tzinfo is None:
+        moment = moment.replace(tzinfo=UTC)
+    return {"date": moment.astimezone(here).date().isoformat(), "at": moment.isoformat()}
+
+
 def drop_what_is_over(items: list[dict[str, Any]], now: datetime | None = None) -> list[dict[str, Any]]:
     """Today's timed entries go once their end has passed, or their start when they name no end.
 
@@ -346,6 +364,10 @@ class IcalAdapter(Adapter):
                         "appointment": True}
                 if clock is not None:
                     item.update(time=clock, over=over.isoformat(timespec="minutes") if over else None)
+                    # Written in a zone: the card puts it on the viewer's own day and clock (#56). A floating time stays as written.
+                    begins = datetime.combine(day, event["clock"])
+                    if begins.tzinfo is not None:
+                        item["at"] = begins.isoformat()
                 items.append(item)
         items.sort(key=in_order)
         return items

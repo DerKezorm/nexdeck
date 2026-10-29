@@ -67,6 +67,7 @@
     "A local account without two-factor authentication.": "Un account locale senza autenticazione a due fattori.",
     "A new media request": "Una nuova richiesta di contenuti",
     "A new nexdeck version": "Una nuova versione di nexdeck",
+    "A program asks to press a button": "Un programma chiede di premere un pulsante",
     "A port that is open while the machine runs. 22 for SSH, 3389 for remote desktop, 445 for file sharing.": "Una porta aperta mentre la macchina è in funzione. 22 per SSH, 3389 per il desktop remoto, 445 per la condivisione file.",
     "A query with several series, one row per label value.": "Una query con più serie, una riga per valore dell'etichetta.",
     "A ring": "Un anello",
@@ -2512,12 +2513,15 @@
     "Shown once when the token is made.": "Mostrato una sola volta alla creazione del token.",
     "The pages changed last, with their book.": "Le pagine modificate per ultime, con il loro libro.",
     "No pages yet.": "Ancora nessuna pagina.",
-    "Administration > API Access, after switching the API on. Wiki.js 2; the key needs the rights to read pages, and administrator rights for the version and the users.": "Amministrazione > Accesso API, dopo aver attivato l'API. Wiki.js 2; la chiave richiede il permesso di leggere le pagine e i diritti di amministratore per versione e utenti.",
-    "How many pages Wiki.js holds, the pages changed last, and whether a newer version is out.": "Quante pagine contiene Wiki.js, le pagine modificate per ultime e se è uscita una versione più recente.",
+    "Administration > API Access, after switching the API on. Wiki.js 2; the key needs the rights to read pages, to read comments for the comments card, and administrator rights for the version and the users.": "Amministrazione > Accesso API, dopo aver attivato l'API. Wiki.js 2; la chiave richiede il permesso di leggere le pagine, per la scheda dei commenti quello di leggere i commenti, e i diritti di amministratore per versione e utenti.",
+    "How many pages Wiki.js holds, the pages changed last, the newest comments, and whether a newer version is out.": "Quante pagine contiene Wiki.js, le pagine modificate per ultime, i commenti più recenti e se è uscita una versione più recente.",
     "How many pages there are, with the users and the version.": "Quante pagine ci sono, con gli utenti e la versione.",
     "The pages changed last, with their path.": "Le pagine modificate per ultime, con il loro percorso.",
     "Wiki": "Wiki",
     "Newer version": "Versione più recente",
+    "Recent comments": "Commenti recenti",
+    "The newest comments, with their page, who wrote them and how long ago.": "I commenti più recenti, con la loro pagina, chi li ha scritti e quanto tempo fa.",
+    "No comments yet.": "Ancora nessun commento.",
     "Changed this week": "Modificate questa settimana",
     "ETAPI token": "Token ETAPI",
     "How many notes Trilium holds, how many changed this week, and the notes changed last.": "Quante note contiene Trilium, quante sono state modificate questa settimana e le note modificate per ultime.",
@@ -3041,6 +3045,7 @@
     "No budget has a limit in this period.": "Nessun budget ha un limite in questo periodo.",
     "No checks yet.": "Nessun controllo ancora.",
     "No filter is switched on, so autobrr grabs nothing.": "Nessun filtro è attivo, quindi autobrr non preleva nulla.",
+    "This wiki has many pages; comments on older pages follow over the next rounds.": "Questo wiki ha molte pagine; i commenti sulle pagine più vecchie arrivano nei prossimi giri.",
     "No late or down checks.": "Nessun controllo in ritardo o non raggiungibile.",
     "No match": "Nessuna corrispondenza",
     "No releases yet.": "Nessuna release ancora.",
@@ -4123,6 +4128,8 @@
     "Reported comments": "Commenti segnalati",
     "Reported posts": "Post segnalati",
     "Reported messages": "Messaggi segnalati",
-    "Unread replies": "Risposte non lette"
+    "Unread replies": "Risposte non lette",
+    "The service does not say which version it runs.": "Il servizio non indica quale versione esegue.",
+    "The service did not answer within twenty seconds.": "Il servizio non ha risposto entro venti secondi."
   }
 }

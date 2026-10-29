@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 import time
-from datetime import UTC
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -13,7 +13,7 @@ import httpx
 import pytest
 import respx
 
-from app.adapters import all_adapters, get_adapter
+from app.adapters import all_adapters, get_adapter, ical
 from app.adapters.base import AdapterError, AuthFailed, Context, WidgetData
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -66,7 +66,9 @@ def test_demo_data_moves_between_ticks() -> None:
 
 
 @respx.mock
-async def test_radarr_queue_status_and_calendar(ctx: Context) -> None:
+async def test_radarr_queue_status_and_calendar(ctx: Context, monkeypatch: pytest.MonkeyPatch) -> None:
+    # The day before the release on this server's clock: the calendar keeps only the days it was asked for.
+    monkeypatch.setattr(ical, "_now", lambda: datetime(2026, 9, 7, 12, 0))
     config = {"url": "http://radarr:7878", "api_key": "key"}
     respx.get("http://radarr:7878/api/v3/queue").mock(return_value=httpx.Response(200, json=fixture("radarr_queue.json")))
     respx.get("http://radarr:7878/api/v3/health").mock(return_value=httpx.Response(200, json=[{"type": "warning", "message": "Indexer unavailable"}]))

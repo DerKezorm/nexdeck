@@ -9,7 +9,10 @@ it runs and "not known" for the newest.
 
 Both are kept for six hours and shared by every card and the System page, so
 a board with three update cards costs a service one look per six hours, and
-GitHub one request per project.
+GitHub one request per project. A service behind the newest release is looked
+at again after half an hour instead, so that one updated shows as current
+within the hour: two looks an hour, and only until it runs the newest. GitHub
+is still asked once per six hours.
 
 ⚠️ GitHub is asked only while the operator lets nexdeck ask it, the switch
 "Check for updates" under System, About that already decides it for nexdeck
@@ -37,6 +40,9 @@ logger = logging.getLogger("nexdeck.versions")
 TTL = 6 * 3600
 #: A failed look is tried again sooner, so a service that was down at the wrong moment does not wait six hours.
 RETRY = 15 * 60
+#: Half an hour for a service behind the newest release: who updates it should not read "newer" for six more hours.
+#: The updates card refreshes every quarter of an hour; any shorter, and such a service would be asked at every refresh.
+BEHIND = 30 * 60
 #: At most this many services are asked at once.
 PARALLEL = 4
 
@@ -146,11 +152,22 @@ async def newest_release(repo: str, ctx: Context) -> dict[str, Any] | None:
     return release
 
 
+def _kept_for(reading: Reading, kind: str) -> float:
+    """How long a running version holds: shorter after a failed look, and while a newer release is known."""
+    if reading.problem:
+        return RETRY
+    # ⚠️ Not ``reading.state``: a reading is shared, and its newest is only what the last
+    # caller was allowed to learn. The six-hour round learns none and would hide it.
+    known = _releases.get(UPSTREAM.get(kind, ""))
+    newest = version_in(known[1]["tag"]) if known and known[1] else None
+    return BEHIND if compare(reading.running, newest) == "behind" else TTL
+
+
 async def read(integration_id: int, kind: str, resolve: Any, ctx: Context, *, allowed: bool = True) -> Reading:
     """The running and the newest version of one connection, from memory while it is fresh."""
     kept = _running.get(integration_id)
     now = time.time()
-    if kept is not None and now - kept.checked < (TTL if not kept.problem else RETRY):
+    if kept is not None and now - kept.checked < _kept_for(kept, kind):
         reading = kept
     else:
         reading = Reading(checked=now)

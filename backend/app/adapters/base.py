@@ -1468,6 +1468,8 @@ def member_client(verify: bool = True) -> httpx.AsyncClient:
 #: with a handful of addresses each stay well under it.
 MAX_CACHED_RESPONSES = 64
 CACHE_PREFIX = "resp:"
+#: A GET that is on its way, under the key its answer will be kept under.
+FLIGHT_PREFIX = "flight:"
 
 
 _relaxed: httpx.AsyncClient | None = None
@@ -1569,7 +1571,8 @@ class Context:
     """What an adapter gets besides its configuration.
 
     ``fetch_json`` caches GET responses for a few seconds per integration, so
-    ten widgets on the same Radarr cause one request, not ten.
+    ten widgets on the same Radarr cause one request, not ten. A GET that
+    another widget has already sent is waited for, not sent again.
     """
 
     def __init__(
@@ -1648,11 +1651,89 @@ class Context:
         key = ""
         if method.upper() == "GET" and cache_seconds > 0:
             key = CACHE_PREFIX + hashlib.sha256(
-                json.dumps([url, params, headers, _auth_fingerprint(auth), *([follow_redirects] if redirects else [])], sort_keys=True, default=str).encode()
+                json.dumps([url, params, headers, _auth_fingerprint(auth), *([follow_redirects] if redirects else []), *([max_bytes] if max_bytes is not None else [])],
+                           sort_keys=True, default=str).encode()
             ).hexdigest()
             hit = self.cache.get(key)
-            if hit and hit[0] > time.monotonic():
+            # ⚠️ Each asker's own age, not the age the answer was kept for. Proxmox asks the guest list for the
+            # inventory (``things``) with a minute and for the cards with five seconds, under one key; after each
+            # inventory the cards showed the same figures for a minute (measured with the load probe, 28.10.2026).
+            now = time.monotonic()
+            if hit and hit[0] > now and now - hit[2] < cache_seconds:
                 return hit[1]
+
+        async def send() -> httpx.Response:
+            return await self._send(method, url, headers=headers, params=params, json_body=json_body, data=data,
+                                    content=content, timeout=timeout, verify=verify, auth=auth, member=member,
+                                    redirects=redirects, max_bytes=max_bytes)
+
+        if key and not member:
+            response = await self._together(key, send, cache_seconds)
+        else:
+            response = await send()
+            # ⚠️ Only an answer that worked is kept. A 401 or a 429 held for the seconds of the cache came back to the
+            # second try, the one made after signing in again, and the card stayed refused until it ran out.
+            if key and response.status_code < 400:
+                self._remember(key, time.monotonic() + cache_seconds, response)
+        if auth_errors and response.status_code in (401, 403):
+            raise AuthFailed(status=response.status_code)
+        return response
+
+    async def _together(self, key: str, send: Any, cache_seconds: float) -> httpx.Response:
+        """Send a GET once for everybody who asks for it while it is on its way.
+
+        ⚠️ The kept answer alone did not do it. It is kept once the answer is
+        there, so every card that asked before that sent its own request: four
+        Proxmox cards on one connection sent ``/nodes`` four times whenever
+        Proxmox took longer than the cards' start was spread, and a service that
+        was slow already got the most requests.
+
+        The request runs on its own, shielded: a card that is rescheduled while
+        it waits stops waiting, and the others still get their answer. The
+        answer is kept only if nobody has forgotten the connection's answers in
+        the meantime (``forget_answers`` after a write), so an answer sent
+        before a write does not come back after it.
+        """
+        name = FLIGHT_PREFIX + key
+        flight = self.cache.get(name)
+        if not isinstance(flight, asyncio.Future):
+            flight = asyncio.ensure_future(send())
+            self.cache[name] = flight
+
+            def landed(done: asyncio.Future[httpx.Response]) -> None:
+                if self.cache.get(name) is not done:
+                    return
+                self.cache.pop(name, None)
+                if done.cancelled() or done.exception() is not None:
+                    return
+                response = done.result()
+                # ⚠️ Only an answer that worked is kept. A 401 or a 429 held for the seconds of the cache came back to
+                # the second try, the one made after signing in again, and the card stayed refused until it ran out.
+                if response.status_code < 400:
+                    self._remember(key, time.monotonic() + cache_seconds, response)
+
+            flight.add_done_callback(landed)
+            # Read the outcome even when every card stopped waiting, or asyncio prints it as never retrieved.
+            flight.add_done_callback(lambda done: done.cancelled() or done.exception())
+        return await asyncio.shield(flight)
+
+    async def _send(
+        self,
+        method: str,
+        url: str,
+        *,
+        headers: dict[str, str] | None,
+        params: dict[str, Any] | None,
+        json_body: Any,
+        data: Any,
+        content: bytes | None,
+        timeout: float,
+        verify: bool,
+        auth: tuple[str, str] | httpx.Auth | None,
+        member: bool,
+        redirects: dict[str, Any],
+        max_bytes: int | None,
+    ) -> httpx.Response:
         try:
             client = member_client(verify) if member else (self.client if verify else _relaxed_client())
             if max_bytes is None:
@@ -1673,13 +1754,7 @@ class Context:
                                     "Check the URL; it is the address of the service itself.") from error
         except httpx.HTTPError as error:
             raise Unreachable(f"The service could not be reached: {error.__class__.__name__}.") from error
-        if auth_errors and response.status_code in (401, 403):
-            raise AuthFailed(status=response.status_code)
         _refuse_a_giant_answer(url, response)
-        # ⚠️ Only an answer that worked is kept. A 401 or a 429 held for the seconds of the cache came back to the
-        # second try, the one made after signing in again, and the card stayed refused until it ran out.
-        if key and response.status_code < 400:
-            self._remember(key, time.monotonic() + cache_seconds, response)
         return response
 
     def forget_answers(self) -> None:
@@ -1687,8 +1762,10 @@ class Context:
 
         ⚠️ For writes a card makes itself. A playlist renamed a second ago must
         not come back under its old name for the two minutes its list is kept.
+        A request still on its way is let go as well: it was asked before the
+        write, and the next card asks again.
         """
-        for name in [key for key in self.cache if key.startswith(CACHE_PREFIX)]:
+        for name in [key for key in self.cache if key.startswith((CACHE_PREFIX, FLIGHT_PREFIX))]:
             self.cache.pop(name, None)
 
     def _remember(self, key: str, until: float, response: httpx.Response) -> None:
@@ -1701,7 +1778,8 @@ class Context:
         into a dict nobody could reach.
         """
         now = time.monotonic()
-        self.cache[key] = (until, response)
+        # Until when it may be given out at most, the answer, and when it came.
+        self.cache[key] = (until, response, now)
         stale = [name for name, entry in self.cache.items()
                  if name.startswith(CACHE_PREFIX) and isinstance(entry, tuple) and entry[0] <= now]
         for name in stale:

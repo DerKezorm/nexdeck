@@ -1,8 +1,10 @@
-import { Archive, Globe, House, Info, KeyRound, LayoutGrid, Mail, Network, Palette, Plug, Puzzle, ScrollText, Search, Sparkles, Users } from 'lucide-react'
+import { Archive, Bot, Globe, House, Info, KeyRound, LayoutGrid, Mail, Network, Palette, Plug, Puzzle, ScrollText, Search, Sparkles, Users } from 'lucide-react'
+import { lazy, Suspense } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Navigate, Route, Routes } from 'react-router-dom'
 
 import { AppShell } from '../../components/AppShell'
+import { useMcpTexts } from '../../lib/mcpTexts'
 import { useAuth } from '../../stores/auth'
 import { AboutSettings } from './AboutSettings'
 import { AppearanceSettings } from './AppearanceSettings'
@@ -21,6 +23,9 @@ import { SettingsNav, type NavEntry } from './SettingsNav'
 import { SignInSettings } from './SignInSettings'
 import { UsersSettings } from './UsersSettings'
 
+// Loaded when the page is opened, with its own words.
+const McpAdmin = lazy(() => import('./McpAdmin').then((m) => ({ default: m.McpAdmin })))
+
 /**
  * Everything that belongs to the instance, not to a person.
  *
@@ -33,6 +38,8 @@ export function SystemPage() {
   const { t } = useTranslation()
   const user = useAuth((state) => state.user)
   const admin = user?.role === 'admin'
+  // The entry's name is one of the MCP words, which come in a language a moment after the page.
+  const mcpWords = useMcpTexts()
   const entries: NavEntry[] = [
     { to: 'integrations', icon: Plug, label: t('settings.nav.integrations') },
     { to: 'apps', icon: LayoutGrid, label: t('settings.nav.apps'), show: admin },
@@ -43,6 +50,7 @@ export function SystemPage() {
     { to: 'mail', icon: Mail, label: t('settings.nav.mail'), show: admin },
     { to: 'search', icon: Search, label: t('settings.nav.search'), show: admin },
     { to: 'assistant', icon: Sparkles, label: t('settings.nav.assistant'), show: admin },
+    { to: 'mcp', icon: Bot, label: t('mcp.nav'), show: admin && mcpWords },
     { to: 'appearance', icon: Palette, label: t('settings.nav.appearance'), show: admin },
     { to: 'sign-in', icon: KeyRound, label: t('settings.nav.oidc'), show: admin },
     { to: 'home-network', icon: House, label: t('settings.nav.homeNetwork'), show: admin },
@@ -72,6 +80,14 @@ export function SystemPage() {
             <Route path="mail" element={forAdmin(<MailSettings />)} />
             <Route path="search" element={forAdmin(<SearchSettings />)} />
             <Route path="assistant" element={forAdmin(<AssistantSettings />)} />
+            <Route
+              path="mcp"
+              element={forAdmin(
+                <Suspense fallback={null}>
+                  <McpAdmin />
+                </Suspense>,
+              )}
+            />
             <Route path="appearance" element={forAdmin(<AppearanceSettings />)} />
             <Route path="sign-in" element={forAdmin(<SignInSettings />)} />
             {/* Where the sign-in providers were until the provider list. */}

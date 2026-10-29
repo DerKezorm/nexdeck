@@ -195,6 +195,7 @@ export const PATTERNS: Record<string, Pattern[]> = {
     [/^(\d+) of (\d+) players$/, '$1 von $2 Spielern'],
     [/^(\d+) players$/, '$1 Spieler'],
     [/^(\d+) of (\d+) MB$/, '$1 von $2 MB'],
+    [/^The answer of the service could not be read \((\w+)\)\.$/, 'Die Antwort des Dienstes ließ sich nicht lesen ($1).'],
   ],
   es: spanish,
   fr: french,

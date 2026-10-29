@@ -9,12 +9,18 @@
  * Sunday night after the clocks change.
  */
 
+import { isoOf } from './calendarDay'
+
+export { isoOf }
+
 export type GridView = 'week' | 'month'
 
 export interface Entry {
   date: string
   title?: unknown
   time?: unknown
+  /** The moment of a timed entry with its offset; `date` is then already the viewer's day (see `calendarDay`). */
+  at?: unknown
   subtitle?: unknown
   source?: unknown
   slot?: unknown
@@ -26,13 +32,6 @@ export interface Entry {
 export interface Range {
   from: string
   to: string
-}
-
-const pad = (value: number) => String(value).padStart(2, '0')
-
-/** The day as the server writes it, from the local calendar of a `Date`. */
-export function isoOf(date: Date): string {
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
 }
 
 /** A `Date` on the local midnight of a written day; an unreadable day is `null`. */

@@ -126,6 +126,12 @@ _SECRET_IN_QUERY = re.compile(
     r"([?&](?:" + "|".join(SECRET_PARAMS) + r")=)([^&\s\"']+)",
     re.IGNORECASE,
 )
+#: A key of an AI program (``services/mcp.py``), wherever it stands in a line: in a header a client
+#: printed, in a body, in an address somebody pasted it into although they were told not to. The same
+#: for what a connector holds (``services/mcp_oauth.py``): its access token ``ndo_``, its refresh token
+#: ``ndr_`` and the code ``ndc_`` it trades for both.
+_MCP_KEY = re.compile(r"\b(nd[mocr])_[A-Za-z0-9_-]{8,}")
+_MCP_MARKS = ("ndm_", "ndo_", "ndr_", "ndc_")
 
 
 def _blank(hit: re.Match[str]) -> str:
@@ -161,7 +167,7 @@ def redact(text: str) -> str:
     # ⚠️ The headers too: at the trace level httpcore prints the answer's headers (a ``Set-Cookie`` holds the ticket of a session,
     # which is as good as the password until it runs out), and h11 prints a refused header with its whole value.
     text = _ILLEGAL_HEADER.sub(lambda hit: f"{hit.group(1)}{hit.group('q')}***{hit.group('q')}", _HEADER_TUPLE.sub(_blank_header, text))
-    return QUERY_PARAMETER.sub(_blank, _SECRET_IN_QUERY.sub(lambda hit: hit.group(1) + "***", text))
+    return QUERY_PARAMETER.sub(_blank, _MCP_KEY.sub(r"\1_***", _SECRET_IN_QUERY.sub(lambda hit: hit.group(1) + "***", text)))
 
 
 class _Context(logging.Filter):
@@ -174,7 +180,7 @@ class _Context(logging.Filter):
         if record.args:
             record.msg = record.getMessage()
             record.args = ()
-        if isinstance(record.msg, str) and ("=" in record.msg or "header value" in record.msg):
+        if isinstance(record.msg, str) and ("=" in record.msg or "header value" in record.msg or any(mark in record.msg for mark in _MCP_MARKS)):
             record.msg = redact(record.msg)
         return True
 

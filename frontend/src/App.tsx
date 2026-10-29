@@ -7,6 +7,7 @@ import { AssistantHost } from './components/assistant/AssistantHost'
 import { BackgroundLayer } from './components/BackgroundLayer'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { NoticeToast } from './components/NoticeDrawer'
+import { NoticeStream } from './components/NoticeStream'
 import { PlayerHost } from './components/player/PlayerHost'
 import { Spinner } from './components/ui'
 import { setLanguage, storedLanguage } from './i18n'
@@ -25,10 +26,12 @@ const SettingsPage = lazy(() => import('./pages/settings/SettingsPage').then((m)
 const SystemPage = lazy(() => import('./pages/settings/SystemPage').then((m) => ({ default: m.SystemPage })))
 const NoticesPage = lazy(() => import('./pages/NoticesPage').then((m) => ({ default: m.NoticesPage })))
 const ChroniclePage = lazy(() => import('./pages/ChroniclePage').then((m) => ({ default: m.ChroniclePage })))
+const McpRequestPage = lazy(() => import('./pages/McpRequestPage').then((m) => ({ default: m.McpRequestPage })))
 const DiagnosisPage = lazy(() => import('./pages/DiagnosisPage').then((m) => ({ default: m.DiagnosisPage })))
 const PreviewPage = lazy(() => import('./pages/PreviewPage').then((m) => ({ default: m.PreviewPage })))
 const CardEditorPage = lazy(() => import('./pages/cardEditor/CardEditorPage').then((m) => ({ default: m.CardEditorPage })))
 const IntegrationEditorPage = lazy(() => import('./pages/integrationEditor/IntegrationEditorPage').then((m) => ({ default: m.IntegrationEditorPage })))
+const ConnectPage = lazy(() => import('./pages/ConnectPage').then((m) => ({ default: m.ConnectPage })))
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false, staleTime: 5000 } } })
 
@@ -107,6 +110,8 @@ export function App() {
                 and a reloaded display comes back in on /k alone. */}
             <Route path="/k/:token?" element={<KioskPage />} />
             <Route path="/preview" element={<PreviewPage />} />
+            {/* An MCP connector's consent page: outside the frame like the sign-in, it sends a signed-out browser there itself. */}
+            <Route path="/connect" element={<ConnectPage />} />
             <Route
               path="/"
               element={
@@ -196,11 +201,20 @@ export function App() {
                 </Guard>
               }
             />
+            <Route
+              path="/mcp/requests/:id"
+              element={
+                <Guard>
+                  <McpRequestPage />
+                </Guard>
+              }
+            />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>
         </AppBarFrame>
         <NoticeToast />
+        <NoticeStream />
         {/* Beside the routes, not inside a page: music carries on when the board changes. */}
         <PlayerHost />
         {/* Beside the routes as well: a conversation carries on from board to board. */}

@@ -1806,6 +1806,35 @@
         "30 more services say when their project has a newer release.",
         "Security: the kept answers of a service are no longer shared between two sign-ins, and an error answer is not kept. The dependency audit lets one build-tool advisory pass until the end of the year, with its reason."
       ]
+    },
+    "0.52.0": {
+      "lead": "Claude Code, claude.ai and other MCP programs can now read your boards and press a card's button once you allow it. A hanging service costs less, and the bell counts on every page.",
+      "sections": [
+        {
+          "title": "AI from outside (MCP)",
+          "body": "A program such as Claude Code or claude.ai reads what needs a look, your cards, the chronicle and the history of a number, with the rights of your account and only the boards you give it. Each key has its level, its boards, an end and a right per tool: allow, ask me first or deny. A press that asks comes to the bell with Allow and Decline and runs out after ten minutes; a dangerous button always asks, and twice. Programs that sign in themselves connect over OAuth, with a consent page in nexdeck. Off until an administrator switches it on.",
+          "path": "System > AI from outside (MCP); My settings > AI from outside (MCP)"
+        },
+        {
+          "title": "Calmer when a service hangs",
+          "body": "When several cards of one connection ask the same thing at the same time, nexdeck sends one request and hands the answer to all of them, also while a slow service is still thinking. A hanging service gets half the requests it got before, and the others keep their pace. A card no longer shows an answer older than it asked for."
+        },
+        {
+          "title": "Wiki.js: recent comments",
+          "body": "A new card lists the newest comments with their page, who wrote them and how long ago, and each row opens the discussion. Wiki.js only hands out the comments of one page at a time, so on a large wiki the card reads the pages in rounds and says so until it has read them all.",
+          "path": "Edit mode (pencil) > Add widget > Wiki.js"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "The bell counts new notices on every page, not only on a board, and after a reload it shows the right number at once.",
+        "Calendar cards put an episode on the day of your own clock, not the day in UTC, so an evening show no longer lands on the next day.",
+        "The Speedtest Tracker history shows the latest measurements on a tracker with more than one page of results.",
+        "After an update, a service shows as current within the hour instead of six.",
+        "The inventory no longer proposes a device such as a FRITZ!Box in a container that only shares part of its name.",
+        "The chronicle no longer lists the card lines of a board you may not open when two boards share a connection.",
+        "The foot of the bell wraps on a narrow drawer and a phone instead of breaking its labels."
+      ]
     }
   }
 }

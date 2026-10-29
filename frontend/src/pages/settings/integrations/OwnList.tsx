@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next'
 import type { AdapterSpec, Integration } from '../../../api/types'
 import { CATEGORY_ORDER } from '../../../components/WidgetLibrary'
 import { ServiceIcon } from '../../../components/ServiceIcon'
+import { tLabel } from '../../../i18n/texts'
 import { timeAgo } from '../../../lib/format'
 import { FILTERS, grouped, rowsOf, storedView, storeView, visible, type OwnFilter, type OwnRow, type VersionReading } from './own'
 
@@ -24,7 +25,8 @@ function VersionColumn({ reading, loading }: { reading?: VersionReading; loading
   }
   return (
     <span className="w-32 min-w-0 grid text-[11px] leading-tight max-md:hidden" data-version={reading.state}>
-      <span className="num truncate text-muted" title={reading.problem || undefined}>
+      {/* The reason comes from the server in English, like the errors of a card. */}
+      <span className="num truncate text-muted" title={reading.problem ? tLabel(reading.problem) : undefined}>
         {reading.running ? (
           t('settings.integrations.version.runs', { version: reading.running })
         ) : (

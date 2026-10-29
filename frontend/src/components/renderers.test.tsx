@@ -5,6 +5,7 @@
 import { render, screen } from '@testing-library/react'
 
 import { DEMO_DATA, DEMO_SERIES, DEMO_VIEWS } from '../demo/board'
+import { isoOf } from '../lib/calendarDay'
 import type { Action, WidgetData, WidgetView } from '../lib/types'
 import { renderWidget } from './renderers'
 import { WidgetCard } from './WidgetCard'
@@ -55,7 +56,8 @@ describe('renderers', () => {
 
   it('shows the time of a timed calendar entry and none for an all-day one', () => {
     const view = { ...DEMO_VIEWS[0], id: 10, renderer: 'calendar' } as WidgetView
-    const today = new Date().toISOString().slice(0, 10)
+    // Today on the viewer's calendar: the card leaves out days gone by, and in UTC it can still be yesterday.
+    const today = isoOf(new Date())
     const data = { status: 'ok', items: [{ date: today, title: 'Holiday' }, { date: today, title: 'Choir', time: '19:30' }] } as unknown as WidgetData
     const { container } = render(<>{renderWidget({ widget: view, data })}</>)
     const times = container.querySelectorAll('time')

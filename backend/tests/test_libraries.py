@@ -672,6 +672,38 @@ async def test_the_history_card_finds_the_newest_end_whichever_it_is(ctx: Contex
             f"the newest measurement was not found with newest_first={newest_first}")
 
 
+@pytest.mark.parametrize("reads", ["page[number]", "page"])
+@respx.mock
+async def test_the_history_card_asks_for_pages_the_way_the_tracker_reads_them(ctx: Context, reads: str) -> None:
+    """⚠️ #54: the tracker pages JSON:API style and answers ``?page=93`` with
+    page 1, the oldest measurements, saying ``current_page: 1``. A card that
+    asked with ``page`` alone read page 1 over and over and, on a tracker
+    with 93 pages, said "No measurement in this period" about last week.
+    ``page`` is still sent for versions that read that instead."""
+    import time as clock
+
+    now = clock.time()
+    pages = 20
+
+    def tracker(request):
+        # Whatever the tracker does not read, it ignores, and answers page 1.
+        page = int(request.url.params.get(reads, 1))
+        # Oldest first: page 1 is months ago, the last page ends now.
+        start = now - (pages - page + 1) * 25 * 21600
+        return httpx.Response(200, json=_results(25, page=page, last=pages, start=start))
+
+    respx.get(f"{TRACKER}/api/v1/results").mock(side_effect=tracker)
+    data = await get_adapter("speedtest").fetch(
+        "history", {"url": TRACKER, "api_key": "k"}, {"days": "7"}, ctx)
+
+    assert data.meta.get("empty") is None, "the newest measurements were never read"
+    points = data.meta["lines"][0]["points"]
+    assert max(point[0] for point in points) > now - 86400
+    # The last page holds 6.25 days; the rest of the week is on the page
+    # before it, which only a walk from the newest end reaches.
+    assert len(points) > 25, f"seven days at six hours apart is about 28 points, not {len(points)}"
+
+
 @respx.mock
 async def test_the_history_card_keeps_only_the_period_that_was_asked_for(ctx: Context) -> None:
     import time as clock

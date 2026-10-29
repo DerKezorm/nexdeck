@@ -35,7 +35,8 @@ export function Sheet({ open, onClose, title, children, wide, footer }: { open: 
           </button>
         </header>
         <div className="flex-1 min-h-0 scroll p-4">{children}</div>
-        {footer && <footer className="px-4 py-3 border-t border-line flex justify-end gap-2">{footer}</footer>}
+        {/* Wraps rather than squeezing: a button is one line high, and a label that wrapped inside it ran out of it. */}
+        {footer && <footer className="px-4 py-3 border-t border-line flex flex-wrap justify-end gap-2">{footer}</footer>}
       </aside>
     </div>
   )

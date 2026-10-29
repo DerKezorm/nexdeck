@@ -149,6 +149,8 @@ export interface Notice {
   link: string
   created_at: string
   read_at: string | null
+  /** What the notice is about, as fields, for some kinds of news only (an MCP request or press): the bell words them. */
+  facts?: { kind: string; [field: string]: unknown }
 }
 
 export interface ChannelKind {

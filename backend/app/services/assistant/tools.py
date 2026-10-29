@@ -51,6 +51,10 @@ class Bench:
     db: Session
     user: User
     grants: list[str]
+    #: A key over MCP may see only some of its account's boards; None: every one the account may see.
+    boards: frozenset[int] | None = None
+    #: Called over MCP: the key's right per tool takes the place of asking in the conversation.
+    mcp: bool = False
     citations: dict[str, dict[str, Any]] = field(default_factory=dict)
     proposals: list[dict[str, Any]] = field(default_factory=list)
     permissions: list[dict[str, Any]] = field(default_factory=list)
@@ -148,10 +152,26 @@ TOOLS: list[dict[str, Any]] = [
 # -- shared lookups ---------------------------------------------------------------------
 
 
-def _places(db: Session) -> dict[int, tuple[Widget, Page, Board]]:
-    """Every card with its page and board. The assistant is for administrators, who may see them all."""
+def board_right(bench: Bench, board: Board) -> str | None:
+    """What the bench's account may do on a board, as ``deps.board_permission`` decides, cut to a key's boards."""
+    from ...deps import board_permission
+
+    if bench.boards is not None and board.id not in bench.boards:
+        return None
+    return board_permission(bench.db, board, bench.user)
+
+
+def _places(bench: Bench) -> dict[int, tuple[Widget, Page, Board]]:
+    """Every card the bench's account may see, with its page and board.
+
+    The chat is for administrators, who see them all. A key over MCP belongs to
+    any account, and may be limited to some of its boards; a card it may not
+    see is not here, so every tool answers about it as about one that does
+    not exist.
+    """
+    db = bench.db
     pages = {page.id: page for page in db.scalars(select(Page))}
-    boards = {board.id: board for board in db.scalars(select(Board))}
+    boards = {board.id: board for board in db.scalars(select(Board)) if board_right(bench, board) is not None}
     out = {}
     for widget in db.scalars(select(Widget)):
         page = pages.get(widget.page_id)
@@ -204,7 +224,7 @@ def _json(value: Any) -> str:
 
 def needs_attention(bench: Bench, _input: dict[str, Any]) -> str:
     db = bench.db
-    places = _places(db)
+    places = _places(bench)
     failing = {check.widget_id: check for check in db.scalars(select(HealthCheck).where(HealthCheck.enabled.is_(True), HealthCheck.last_ok.is_(False)))}
     rows = []
     for widget_id, (widget, page, board) in places.items():
@@ -221,16 +241,18 @@ def needs_attention(bench: Bench, _input: dict[str, Any]) -> str:
         else:
             continue
         _cite(bench, widget, page, board)
-    warnings = [{"title": notice.title, "body": notice.body[:200], "at": notice.created_at}
-                for notice in db.scalars(select(Notice).where(Notice.user_id == bench.user.id, Notice.read_at.is_(None), Notice.level.in_(("warn", "error", "bad")))
-                                         .order_by(Notice.created_at.desc()).limit(10))]
+    # The bell names cards of every board; a key limited to some of them does not read it.
+    warnings = [] if bench.boards is not None else [
+        {"title": notice.title, "body": notice.body[:200], "at": notice.created_at}
+        for notice in db.scalars(select(Notice).where(Notice.user_id == bench.user.id, Notice.read_at.is_(None), Notice.level.in_(("warn", "error", "bad")))
+                                 .order_by(Notice.created_at.desc()).limit(10))]
     return _json({"cards": rows, "unread_warnings": warnings, "nothing_wrong": not rows and not warnings})
 
 
 def find_cards(bench: Bench, given: dict[str, Any]) -> str:
     words = str(given.get("words") or "").lower().strip()
     rows = []
-    for widget_id, (widget, _page, board) in _places(bench.db).items():
+    for widget_id, (widget, _page, board) in _places(bench).items():
         integration = widget.integration.name if widget.integration is not None else ""
         haystack = " ".join((widget.title, widget.kind, integration, board.name)).lower()
         if words and words not in haystack:
@@ -251,7 +273,7 @@ def _offered(data: Any) -> list[tuple[str, dict[str, Any], list[Any]]]:
 
 
 def card_details(bench: Bench, given: dict[str, Any]) -> str:
-    place = _places(bench.db).get(int(given.get("card_id") or 0))
+    place = _places(bench).get(int(given.get("card_id") or 0))
     if place is None:
         return _json({"error": "No such card."})
     widget, page, board = place
@@ -287,8 +309,8 @@ def read_chronicle(bench: Bench, given: dict[str, Any]) -> str:
     except (TypeError, ValueError):
         hours = 24
     group = str(given.get("group") or "all")
-    lines = chronicle.query(bench.db, user=bench.user, kinds=chronicle.GROUPS.get(group), since=utcnow() - timedelta(hours=hours),
-                            words=str(given.get("words") or ""), limit=60)
+    lines = chronicle.query(bench.db, user=bench.user, boards=None if bench.boards is None else set(bench.boards),
+                            kinds=chronicle.GROUPS.get(group), since=utcnow() - timedelta(hours=hours), words=str(given.get("words") or ""), limit=60)
     if lines:
         bench.citations["chronicle"] = {"label": "chronicle", "chronicle": True}
     return _json({"lines": [{"at": line.at.isoformat(timespec="minutes"), "kind": line.kind, "name": line.name, "before": line.before,
@@ -296,7 +318,7 @@ def read_chronicle(bench: Bench, given: dict[str, Any]) -> str:
 
 
 def metric_history(bench: Bench, given: dict[str, Any]) -> str:
-    place = _places(bench.db).get(int(given.get("card_id") or 0))
+    place = _places(bench).get(int(given.get("card_id") or 0))
     if place is None:
         return _json({"error": "No such card."})
     try:
@@ -350,15 +372,21 @@ def _gives_logs(kind: str) -> bool:
 
 
 async def container_log(bench: Bench, given: dict[str, Any]) -> str:
-    place = _places(bench.db).get(int(given.get("card_id") or 0))
+    place = _places(bench).get(int(given.get("card_id") or 0))
     container = str(given.get("container") or "").strip()
     if place is None or place[0].integration is None or not container:
         return _json({"error": "Name a card that lists containers, and one of its containers."})
     widget = place[0]
     if not _gives_logs(widget.integration.kind):
         return _json({"error": f"A {widget.integration.kind} connection gives no container logs. Docker, Portainer and a Synology do."})
+    # ⚠️ One of the containers this card lists, not any container of its connection: the connection may serve cards
+    # on boards the key does not see, and the log of a container only they list is theirs.
+    shown = live.get(widget.id)
+    listed = {str(value) for item in (shown.items if shown is not None else []) if isinstance(item, dict) for value in (item.get("title"), item.get("id")) if value}
+    if container not in listed:
+        return _json({"error": "That container is not on this card. Name one that card_details lists."})
     grant = f"log:{widget.integration_id}:{container}"
-    if grant not in bench.grants:
+    if not bench.mcp and grant not in bench.grants:
         bench.permissions.append({"kind": "log", "card_id": widget.id, "container": container, "grant": grant})
         return _json({"asked": True, "note": "The person has been asked whether you may read this log. Nothing was read."})
     from ...adapters.base import AdapterError
@@ -384,7 +412,7 @@ async def container_log(bench: Bench, given: dict[str, Any]) -> str:
 
 
 async def propose_action(bench: Bench, given: dict[str, Any]) -> str:
-    place = _places(bench.db).get(int(given.get("card_id") or 0))
+    place = _places(bench).get(int(given.get("card_id") or 0))
     action_id = str(given.get("action") or "")
     params = given.get("params") if isinstance(given.get("params"), dict) else {}
     if place is None:
@@ -413,14 +441,22 @@ async def propose_action(bench: Bench, given: dict[str, Any]) -> str:
 def diagnose(bench: Bench, given: dict[str, Any]) -> str:
     from .. import dependencies, diagnosis
 
+    places = _places(bench)
     ref = str(given.get("ref") or "").strip()
     if not ref and given.get("card_id"):
-        place = _places(bench.db).get(int(given.get("card_id") or 0))
+        place = places.get(int(given.get("card_id") or 0))
         ref = dependencies.subject_of(place[0]) or "" if place is not None else ""
+    # A key limited to some boards asks only about a service one of its cards is about.
+    if ref and bench.boards is not None and not any(widget.id in places for widget in diagnosis.widgets_of(bench.db, ref)):
+        ref = ""
     page = diagnosis.build(bench.db, ref) if ref else None
     if page is None:
         return _json({"error": "Name a service by its ref or one of its cards by card_id."})
-    places = _places(bench.db)
+    # A service is shown on cards of several boards; the ones this bench may not see are not named, neither
+    # as cards nor in the lines and buttons that carry their titles.
+    page["cards"] = [card for card in page["cards"] if card["id"] in places]
+    page["buttons"] = [button for button in page["buttons"] if button["widget_id"] in places]
+    page["lines"] = [line for line in page["lines"] if "target" not in line or line["target"]["widget"] in places]
     for card in page["cards"]:
         if card["id"] in places:
             _cite(bench, *places[card["id"]])

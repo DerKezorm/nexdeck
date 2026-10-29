@@ -19,6 +19,7 @@ import { Spinner } from '../components/ui'
 import { tLabel } from '../i18n/texts'
 import { useAssistant } from '../lib/assistant'
 import { clockOf, lineDetail, lineStatus, lineText, momentOf } from '../lib/chronicle'
+import { useChronicleWords } from '../lib/chronicleWords'
 import { diagnosisPath, lengthOf, type Diagnosis, type Runbook } from '../lib/diagnosis'
 import { useLazyTexts } from '../lib/lazyTexts'
 import { safeUrl } from '../lib/safeUrl'
@@ -156,6 +157,7 @@ function Body({ page, reload, moment }: { page: Diagnosis; reload: () => Promise
 
 function Happened({ page }: { page: Diagnosis }) {
   const { t, i18n } = useTranslation()
+  useChronicleWords(page.lines)
   const marks: { at: number; text: string; ok: boolean }[] = []
   if (page.since) marks.push({ at: page.since, text: t('diagnosis.began', { time: clockOf(page.since, i18n.language) }), ok: false })
   if (page.until) marks.push({ at: page.until, text: t('diagnosis.ended', { time: clockOf(page.until, i18n.language) }), ok: true })

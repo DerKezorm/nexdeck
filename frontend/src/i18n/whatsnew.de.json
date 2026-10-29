@@ -1806,6 +1806,35 @@
         "30 weitere Dienste sagen, wenn ihr Projekt eine neuere Version hat.",
         "Sicherheit: Die zwischengespeicherten Antworten eines Dienstes werden nicht mehr zwischen zwei Anmeldungen geteilt, und eine Fehlerantwort wird nicht behalten. Die Abhängigkeitsprüfung lässt einen Hinweis zu einem Build-Werkzeug bis Jahresende gelten, mit Begründung."
       ]
+    },
+    "0.52.0": {
+      "lead": "Claude Code, claude.ai und andere MCP-Programme können jetzt deine Boards lesen und einen Knopf auf einer Karte drücken, wenn du es erlaubst. Ein hängender Dienst kostet weniger, und die Glocke zählt auf jeder Seite.",
+      "sections": [
+        {
+          "title": "KI von außen (MCP)",
+          "body": "Ein Programm wie Claude Code oder claude.ai liest, was einen Blick braucht, deine Karten, die Chronik und den Verlauf einer Zahl, mit den Rechten deines Kontos und nur auf den Boards, die du ihm gibst. Jeder Schlüssel hat seine Stufe, seine Boards, ein Ablaufdatum und ein Recht je Werkzeug: erlauben, erst fragen oder verbieten. Ein Druck, der fragt, landet in der Glocke mit Erlauben und Ablehnen und verfällt nach zehn Minuten. Ein gefährlicher Knopf fragt immer, und zwar zweimal. Programme, die sich selbst anmelden, verbinden sich über OAuth mit einer Zustimmungsseite in nexdeck. Aus, bis ein Admin es einschaltet.",
+          "path": "System > KI von außen (MCP); Meine Einstellungen > KI von außen (MCP)"
+        },
+        {
+          "title": "Ruhiger, wenn ein Dienst hängt",
+          "body": "Fragen mehrere Karten einer Anbindung gleichzeitig dasselbe, schickt nexdeck eine Anfrage und gibt die Antwort allen, auch solange ein langsamer Dienst noch nachdenkt. Ein hängender Dienst bekommt nur noch halb so viele Anfragen, und die anderen behalten ihren Takt. Eine Karte zeigt keine Antwort mehr, die älter ist, als sie gefragt hat."
+        },
+        {
+          "title": "Wiki.js: neue Kommentare",
+          "body": "Eine neue Karte zeigt die neuesten Kommentare mit Seite, Verfasser und wie lange es her ist, und jede Zeile öffnet die Diskussion. Wiki.js gibt Kommentare nur je Seite heraus, darum liest die Karte ein großes Wiki in Runden und sagt das, bis sie alle Seiten einmal gelesen hat.",
+          "path": "Bearbeiten (Stift) > Widget hinzufügen > Wiki.js"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Die Glocke zählt neue Hinweise auf jeder Seite, nicht nur auf einem Board, und zeigt nach dem Neuladen gleich die richtige Zahl.",
+        "Kalenderkarten setzen eine Folge auf den Tag deiner eigenen Uhr statt auf den Tag in UTC, eine Abendsendung landet also nicht mehr am nächsten Tag.",
+        "Der Verlauf von Speedtest Tracker zeigt die neuesten Messungen, auch wenn der Tracker mehr als eine Seite Ergebnisse hat.",
+        "Nach einem Update gilt ein Dienst binnen einer Stunde als aktuell statt nach sechs.",
+        "Das Inventar schlägt ein Gerät wie eine FRITZ!Box nicht mehr in einem Container vor, der nur einen Teil des Namens teilt.",
+        "Die Chronik zeigt keine Kartenzeilen eines Boards mehr, das du nicht öffnen darfst, wenn sich zwei Boards eine Anbindung teilen.",
+        "Die Fußleiste der Glocke bricht im schmalen Fenster und auf dem Handy um, statt ihre Beschriftungen zu zerteilen."
+      ]
     }
   }
 }

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { ExternalLink, LayoutDashboard, Play, Search, Settings, Sparkles, Zap } from 'lucide-react'
+import { ExternalLink, KeyRound, LayoutDashboard, Play, Search, Settings, Sparkles, Zap } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
@@ -13,6 +13,7 @@ import { safeUrl } from '../lib/safeUrl'
 import { pickTarget, searchUrl, type SearchSettings } from '../lib/search'
 import type { Action, WidgetData, WidgetView } from '../lib/types'
 import { useFocusTrap } from '../lib/useFocusTrap'
+import { useAuth } from '../stores/auth'
 import { linksOf } from './paletteLinks'
 import { ServiceIcon } from './ServiceIcon'
 
@@ -42,8 +43,23 @@ interface Props {
 
 /** Ctrl+K: services, links, actions, boards, pages and settings, all from the keyboard. */
 export function CommandPalette({ open, onClose, boards, widgets, actions = [], onAction, data, initial = '' }: Props) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const navigate = useNavigate()
+  // "MCP keys" is one of the MCP words, which are not in the first load: they are fetched the first time the bar
+  // opens, and the entry shows once they are there (for the language on screen).
+  const member = useAuth((state) => !!state.user && state.user.role !== 'guest')
+  const [mcpWords, setMcpWords] = useState<string | null>(null)
+  useEffect(() => {
+    if (!open || !member || mcpWords === i18n.language) return
+    let gone = false
+    void import('../lib/mcpTexts').then(async (module) => {
+      await module.loadMcpTexts(i18n.language)
+      if (!gone) setMcpWords(i18n.language)
+    })
+    return () => {
+      gone = true
+    }
+  }, [open, member, mcpWords, i18n.language])
   const [query, setQuery] = useState('')
   const [index, setIndex] = useState(0)
   const input = useRef<HTMLInputElement>(null)
@@ -95,6 +111,10 @@ export function CommandPalette({ open, onClose, boards, widgets, actions = [], o
     ]) {
       list.push({ id: `s${path}`, title: label, subtitle: t('palette.settings'), icon: <Settings size={16} />, keywords: label.toLowerCase(), run: () => navigate(path) })
     }
+    if (mcpWords === i18n.language) {
+      const label = t('mcp.palette')
+      list.push({ id: 's/settings/mcp', title: label, subtitle: t('palette.settings'), icon: <KeyRound size={16} />, keywords: `${label} mcp claude`.toLowerCase(), run: () => navigate('/settings/mcp') })
+    }
     // Last, so an empty bar still opens on services and boards: a board with
     // forty bookmarks would otherwise fill the first screen with them.
     const seen = new Set<string>()
@@ -116,7 +136,7 @@ ${link.url}`
       }
     }
     return list
-  }, [widgets, actions, boards, navigate, onAction, t, data])
+  }, [widgets, actions, boards, navigate, onAction, t, data, mcpWords, i18n.language])
 
   /**
    * The targets the bar may hand a word to. Read once and kept: they change

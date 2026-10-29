@@ -83,3 +83,21 @@ async def test_an_answer_that_worked_is_still_kept() -> None:
     await ctx.request("GET", URL, cache_seconds=60)
     await ctx.request("GET", URL, cache_seconds=60)
     assert route.call_count == 1
+
+
+@respx.mock
+async def test_each_asker_gets_an_answer_no_older_than_it_asked_for(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Proxmox asks the guest list with a minute for the inventory and with five seconds for the cards, under one key.
+
+    The cards got the inventory's answer for the whole minute (load probe, 28.10.2026).
+    """
+    clock = [1000.0]
+    monkeypatch.setattr("app.adapters.base.time.monotonic", lambda: clock[0])
+    route = respx.get(URL).mock(side_effect=[httpx.Response(200, json={"n": 1}), httpx.Response(200, json={"n": 2})])
+    ctx = _ctx()
+    await ctx.request("GET", URL, cache_seconds=60)
+    clock[0] += 4
+    assert (await ctx.request("GET", URL, cache_seconds=5)).json() == {"n": 1}
+    clock[0] += 2
+    assert (await ctx.request("GET", URL, cache_seconds=5)).json() == {"n": 2}
+    assert route.call_count == 2

@@ -13,14 +13,15 @@ import assistantEn from './assistant.en.json'
 import diagnosisEn from './diagnosis.en.json'
 import editorEn from './editor.en.json'
 import inventoryEn from './inventory.en.json'
+import mcpEn from './mcp.en.json'
 import enOwn from './en.json'
 import { withOidc } from './index'
 
 // The sign-in words of the shared module are merged into English at start (`withOidc`), so they count as present.
 const en = withOidc(enOwn, oidcEn)
-// The words of the chat, the inventory, the diagnosis (`lib/lazyTexts.ts`) and the card editor (`pages/cardEditor/editorTexts.ts`)
+// The words of the chat, the inventory, the diagnosis and MCP (`lib/lazyTexts.ts`) and the card editor (`pages/cardEditor/editorTexts.ts`)
 // come in files of their own, and count as English too.
-for (const [name, branch] of [...Object.entries(assistantEn), ...Object.entries(inventoryEn), ...Object.entries(diagnosisEn), ...Object.entries(editorEn)]) {
+for (const [name, branch] of [...Object.entries(assistantEn), ...Object.entries(inventoryEn), ...Object.entries(diagnosisEn), ...Object.entries(mcpEn), ...Object.entries(editorEn)]) {
   ;(en as Record<string, unknown>)[name] = { ...((en as Record<string, Record<string, unknown>>)[name] ?? {}), ...branch }
 }
 
