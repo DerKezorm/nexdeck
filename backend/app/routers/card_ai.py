@@ -120,6 +120,8 @@ class _Verifier:
             return ai.Checked([])
         problems: list[Problem] = []
         for index, request in enumerate(definition.requests):
+            if "{" in request.path:
+                continue  # a name the administrator fills in later: nothing to ask yet, and not the provider's to guess
             try:
                 self.answers[request.id] = await _ask(adapter, config, ctx, request)
             except AdapterError as failure:
