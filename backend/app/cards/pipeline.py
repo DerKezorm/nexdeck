@@ -508,6 +508,17 @@ def _raw(run: _Run, val: Val, row: Any = None, inside_row: bool = False) -> Any:
     return _total(run, val.total)
 
 
+def _a_year(path: str | None, raw: Any) -> bool:
+    """A whole number in a field named for a year (``year``, ``productionYear``, ``release_year``): written as it is, never 2,005.
+
+    Without a format a number is grouped by thousands, and the guided way, the card help and a hand-written card all
+    leave the format out for a year (found in a real run on 1.0.0).
+    """
+    if not path or not isinstance(raw, int) or isinstance(raw, bool) or not 1000 <= raw <= 9999:
+        return False
+    return path.rsplit(".", 1)[-1].lower().endswith("year")
+
+
 def _value(run: _Run, val: Val, row: Any = None, inside_row: bool = False) -> Shown:
     raw = _raw(run, val, row, inside_row)
     run.budget.check()
@@ -516,7 +527,7 @@ def _value(run: _Run, val: Val, row: Any = None, inside_row: bool = False) -> Sh
         run.note_missing(what)
     shape = val.format
     if shape is None:
-        shape = "number" if isinstance(raw, int | float) and not isinstance(raw, bool) else "text"
+        shape = "number" if isinstance(raw, int | float) and not isinstance(raw, bool) and not _a_year(val.path, raw) else "text"
     value, text, shape = _format(run, raw, shape, val.digits)
     return Shown(
         value=value,
