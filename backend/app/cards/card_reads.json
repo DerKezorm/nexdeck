@@ -3023,7 +3023,7 @@
    ]
   },
   {
-   "path": "/api/v1/results?page=1",
+   "path": "/api/v1/results?page%5Bnumber%5D=1&page=1",
    "widgets": [
     "history"
    ]
