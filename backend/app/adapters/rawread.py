@@ -403,13 +403,18 @@ def _proves(name: str) -> bool:
 
 
 def _parts_of(value: str) -> set[str]:
-    """A header value and what may stand alone of it: ``Bearer <token>``, ``name=<ticket>; other=<ticket>``."""
+    """A header value and what may stand alone of it: ``Bearer <token>``, ``name=<ticket>; other=<ticket>``, ``Token="<key>"``.
+
+    ⚠️ A plain word is no credential of its own: ``Bearer``, ``MediaBrowser`` or ``Client="nexdeck"`` would hide every text
+    of an answer that names them. A key that is a plain word comes from a secret field, which is looked for as it is.
+    """
     found = {value}
     for token in re.split(r"[\s;,]+", value):
-        found.add(token)
+        token = token.strip("\"'")
         named = re.fullmatch(r"[A-Za-z0-9_.\-]+=(.+)", token)
-        if named:
-            found.add(named.group(1))
+        for one in (token, named.group(1).strip("\"'") if named else ""):
+            if one and not one.isalpha():
+                found.add(one)
     return found
 
 

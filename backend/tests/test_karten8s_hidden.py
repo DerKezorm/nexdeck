@@ -142,3 +142,14 @@ def test_karten8s_s1_the_credentials_come_from_the_secret_fields_the_signing_and
     found = rawread.credentials_of(get_adapter("sonarr"), SONARR, [sent], cookies)
     assert {KEY, "token-0123456789", "sid-0123456789", "pw-0123456789", "cookie-0123456789"} <= found
     assert "someone-long" not in found and "nexdeck-client" not in found
+
+
+def test_karten8s_s1_a_plain_word_of_a_header_is_no_credential_of_its_own() -> None:
+    """``Bearer`` and the Jellyfin header name words that answers use as well: only the key in it is looked for."""
+    jellyfin = 'MediaBrowser Token="tok-0123456789", Client="nexdeck", Device="nexdeck", Version="1"'
+    sent = rawread.Sent({"Authorization": jellyfin, "X-Other-Token": "Bearer bearer-0123456789"})
+    found = rawread.credentials_of(get_adapter("sonarr"), {"url": BASE}, [sent])
+    assert {"tok-0123456789", "bearer-0123456789"} <= found
+    assert not {"MediaBrowser", "Bearer", "nexdeck", "Client"} & found
+    holds = rawread.holds_a_credential(found)
+    assert not holds("Served by MediaBrowser for the nexdeck client, Bearer accepted")
