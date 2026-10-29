@@ -33,6 +33,7 @@ const McpRequestPage = lazy(() => import('./pages/McpRequestPage').then((m) => (
 const DiagnosisPage = lazy(() => import('./pages/DiagnosisPage').then((m) => ({ default: m.DiagnosisPage })))
 const PreviewPage = lazy(() => import('./pages/PreviewPage').then((m) => ({ default: m.PreviewPage })))
 const CardEditorPage = lazy(() => import('./pages/cardEditor/CardEditorPage').then((m) => ({ default: m.CardEditorPage })))
+const SkinEditorPage = lazy(() => import('./pages/skins/SkinEditorPage').then((m) => ({ default: m.SkinEditorPage })))
 const IntegrationEditorPage = lazy(() => import('./pages/integrationEditor/IntegrationEditorPage').then((m) => ({ default: m.IntegrationEditorPage })))
 const ConnectPage = lazy(() => import('./pages/ConnectPage').then((m) => ({ default: m.ConnectPage })))
 
@@ -144,6 +145,23 @@ export function App() {
               element={
                 <Guard>
                   <SettingsPage />
+                </Guard>
+              }
+            />
+            {/* The skin editor too: the whole window, the stage in the middle. */}
+            <Route
+              path="/system/skins/new"
+              element={
+                <Guard>
+                  <SkinEditorPage />
+                </Guard>
+              }
+            />
+            <Route
+              path="/system/skins/:key/edit"
+              element={
+                <Guard>
+                  <SkinEditorPage />
                 </Guard>
               }
             />

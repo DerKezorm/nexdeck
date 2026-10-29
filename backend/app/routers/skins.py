@@ -60,6 +60,11 @@ def described(admin: AdminUser) -> dict:
     }
 
 
+@router.get("/starters", summary="What a new skin can start from: nothing, a look nexdeck ships, an example")
+def starting_points(admin: AdminUser) -> dict:
+    return {"starters": store.starters()}
+
+
 @router.post("/check", summary="Check and compile a skin without saving it")
 def check(body: SkinText, admin: AdminUser) -> dict:
     """Asked while somebody edits: always 200, with what is wrong in ``problems``."""

@@ -19,7 +19,7 @@ from app.skins import compile as skin_compile
 from app.skins import css, sprites
 from app.skins.schema import SkinFile, Sprite
 
-FIXTURES = Path(__file__).parent / "fixtures" / "skins"
+FIXTURES = Path(__file__).parents[1] / "app" / "skins" / "examples"
 FENCE = ":where(:not([data-skin-guard], [data-skin-guard] *))"
 
 

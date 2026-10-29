@@ -289,7 +289,8 @@
       "apps": "Apps",
       "assistant": "Asistente",
       "inventory": "Inventario",
-      "cards": "Tarjetas propias"
+      "cards": "Tarjetas propias",
+      "skins": "Skins"
     },
     "mail": {
       "title": "Servidor de correo",

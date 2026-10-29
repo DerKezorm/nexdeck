@@ -22,7 +22,7 @@ from app.skins import store
 
 from .conftest import CSRF, create_user, login, setup_admin
 
-CONSOLE = (Path(__file__).parent / "fixtures" / "skins" / "console.json").read_text(encoding="utf-8")
+CONSOLE = (Path(__file__).parents[1] / "app" / "skins" / "examples" / "console.json").read_text(encoding="utf-8")
 LOOK = {"preset": "cyan", "accent": "", "css": ""}
 
 
@@ -240,3 +240,15 @@ def test_migration_32_adds_the_table_and_a_column_an_older_version_can_insert_ar
         # 1.0 writes accounts without the column it does not know: the database fills it in.
         skin = next(row for row in connection.execute(text("PRAGMA table_info(users)")) if row[1] == "skin")
         assert skin[3] == 1 and skin[4] == "'{}'"
+
+
+def test_a_new_skin_starts_from_nothing_a_look_or_an_example_and_each_compiles(admin_client: TestClient, user_client: TestClient) -> None:
+    starters = admin_client.get("/api/v1/skins/starters").json()["starters"]
+    kinds = {starter["key"]: starter["kind"] for starter in starters}
+    assert kinds["empty"] == "empty" and kinds["console"] == "example" and kinds["frost"] == "look"
+    assert "1984" not in kinds, "1984 is nexdeck's own sheet, not data to start from"
+    frost = json.loads(next(starter["text"] for starter in starters if starter["key"] == "frost"))
+    assert frost["tokens"]["card_style"] == "outline" and len(frost["tokens"]["dark"]) == 15
+    for starter in starters:
+        assert admin_client.post("/api/v1/skins/check", headers=CSRF, json={"text": starter["text"]}).json()["ok"], starter["key"]
+    assert user_client.get("/api/v1/skins/starters").status_code == 403

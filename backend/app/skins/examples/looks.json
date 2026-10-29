@@ -1,0 +1,13 @@
+{
+  "about": "The looks nexdeck ships (frontend/src/pages/settings/LookShare.tsx, LOOKS), as starting points for a skin of colours and shapes. 1984 is not among them: it is a sheet of nexdeck's own, not data. A frontend test keeps the two lists together.",
+  "looks": [
+    {"key": "classic", "name": "Classic", "theme": null, "card_style": "glass", "radius": 16, "gap": 12},
+    {"key": "midnight", "name": "Midnight", "theme": "tokyonight", "card_style": "neon", "radius": 14, "gap": 12},
+    {"key": "frost", "name": "Frost", "theme": "nord", "card_style": "outline", "radius": 8, "gap": 10},
+    {"key": "latte", "name": "Latte", "theme": "catppuccin", "card_style": "flat", "radius": 12, "gap": 14},
+    {"key": "castle", "name": "Castle", "theme": "dracula", "card_style": "glass", "radius": 18, "gap": 12},
+    {"key": "workshop", "name": "Workshop", "theme": "gruvbox", "card_style": "flat", "radius": 4, "gap": 8},
+    {"key": "evening", "name": "Evening", "theme": "rosepine", "card_style": "glass", "radius": 20, "gap": 16},
+    {"key": "quiet", "name": "Quiet", "theme": "graphite", "card_style": "calm", "radius": 10, "gap": 14, "font": "geist"}
+  ]
+}

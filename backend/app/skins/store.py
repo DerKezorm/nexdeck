@@ -48,6 +48,36 @@ def builtin() -> dict[str, tuple[SkinFile, dict[str, Any]]]:
     return found
 
 
+EXAMPLES_DIR = Path(__file__).with_name("examples")
+
+
+@cache
+def starters() -> list[dict[str, Any]]:
+    """What a new skin can start from besides a copy of an installed one: nothing, a look nexdeck ships, an example.
+
+    Each is a whole skin file as text, checked here once, so the editor never opens one that does not compile.
+    """
+    from ..services import themes
+
+    found: list[dict[str, Any]] = [{"key": "empty", "kind": "empty", "name": "My skin", "text": json.dumps({"nexdeck_skin": 1, "key": "my-skin", "name": "My skin"}, indent=2)}]
+    looks = json.loads((EXAMPLES_DIR / "looks.json").read_text(encoding="utf-8"))["looks"]
+    for look in looks:
+        theme = themes.THEMES.get(look["theme"]) if look["theme"] else None
+        tokens: dict[str, Any] = {name: look[name] for name in ("card_style", "radius", "gap", "font") if name in look}
+        if theme:
+            tokens.update({mode: theme[mode] for mode in ("dark", "light") if theme.get(mode)})
+        text = json.dumps({"nexdeck_skin": 1, "key": look["key"], "name": look["name"], "tokens": tokens}, indent=2)
+        found.append({"key": look["key"], "kind": "look", "name": look["name"], "text": text})
+    for path in sorted(EXAMPLES_DIR.glob("*.json")):
+        if path.name == "looks.json":
+            continue
+        text = path.read_text(encoding="utf-8")
+        found.append({"key": path.stem, "kind": "example", "name": json.loads(text)["name"], "text": text})
+    for starter in found:
+        skin_compile.compile_skin(read(starter["text"]))
+    return found
+
+
 def read(text: str) -> SkinFile:
     """The file checked, or SkinError with every problem a person can act on."""
     try:

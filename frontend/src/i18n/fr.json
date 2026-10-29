@@ -289,7 +289,8 @@
       "apps": "Apps",
       "assistant": "Assistant",
       "inventory": "Inventaire",
-      "cards": "Cartes personnalisées"
+      "cards": "Cartes personnalisées",
+      "skins": "Skins"
     },
     "mail": {
       "title": "Serveur de messagerie",

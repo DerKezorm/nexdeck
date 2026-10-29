@@ -1,4 +1,4 @@
-import { Archive, Bot, Globe, House, Info, KeyRound, LayoutGrid, Mail, Network, Palette, Plug, Puzzle, ScrollText, Search, Sparkles, Users } from 'lucide-react'
+import { Archive, Bot, Brush, Globe, House, Info, KeyRound, LayoutGrid, Mail, Network, Palette, Plug, Puzzle, ScrollText, Search, Sparkles, Users } from 'lucide-react'
 import { lazy, Suspense } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Navigate, Route, Routes } from 'react-router-dom'
@@ -25,6 +25,7 @@ import { UsersSettings } from './UsersSettings'
 
 // Loaded when the page is opened, with its own words.
 const McpAdmin = lazy(() => import('./McpAdmin').then((m) => ({ default: m.McpAdmin })))
+const SkinsPage = lazy(() => import('../skins/SkinsPage').then((m) => ({ default: m.SkinsPage })))
 
 /**
  * Everything that belongs to the instance, not to a person.
@@ -52,6 +53,7 @@ export function SystemPage() {
     { to: 'assistant', icon: Sparkles, label: t('settings.nav.assistant'), show: admin },
     { to: 'mcp', icon: Bot, label: t('mcp.nav'), show: admin && mcpWords },
     { to: 'appearance', icon: Palette, label: t('settings.nav.appearance'), show: admin },
+    { to: 'skins', icon: Brush, label: t('settings.nav.skins'), show: admin },
     { to: 'sign-in', icon: KeyRound, label: t('settings.nav.oidc'), show: admin },
     { to: 'home-network', icon: House, label: t('settings.nav.homeNetwork'), show: admin },
     { to: 'journal', icon: ScrollText, label: t('settings.nav.journal'), show: admin },
@@ -89,6 +91,14 @@ export function SystemPage() {
               )}
             />
             <Route path="appearance" element={forAdmin(<AppearanceSettings />)} />
+            <Route
+              path="skins"
+              element={forAdmin(
+                <Suspense fallback={null}>
+                  <SkinsPage />
+                </Suspense>,
+              )}
+            />
             <Route path="sign-in" element={forAdmin(<SignInSettings />)} />
             {/* Where the sign-in providers were until the provider list. */}
             <Route path="oidc" element={<Navigate to="/system/sign-in" replace />} />
