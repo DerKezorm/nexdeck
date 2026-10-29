@@ -46,7 +46,7 @@
       "accept": "Aceptar",
       "takeAnyway": "Llevar al editor",
       "discard": "Descartar",
-      "sentValues": "Con esta petición se enviaron valores de ejemplo del servicio.",
+      "sentValues": "Con esta petición se enviaron valores de ejemplo del servicio. La casilla se ha gastado con ella; márcala de nuevo para enviarlos con la siguiente.",
       "sentNoValues": "No se envió ningún valor, solo nombres y tipos de campos.",
       "leaveBody": "Hay una respuesta de la IA que no se ha aceptado ni descartado. Se pierde si te vas.",
       "previewFailed": "No se pudo dibujar la vista previa de esta tarjeta.",

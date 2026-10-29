@@ -46,7 +46,7 @@
       "accept": "Übernehmen",
       "takeAnyway": "In den Editor holen",
       "discard": "Verwerfen",
-      "sentValues": "Beispielwerte des Dienstes sind bei dieser Anfrage mitgegangen.",
+      "sentValues": "Beispielwerte des Dienstes sind bei dieser Anfrage mitgegangen. Das Häkchen ist damit verbraucht; setz es neu, damit sie bei der nächsten mitgehen.",
       "sentNoValues": "Es sind keine Werte mitgegangen, nur Feldnamen und Typen.",
       "leaveBody": "Eine Antwort der KI wartet und wurde weder übernommen noch verworfen. Wenn du gehst, ist sie weg.",
       "previewFailed": "Die Vorschau dieser Karte konnte nicht gezeichnet werden.",
