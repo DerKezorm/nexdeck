@@ -15,7 +15,7 @@ from pydantic import BaseModel, Field, StringConstraints, ValidationError
 from sqlalchemy import select
 
 from ..adapters.base import AdapterError
-from ..cards import ai, credentials, schema
+from ..cards import ai, credentials, demo, load, schema
 from ..cards.load import Problem
 from ..db import db_session
 from ..deps import AdminUser, DbSession, error
@@ -95,15 +95,22 @@ def _tried_with(preferred: int | None, kinds: list[str]) -> int | None:
         return db.scalar(found.order_by(Integration.id).limit(1))
 
 
-def _verifier(preferred: int | None, userid: int, username: str) -> ai.Verify:
+class _Verifier:
     """Asks the service every request of a proposal, the way the editor's preview will (found in a real run on 1.0.0).
 
     The provider guessed paths from a lookalike service (Sonarr's for nexcrate), and the card failed only once taken over.
     Nothing of the answers goes to the provider, only which path failed and nexdeck's own sentence for it. Without a real
     connection of the kind, in demo mode, or with the service down, nothing can be said and nothing is held against the card.
+    The answers of the last card asked stay in ``answers`` (request id -> answer) for its examples.
     """
 
-    async def verify(definition: Any) -> list[Problem]:
+    def __init__(self, preferred: int | None, userid: int, username: str) -> None:
+        self.preferred, self.userid, self.username = preferred, userid, username
+        self.answers: dict[str, Any] = {}
+
+    async def __call__(self, definition: Any) -> list[Problem]:
+        self.answers = {}
+        preferred, userid, username = self.preferred, self.userid, self.username
         number = _tried_with(preferred, list(definition.requires))
         if number is None:
             return []
@@ -114,7 +121,7 @@ def _verifier(preferred: int | None, userid: int, username: str) -> ai.Verify:
         problems: list[Problem] = []
         for index, request in enumerate(definition.requests):
             try:
-                await _ask(adapter, config, ctx, request)
+                self.answers[request.id] = await _ask(adapter, config, ctx, request)
             except AdapterError as failure:
                 if failure.code in _PATH_FAILURES:
                     problems.append(Problem(
@@ -129,7 +136,26 @@ def _verifier(preferred: int | None, userid: int, username: str) -> ai.Verify:
         logger.info("%s had a proposed card asked of %s at %s.", username, number, paths)
         return problems
 
-    return verify
+
+def _verifier(preferred: int | None, userid: int, username: str) -> _Verifier:
+    return _Verifier(preferred, userid, username)
+
+
+def with_examples(outcome: ai.Outcome, answers: dict[str, Any]) -> None:
+    """A proposal without examples gets the service's answers, made up the way a card's demo data is (they stay in nexdeck).
+
+    The preview beside a proposal draws from examples, and the provider writes none: without them it could not be drawn
+    (found in a real run on 1.0.0). A card that has examples keeps its own.
+    """
+    if not outcome.ok or outcome.definition is None or outcome.definition.demo or not answers:
+        return
+    try:
+        made, _cut = demo.disguise(answers)
+        text = ai.with_demo(outcome.yaml, made)
+        loaded = load.load_definition(text)
+    except (AdapterError, load.CardInvalid):
+        return
+    outcome.yaml, outcome.definition = text, loaded.definition
 
 
 @router.post("/ai", summary="Have the provider of the assistant write, change or translate a card")
@@ -143,10 +169,13 @@ async def card_with_ai(body: AiBody, user: AdminUser, db: DbSession) -> dict[str
 
     async def work() -> ai.Outcome:
         kind, answer = await _asked(body, request, userid, username)
-        return await ai.generate(
+        verify = _verifier(body.connection_id, userid, username)
+        outcome = await ai.generate(
             ai.Ask(mode=body.mode, description=body.description, yaml=body.yaml, connection_kind=kind, path=body.path or "", answer=answer, include_values=body.include_values),
-            config, key, _verifier(body.connection_id, userid, username),
+            config, key, verify,
         )
+        with_examples(outcome, verify.answers)
+        return outcome
 
     try:
         finished, outcome = await ai.supervised(userid, work())

@@ -125,3 +125,18 @@ def test_karten17v_the_connection_chosen_in_the_editor_is_asked_before_the_first
     monkeypatch.setattr(providers, "turn", Script(proposing(RIGHT)))
     body = admin.post("/api/v1/cards/ai", json={"mode": "change", "description": "Show my queue", "yaml": ai.EXAMPLE, "connection_id": chosen}, headers=CSRF).json()
     assert body["ok"] is True and second.call_count == 1 and first.call_count == 0
+
+
+@respx.mock
+def test_karten17v_a_proposal_comes_with_examples_made_from_the_answers_so_its_preview_can_be_drawn(admin: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:  # noqa: F811
+    switch_on(admin)
+    connection(admin)
+    respx.get(f"{BASE}{RIGHT}").mock(return_value=httpx.Response(200, json=ANSWER))
+    monkeypatch.setattr(providers, "turn", Script(proposing(RIGHT)))
+    body = admin.post("/api/v1/cards/ai", json={"mode": "change", "description": "Show my queue", "yaml": ai.EXAMPLE}, headers=CSRF).json()
+    assert body["ok"] is True and "\ndemo:" in body["yaml"]
+    # Made up like a card's demo data: the real text of the answer is not in it.
+    assert "Zq-Marker-Alpha" not in body["yaml"]
+    # The preview beside the proposal asks with its examples, and gets a card.
+    drawn = admin.post("/api/v1/cards/preview", json={"yaml": body["yaml"], "demo": True}, headers=CSRF)
+    assert drawn.status_code == 200, drawn.text
