@@ -474,6 +474,24 @@ def _readable(kind: str) -> bool:
 
 
 NO_OWN_CARDS = "cannot be read by a card of its own. Say so, and name the way out: a connection of the kind JSON API, or an own connection that describes the service."
+#: What the provider is told when the service could not be read for a draft: the code and nexdeck's own sentence for it.
+#: ⚠️ Never the message of the failure: it names the connection ("The connection Garage Rack is in demo mode") or an address
+#: (found in a real run on 1.0.1).
+UNREAD = {
+    "demo_mode": "The connection is in demo mode, so nexdeck does not ask the real service. Demo mode is switched off under System > Integrations.",
+    "unreachable": "The service did not answer. Ask the person to check that it runs and that nexdeck can reach it.",
+    "http_error": "The service answered this path with an error. Try another path of its kind.",
+    "not_json": "The service does not answer this path with JSON. Try another path of its kind.",
+    "redirected": "The service sends this path somewhere else. Try another path of its kind.",
+    "answer_too_large": "The answer of the service at this path is too large for a card. Try a path that asks for less.",
+    "command_refused": "nexdeck does not ask this path: it reads like one that makes the service do something.",
+    "bad_path": "The path starts with a single / and names no host.",
+}
+UNREAD_OTHERWISE = "The service could not be read. Tell the person the code; the editor's probe shows the whole message."
+
+
+def _unread(code: str) -> dict[str, str]:
+    return {"error": UNREAD.get(code, UNREAD_OTHERWISE), "code": code}
 
 
 def _listed(rows: list[Any]) -> list[dict[str, Any]]:
@@ -548,7 +566,7 @@ async def draft_card(bench: Bench, given: dict[str, Any]) -> str:
     except ai.Busy:
         return _json({"error": "A card is being written for this person already. Say so and try again in a moment."})
     except AdapterError as failure:
-        return _json({"error": f"The service could not be read: {failure.message}"})
+        return _json(_unread(failure.code))
     except ai.AiError as failure:
         return _json({"error": failure.message})
     if not finished:
