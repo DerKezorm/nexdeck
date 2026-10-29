@@ -371,7 +371,7 @@ def _semantic(definition: Any, lines: dict[Path, int], running: str) -> list[Pro
     if not pipeline.fixed_place(link):
         add(
             "card_link_address",
-            "A link is a value of the answer, a path that starts with a single /, or an address with http or https and the host written out before any {placeholder}.",
+            "A link is a value of the answer, a path that starts with a single / (it leads underneath the connection), or an address with http or https written out whole, without a {placeholder}.",
             ("item", "link", "formula" if link.formula is not None else "template"),
         )
     for path, code, message, params in buttons.problems(definition):

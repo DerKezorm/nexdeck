@@ -72,8 +72,8 @@ def test_karten8s_s2_a_link_whose_host_is_not_written_out_is_refused_on_checking
         "  link: url\n",
         "  link: {path: url}\n",
         "  link: {template: '/series/{titleSlug}'}\n",
-        "  link: {template: 'https://stats.example.com/q?k={instanceName}'}\n",
-        "  link: {template: 'HTTP://svc.example.com:8989/x/{id}'}\n",
+        "  link: {template: 'https://docs.example.com/sonarr/queue'}\n",
+        "  link: {template: 'HTTP://svc.example.com:8989/x'}\n",
     ],
 )
 def test_karten8s_s2_a_value_a_path_and_an_address_with_its_host_written_out_are_fine(link: str) -> None:
@@ -96,8 +96,10 @@ def test_karten8s_s2_a_saved_card_that_breaks_the_rule_shows_no_link_and_one_tha
     assert present_unchecked({"template": "{url}"}, row).items[0].get("url") is None
     assert present_unchecked({"template": "https://{host}/x"}, row).items[0].get("url") is None
     assert present_unchecked({"formula": "{url}"}, row).items[0].get("url") is None
-    kept = present_unchecked({"template": "https://stats.example.com/{instanceName}"}, row).items[0].get("url")
-    assert kept == "https://stats.example.com/Sonarr"
+    # Since B10 of the second review a placeholder after a host written out breaks it too.
+    assert present_unchecked({"template": "https://stats.example.com/{instanceName}"}, row).items[0].get("url") is None
+    kept = present_unchecked({"template": "https://docs.example.com/queue"}, row).items[0].get("url")
+    assert kept == "https://docs.example.com/queue"
     # A value of the answer as it stands may lead anywhere: the service named it, not the card.
     assert present_unchecked({"path": "url"}, row).items[0].get("url") == "https://evil.example.com/x"
 
@@ -108,13 +110,13 @@ BASE = "http://svc.example.com:8989"
 
 @respx.mock
 def test_karten8s_s2_the_probe_of_the_review_a_link_to_another_host_carries_no_key() -> None:
-    """The probe of S1/S2 the other way round: the link to a host of the author does not carry the key away."""
-    card = HEAD + "  value: apiKey\n  link: {template: 'https://stats.example.com/q?k={apiKey}'}\n"
+    """The probe of S1/S2 the other way round: a link with the key in it carries it nowhere (a host of the author is refused since B10)."""
+    card = HEAD + "  value: apiKey\n  link: {template: '/q?k={apiKey}'}\n"
     definition = load.load_definition(card).definition
     respx.get(f"{BASE}/api/v3/config/host").mock(return_value=httpx.Response(200, json={"instanceName": "Sonarr", "apiKey": KEY}))
     context = Context(httpx.AsyncClient(), integration_id=1, widget_id=1, cache={})
     answer = asyncio.run(source.fetch_source(get_adapter("sonarr"), {"url": BASE, "api_key": KEY}, context, Request(id="host", path="/api/v3/config/host")))
-    data = present(definition, pipeline.run(definition, {"host": answer}))
+    data = present(definition, pipeline.run(definition, {"host": answer}), base=BASE)
     links = [item.get("url") for item in data.items]
     assert links and not any(KEY in (link or "") for link in links), links
     assert KEY not in data.model_dump_json()

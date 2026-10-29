@@ -117,7 +117,7 @@
       "card_demo_unknown_request": "La respuesta de demostración {{id}} no pertenece a ninguna consulta.",
       "card_rule_subject": "Una regla de la tarjeta debe decir en qué se fija: un valor o una fórmula.",
       "card_picture_address": "Una imagen es un valor de la respuesta o una ruta de la conexión que empieza con una sola /.",
-      "card_link_address": "Un enlace es un valor de la respuesta, una ruta que empieza con una sola / o una dirección con http o https cuyo host está escrito antes de cualquier {marcador}.",
+      "card_link_address": "Un enlace es un valor de la respuesta, una ruta que empieza con una sola / (lleva por debajo de la dirección de la conexión) o una dirección con http o https escrita entera, sin ningún {marcador}.",
       "card_expression": "{{reason}}",
       "card_expression_at": "{{reason}} (carácter {{position}})",
       "card_secret_value": "Esto parece {{what}}. Una tarjeta no guarda secretos: la conexión los conserva y los añade a la consulta.",

@@ -117,7 +117,7 @@
       "card_demo_unknown_request": "La risposta dimostrativa {{id}} non appartiene ad alcuna richiesta.",
       "card_rule_subject": "Una regola della scheda deve dire che cosa guarda: un valore o una formula.",
       "card_picture_address": "Un'immagine è un valore della risposta o un percorso della connessione che inizia con una sola /.",
-      "card_link_address": "Un link è un valore della risposta, un percorso che inizia con una sola / o un indirizzo con http o https il cui host è scritto prima di qualsiasi {segnaposto}.",
+      "card_link_address": "Un link è un valore della risposta, un percorso che inizia con una sola / (porta sotto l'indirizzo della connessione) o un indirizzo con http o https scritto per intero, senza {segnaposto}.",
       "card_expression": "{{reason}}",
       "card_expression_at": "{{reason}} (carattere {{position}})",
       "card_secret_value": "Sembra {{what}}. Una scheda non contiene segreti: li conserva la connessione e li aggiunge alla richiesta.",
