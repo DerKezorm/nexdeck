@@ -76,13 +76,32 @@ async def _asked(body: AiBody, request: schema.Request | None, userid: int, user
         return body.kind or "", ai.MISSING
     assert body.connection_id is not None
     adapter, config, ctx = await _connection(body.connection_id)
-    answer = await _ask(adapter, config, ctx, request)
-    with db_session() as db:
-        name = db.get(Integration, body.connection_id)
-        chronicle.record("card_probe", user_id=userid, integration_id=body.connection_id, name=name.name if name else "", detail=f"{request.path} (card help)", db=db)
-        db.commit()
-    logger.info("%s asked %s for a card at %s.", username, body.connection_id, request.path)
+    try:
+        answer = await _ask(adapter, config, ctx, request)
+    except AdapterError as failure:
+        note_asked(userid, username, body.connection_id, [(request.path, failure.code)], "card help")
+        raise
+    note_asked(userid, username, body.connection_id, [(request.path, None)], "card help")
     return adapter.kind, answer
+
+
+def note_asked(userid: int, username: str, number: int, asked: list[tuple[str, str | None]], how: str) -> None:
+    """A line in the chronicle and the log for every question the card help put to a service, also one that failed.
+
+    ``asked`` are the paths with the code of their failure, ``None`` for an answer. ⚠️ A question that failed was asked all
+    the same, with the connection's credentials, like a probe that failed: the line says why, never what came back. The chat's
+    draft wrote none, and the editor none when its first question failed (found in a real run on 1.0.1).
+    """
+    if not asked:
+        return
+    failed = [code for _path, code in asked if code]
+    detail = ", ".join(f"[{code}] {path}" if code else path for path, code in asked)
+    with db_session() as db:
+        row = db.get(Integration, number)
+        chronicle.record("card_probe", level="warn" if failed else "info", user_id=userid, integration_id=number if row else None,
+                         name=row.name if row else "", detail=f"{detail} ({how})", db=db)
+        db.commit()
+    logger.info("%s had the card help ask %s at %s (%s)%s.", username, number, detail, how, f": {', '.join(failed)}" if failed else "")
 
 
 def _tried_with(preferred: int | None, kinds: list[str]) -> int | None:
@@ -119,23 +138,21 @@ class _Verifier:
         except AdapterError:
             return ai.Checked([])
         problems: list[Problem] = []
+        asked: list[tuple[str, str | None]] = []
         for index, request in enumerate(definition.requests):
             if "{" in request.path:
                 continue  # a name the administrator fills in later: nothing to ask yet, and not the provider's to guess
             try:
                 self.answers[request.id] = await _ask(adapter, config, ctx, request)
+                asked.append((request.path, None))
             except AdapterError as failure:
+                asked.append((request.path, failure.code))
                 if failure.code in _PATH_FAILURES:
                     problems.append(Problem(
                         ai.PATH_FAILED, f"The service did not answer {request.path}: {failure.message}", path=f"requests[{index}].path",
                         params={"path": request.path, "failure": failure.code},
                     ))
-        paths = ", ".join(request.path for request in definition.requests)
-        with db_session() as db:
-            name = db.get(Integration, number)
-            chronicle.record("card_probe", user_id=userid, integration_id=number, name=name.name if name else "", detail=f"{paths} (card help, check)", db=db)
-            db.commit()
-        logger.info("%s had a proposed card asked of %s at %s.", username, number, paths)
+        note_asked(userid, username, number, asked, "card help, check")
         return ai.Checked(problems, dict(self.answers))
 
 

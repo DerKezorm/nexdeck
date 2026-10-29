@@ -506,7 +506,7 @@ async def draft_card(bench: Bench, given: dict[str, Any]) -> str:
     from ...adapters.custom import plain
     from ...cards import ai, card_reads, credentials, demo, load, schema
     from ...models import Conversation, ConversationDraft, Integration
-    from ...routers.card_ai import _verifier
+    from ...routers.card_ai import _verifier, note_asked
     from ...routers.cards import _ask, _connection
     from . import chat, settings
 
@@ -551,13 +551,18 @@ async def draft_card(bench: Bench, given: dict[str, Any]) -> str:
         if held is not None:
             held.grants = [one for one in held.grants or [] if one != grant]
     config, key = settings.stored(bench.db), settings.key_of(bench.db)
-    integration_id, conversation_id, user_id = chosen.id, bench.conversation_id, bench.user.id
-    verify = _verifier(integration_id, user_id, bench.user.username)
+    integration_id, conversation_id, user_id, username = chosen.id, bench.conversation_id, bench.user.id, bench.user.username
+    verify = _verifier(integration_id, user_id, username)
     bench.db.commit()
 
     async def work() -> tuple[Any, Any]:
         adapter, connection, ctx = await _connection(integration_id)
-        answer = await _ask(adapter, connection, ctx, request)
+        try:
+            answer = await _ask(adapter, connection, ctx, request)
+        except AdapterError as failure:
+            note_asked(user_id, username, integration_id, [(path, failure.code)], "card help, chat")
+            raise
+        note_asked(user_id, username, integration_id, [(path, None)], "card help, chat")
         return answer, await ai.generate(ai.Ask(mode="new", description=description, connection_kind=adapter.kind, path=path, answer=answer, include_values=values), config, key, verify)
 
     # One request per administrator, like the editor's, and the one that ends when the provider is taken away (KARTEN-17 AC-8, EC-6).
