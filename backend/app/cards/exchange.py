@@ -142,8 +142,8 @@ class Item:
 
     @property
     def id(self) -> str:
-        """What the choices name: ``card:<slug>`` or ``integration:<short>``."""
-        return f"{self.type}:{self.key}"
+        """What the choices name: ``card:<slug>`` or ``integration:<short>``; a document that names no short name by its place in the file, ``card:#<line>``."""
+        return f"{self.type}:{self.key if self.key else f'#{self.line}'}"
 
     def view(self) -> dict[str, Any]:
         found = {

@@ -7,7 +7,8 @@ from fastapi.testclient import TestClient
 from app.cards import load
 
 from .cards_sample import changed
-from .conftest import setup_admin
+from .conftest import CSRF, setup_admin
+from .karten12_sample import PLAIN, separated
 from .test_board_yaml_edit import _board, _card, _save, _text
 
 
@@ -55,3 +56,18 @@ def test_karten8k_the_answer_of_a_change_by_yaml_is_the_board_after_it(client: T
     shown = {card["title"]: card["options"] for card in answer.json()["pages"][0]["widgets"]}
     assert set(shown) == {"Shopping", "New clock"} and shown["Shopping"]["content"] == "milk"
     assert answer.json()["pages"] == after["pages"], "the answer is the board a request for it gives straight after"
+
+
+# -- a document of a file that names no short name is told apart by its place -----------------------------------
+
+
+def test_karten8k_documents_without_a_short_name_are_named_by_their_line_not_by_none(client: TestClient) -> None:
+    setup_admin(client)
+    nameless = changed("slug: queue-size\n", "", PLAIN)
+    seen = client.post("/api/v1/cards/import/check", json={"text": separated(PLAIN, nameless, nameless)}, headers=CSRF)
+    assert seen.status_code == 200, seen.text
+    ids = [one["id"] for one in seen.json()["documents"]]
+    assert ids[0] == "card:queue-size"
+    assert len(set(ids)) == 3 and not any("None" in one for one in ids), ids
+    assert all(one.startswith("card:#") for one in ids[1:])
+    assert [one["line"] for one in seen.json()["documents"][1:]] == [int(one.split("#")[1]) for one in ids[1:]]
