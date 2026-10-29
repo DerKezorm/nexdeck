@@ -38,9 +38,13 @@ vi.mock('../../api/client', async (original) => ({
   }),
 }))
 
+/** The client of the page on screen, so a test can wait for an answer to have arrived and not only for the request to have left. */
+let client = new QueryClient()
+
 function wrap(node: React.ReactNode) {
+  client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
-    <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+    <QueryClientProvider client={client}>
       <MemoryRouter>{node}</MemoryRouter>
     </QueryClientProvider>,
   )
@@ -108,8 +112,9 @@ describe('the setting under System', () => {
   it('asks a local runner for its models with the address and key typed', async () => {
     stored.value = { provider: 'off', base_url: '', model: '', has_key: false, ready: false, leaves_the_house: false }
     wrap(<AssistantSettings />)
-    await waitFor(() => expect(sent.some((one) => one.path === '/settings/assistant')).toBe(true))
-    // Let the stored setting arrive before anything is typed over it.
+    // The stored setting must have arrived (and been put in the form) before anything is typed over it: waiting for the
+    // request is not enough, the answer can come after the typing on a busy machine and then sets the form back.
+    await waitFor(() => expect(client.getQueryState(['assistant-setting'])?.status).toBe('success'))
     await act(async () => undefined)
     expect(sent.some((one) => one.path === '/settings/assistant/models')).toBe(false)
     fireEvent.change(screen.getByLabelText('Provider'), { target: { value: 'openai' } })
@@ -127,9 +132,10 @@ describe('the setting under System', () => {
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'Save and test' }))
     })
-    const order = sent.filter((one) => one.method !== 'GET' && one.path !== '/settings/assistant/models').map((one) => `${one.method} ${one.path}`)
-    expect(order).toEqual(['PUT /settings/assistant', 'POST /settings/assistant/test'])
-    expect(screen.getByText('claude-opus-5-5 answers.')).toBeTruthy()
+    // The test follows the saving by a moment (the stored setting is read again first), so it is waited for, not looked for at once.
+    const order = () => sent.filter((one) => one.method !== 'GET' && one.path !== '/settings/assistant/models').map((one) => `${one.method} ${one.path}`)
+    await waitFor(() => expect(order()).toEqual(['PUT /settings/assistant', 'POST /settings/assistant/test']))
+    expect(await screen.findByText('claude-opus-5-5 answers.')).toBeTruthy()
   })
 
   it('asks for an address for a local runner and says whether it stays home once saved', async () => {
