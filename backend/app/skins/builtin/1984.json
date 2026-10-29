@@ -1,0 +1,15 @@
+{
+  "nexdeck_skin": 1,
+  "key": "1984",
+  "name": "1984",
+  "description": "Every card a window with a striped title bar, the bar a menu bar, the page a dotted desk, titles in pixels, one bit of black and white.",
+  "author": "nexdeck",
+  "version": "1.0",
+  "native": "retro",
+  "options": [
+    {"key": "status", "label": "How a card says it is unwell", "default": "symbol", "choices": [{"key": "symbol", "label": "A coloured symbol"}, {"key": "tint", "label": "Colour on the window too"}, {"key": "pattern", "label": "The shape alone"}]},
+    {"key": "icons", "label": "Logos", "default": "colour", "choices": [{"key": "colour", "label": "In their colours"}, {"key": "mono", "label": "Black and white"}]},
+    {"key": "desk", "label": "The desk", "default": "dither", "choices": [{"key": "dither", "label": "Fine dots"}, {"key": "weave", "label": "Woven"}, {"key": "grey", "label": "Plain grey"}]},
+    {"key": "type", "label": "Pixel type", "default": "titles", "choices": [{"key": "titles", "label": "Titles and menus"}, {"key": "all", "label": "Everything"}]}
+  ]
+}

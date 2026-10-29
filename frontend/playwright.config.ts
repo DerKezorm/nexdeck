@@ -11,8 +11,10 @@ import { fileURLToPath } from 'node:url'
 const here = path.dirname(fileURLToPath(import.meta.url))
 const root = path.resolve(here, '..')
 
-export const BACKEND_PORT = 8799
-export const FRONTEND_PORT = 5799
+/** Moves every port of the run, so a second checkout (a worktree) can test while the first one does. */
+const SHIFT = Number(process.env.NEXDECK_E2E_PORT_SHIFT ?? 0)
+export const BACKEND_PORT = 8799 + SHIFT
+export const FRONTEND_PORT = 5799 + SHIFT
 /**
  * ⚠️ The third server: the built frontend served by FastAPI, which is the
  * arrangement the Docker image ships and the only one nobody was testing.
@@ -21,9 +23,9 @@ export const FRONTEND_PORT = 5799
  * went out with Web Push dead for exactly that reason, and every test was
  * green.
  */
-export const BUILT_PORT = 8798
+export const BUILT_PORT = 8798 + SHIFT
 /** The stand-in sign-in provider of `e2e/fake-provider.mjs` (nexoidc.spec.ts), never a real one. */
-export const PROVIDER_PORT = 8797
+export const PROVIDER_PORT = 8797 + SHIFT
 /**
  * ⚠️ Outside the frontend on purpose. The Vite dev server watches its own
  * root and ignores only .git, node_modules, test-results, its cache and the

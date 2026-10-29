@@ -12,9 +12,11 @@ import path from 'node:path'
 
 import { expect, test, type Browser, type Page } from '@playwright/test'
 
+import { PROVIDER_PORT } from '../playwright.config'
+
 const ADMIN = { username: 'e2e-admin', password: 'A-long-enough-password-1' }
 const MEMBER = { username: 'ossie', password: 'e2e provider test password' }
-const ISSUER = 'http://127.0.0.1:8797/oidc'
+const ISSUER = `http://127.0.0.1:${PROVIDER_PORT}/oidc`
 const CSRF = { 'X-Nexdeck-Request': '1' }
 
 type Entry = { id: number; slug: string; label: string }

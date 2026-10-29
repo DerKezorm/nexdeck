@@ -34,6 +34,7 @@ from ..security import (
     verify_password,
 )
 from ..services import avatars, chronicle, login_guard, mail, password_reset, sign_in, two_factor
+from ..skins import store as skin_store
 from ..uploads import read_at_most
 
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
@@ -68,7 +69,7 @@ def clear_session_cookie(response: Response) -> None:
 def user_public(user: User, request: Request | None = None) -> UserPublic:
     return UserPublic(
         id=user.id, username=user.username, display_name=user.display_name or user.username, role=user.role,
-        locale=user.locale, theme=user.theme, light_from=user.light_from or "07:00", dark_from=user.dark_from or "20:00", tilt=user.tilt is not False, start_board_id=user.start_board_id, disabled=user.disabled,
+        locale=user.locale, theme=user.theme, light_from=user.light_from or "07:00", dark_from=user.dark_from or "20:00", tilt=user.tilt is not False, skin=dict(user.skin or {}), start_board_id=user.start_board_id, disabled=user.disabled,
         language_pair=languages.read_pair(user.language_pair),
         seen_version=user.seen_version, has_password=has_usable_password(user.password_hash),
         auth_kind=getattr(request.state, "auth_kind", "session") if request is not None else "session",
@@ -237,6 +238,18 @@ def me(user: CurrentUser, request: Request, db: DbSession) -> UserPublic:
     return public
 
 
+def own_skin(db: DbSession, given: dict) -> dict:
+    """A skin of one's own among the installed ones, or ``{}`` for the installation's; sounds are each person's to switch on."""
+    sounds = given.get("sounds", False)
+    if not isinstance(sounds, bool):
+        raise error("bad_skin_choice", "Whether a skin plays sounds is yes or no.")
+    try:
+        chosen = skin_store.check_choice(db, {name: value for name, value in given.items() if name != "sounds"} if given.get("key") else None)
+    except skin_store.SkinError as failure:
+        raise error(failure.code, failure.message) from failure
+    return {**chosen, "sounds": sounds} if chosen or sounds else {}
+
+
 @router.patch("/me", response_model=UserPublic, summary="Change own profile settings")
 def patch_me(body: MePatch, user: CurrentUser, request: Request, db: DbSession) -> UserPublic:
     # Checked before anything changes: two equal times would leave a look that never comes.
@@ -257,6 +270,8 @@ def patch_me(body: MePatch, user: CurrentUser, request: Request, db: DbSession) 
         user.dark_from = body.dark_from
     if body.tilt is not None:
         user.tilt = body.tilt
+    if body.skin is not None:
+        user.skin = own_skin(db, body.skin)
     if body.start_board_id is not None:
         user.start_board_id = body.start_board_id or None
     if body.seen_version is not None:
