@@ -85,7 +85,7 @@ test('karten9 EC-3: two windows save the same card; the second hears who saved m
     await expect(one.getByRole('heading', { name: 'Pasted from a forum', level: 1 })).toBeVisible()
     // The guided way can show this card, so it opens there; the texts are under All settings.
     await one.getByRole('button', { name: 'All settings' }).click()
-    await one.getByRole('button', { name: '4 Texts' }).click()
+    await one.getByRole('button', { name: '5 Texts' }).click()
   }
 
   await page.getByRole('textbox', { name: 'Name, English (required)' }).fill('Saved first')
@@ -104,7 +104,7 @@ test('karten9 EC-3: two windows save the same card; the second hears who saved m
   await page.getByRole('button', { name: 'All settings' }).click()
 
   // And the other way out: the first window saves again, hears of the overwrite, and reloads.
-  await page.getByRole('button', { name: '4 Texts' }).click()
+  await page.getByRole('button', { name: '5 Texts' }).click()
   await page.getByRole('textbox', { name: 'Name, English (required)' }).fill('Saved third')
   await other.getByRole('textbox', { name: 'Name, English (required)' }).fill('Saved fourth')
   await other.getByRole('button', { name: 'Save', exact: true }).click()

@@ -54,10 +54,10 @@ async function signIn(page: Page) {
 }
 
 /** The language of the account, which the page takes at the start. Every later spec signs in to the same account. */
-async function setLocale(page: Page, language: string) {
+async function setLocale(page: Page, language: string, pair?: string[]) {
   const status = await page.evaluate(
-    (code) => fetch('/api/v1/auth/me', { method: 'PATCH', headers: { 'content-type': 'application/json', 'X-Nexdeck-Request': '1' }, body: JSON.stringify({ locale: code }), credentials: 'same-origin' }).then((response) => response.status),
-    language,
+    (body) => fetch('/api/v1/auth/me', { method: 'PATCH', headers: { 'content-type': 'application/json', 'X-Nexdeck-Request': '1' }, body: JSON.stringify(body), credentials: 'same-origin' }).then((response) => response.status),
+    pair ? { locale: language, language_pair: pair } : { locale: language },
   )
   expect(status).toBe(200)
 }
@@ -162,8 +162,9 @@ for (const language of ['de', 'fr', 'es', 'it']) {
       expect(over).toEqual({ page: false, builder: 0 })
       expect(trouble).toEqual([])
     } finally {
-      // Back to English, or every spec after this one looks for its buttons by words of another language.
-      await setLocale(page, 'en')
+      // Back to English and the pair of a new account, or the specs after this one look for their buttons by words of
+      // another language, and the bar offers Italiano where they look for Deutsch.
+      await setLocale(page, 'en', ['en', 'de'])
     }
   })
 }

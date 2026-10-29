@@ -69,8 +69,12 @@ test('umbau: Home Assistant, devices and sensors counted as "Lights on", saved a
   expect(added.status()).toBe(201)
 
   await page.goto('/system/custom-cards/new')
-  await expect(page.getByRole('heading', { name: 'Where does the data come from?', level: 2 })).toBeVisible()
-  await page.getByRole('button', { name: /^Stand-in home/ }).click()
+  await expect(page.getByRole('heading', { name: 'Which service is the card for?', level: 2 })).toBeVisible()
+  // One tile for each kind of service; the connection to try the card with is chosen on the next step.
+  await page.getByRole('button', { name: /^Home Assistant/ }).click()
+  await expect(page.getByRole('heading', { name: 'What should the card show?', level: 2 })).toBeVisible()
+  // The demo's Home Assistant comes first; the answers have to come from the stand-in.
+  await page.getByLabel('Trying it out with').selectOption({ label: 'Stand-in home' })
   await page.getByRole('button', { name: /^Devices and sensors/ }).click()
   const table = page.getByTestId('card-answer-table')
   await expect(table).toContainText('12 entries')
@@ -101,8 +105,9 @@ test('umbau: Home Assistant, devices and sensors counted as "Lights on", saved a
   await page.setViewportSize({ width: 375, height: 812 })
   await page.goto('/system/custom-cards/lights-on/edit')
   await expect(page.getByRole('heading', { name: 'Lights on', level: 1 })).toBeVisible()
-  // The connection is not part of the card: a fresh visit takes the first that fits (the demo's), until a tile is picked.
-  await page.getByRole('button', { name: /^Stand-in home/ }).click()
+  // The connection is not part of the card: a fresh visit takes the first that fits (the demo's), until one is picked.
+  await page.getByRole('button', { name: /^2 Data/ }).click()
+  await page.getByLabel('Trying it out with').selectOption({ label: 'Stand-in home' })
   await expect(page.getByTestId('card-answer-table')).toContainText('12 entries')
   await page.getByRole('button', { name: 'Next' }).click()
   await expect(page.getByTestId('card-guided-result')).toContainText('of 12 entries')
