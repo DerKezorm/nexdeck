@@ -53,13 +53,18 @@ async function signIn(page: Page) {
   await expect(page).toHaveURL(/\/b\//)
 }
 
-async function openBuilder(page: Page, language = 'en') {
-  const said = words(language)
-  // The language of the account, which the page takes at the start.
-  await page.evaluate(
+/** The language of the account, which the page takes at the start. Every later spec signs in to the same account. */
+async function setLocale(page: Page, language: string) {
+  const status = await page.evaluate(
     (code) => fetch('/api/v1/auth/me', { method: 'PATCH', headers: { 'content-type': 'application/json', 'X-Nexdeck-Request': '1' }, body: JSON.stringify({ locale: code }), credentials: 'same-origin' }).then((response) => response.status),
     language,
   )
+  expect(status).toBe(200)
+}
+
+async function openBuilder(page: Page, language = 'en') {
+  const said = words(language)
+  await setLocale(page, language)
   await page.goto('/system/custom-cards/new')
   await page.getByRole('button', { name: said.guided.service.paste }).click()
   const field = page.locator('.cm-content')
@@ -146,14 +151,19 @@ for (const language of ['de', 'fr', 'es', 'it']) {
     await context.grantPermissions(['clipboard-read', 'clipboard-write'])
     await page.setViewportSize({ width: 375, height: 812 })
     await signIn(page)
-    await openBuilder(page, language)
-    // The palette, the tree and the settings of a chosen block: nothing runs over the edge of the screen.
-    await page.getByTestId('card-builder-tree').getByText('Second').tap()
-    const over = await page.evaluate(() => {
-      const past = (element: Element) => element.getBoundingClientRect().right > window.innerWidth + 1
-      return { page: document.documentElement.scrollWidth > window.innerWidth, builder: [...document.querySelectorAll('[data-testid="card-builder"] *')].filter(past).length }
-    })
-    expect(over).toEqual({ page: false, builder: 0 })
-    expect(trouble).toEqual([])
+    try {
+      await openBuilder(page, language)
+      // The palette, the tree and the settings of a chosen block: nothing runs over the edge of the screen.
+      await page.getByTestId('card-builder-tree').getByText('Second').tap()
+      const over = await page.evaluate(() => {
+        const past = (element: Element) => element.getBoundingClientRect().right > window.innerWidth + 1
+        return { page: document.documentElement.scrollWidth > window.innerWidth, builder: [...document.querySelectorAll('[data-testid="card-builder"] *')].filter(past).length }
+      })
+      expect(over).toEqual({ page: false, builder: 0 })
+      expect(trouble).toEqual([])
+    } finally {
+      // Back to English, or every spec after this one looks for its buttons by words of another language.
+      await setLocale(page, 'en')
+    }
   })
 }
