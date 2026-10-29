@@ -87,6 +87,7 @@ def entry_view(entry: catalog.Entry, ctx: Context, facts: derived.Facts | None =
         "updated_at": entry.updated_at,
         "license": entry.license or "MIT",
         "removed": entry.removed.model_dump() if entry.removed else None,
+        "starter": entry.starter,
         "needs_newer": load.needs_newer(entry.min_nexdeck),
         # An own connection has nothing to read through, so it is always something to install.
         "fits": entry.type == "integration" or bool(connections),

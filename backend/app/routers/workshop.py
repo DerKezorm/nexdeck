@@ -165,6 +165,21 @@ async def read_entry(author: str, slug: str, user: AdminUser, db: DbSession) -> 
     return view
 
 
+@router.get("/examples/{author}/{slug}", summary="The checked definition of an example, to open in the editor as a new draft; nothing is installed or saved")
+async def read_example(author: str, slug: str, user: AdminUser, db: DbSession) -> dict[str, Any]:
+    """Only entries the Workshop holds up as examples (``starter``). The text is the one the catalog's checksum names, like an installation's (KARTEN-19 AC-4)."""
+    repo, found, _warning = await _catalog(db)
+    entry = _entry(found, author, slug)
+    if not entry.starter:
+        raise error("no_such_example", "This entry is not one of the examples.", 404)
+    try:
+        install.gate(entry)
+        text = await files.definition(repo, entry)
+    except catalog.CatalogError as failure:
+        raise _failure(failure) from failure
+    return {"id": entry.id, "type": entry.type, "slug": install.free_short(db, entry), "text": text}
+
+
 @router.get("/entries/{author}/{slug}/image/{theme}", summary="A picture of an entry, fetched by the server and kept for an hour")
 async def entry_image(author: str, slug: str, theme: str, user: AdminUser, db: DbSession, v: str = "") -> Response:
     """The browser asks this server and never GitHub, so opening the shop tells GitHub nothing about the visitor.

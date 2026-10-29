@@ -168,6 +168,8 @@ class Entry(BaseModel):
     license: Short | None = None
     updated_at: Short = ""
     removed: Removal | None = None
+    #: The Workshop holds the entry up as an example to start from (``starters.json``); a catalog that does not say is no example.
+    starter: Annotated[bool, BeforeValidator(lambda value: value is True)] = False
 
     @model_validator(mode="before")
     @classmethod

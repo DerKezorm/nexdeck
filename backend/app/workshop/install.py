@@ -58,6 +58,32 @@ def offers(db: Session, found: catalog.Catalog, entry: catalog.Entry, requires: 
     return offered, missing
 
 
+def free_short(db: Session, entry: catalog.Entry) -> str:
+    """A short name for a draft that starts from an example: the entry's own when it is free, else with -2, -3, … (KARTEN-19 AC-4).
+
+    Free means no card, board or own connection here has it and, for a connection, no built-in kind is called so.
+    """
+    from ..adapters import get_adapter
+
+    def taken(short: str) -> bool:
+        if entry.type == "card":
+            return db.scalar(select(CardRecord.id).where(CardRecord.slug == short)) is not None
+        if short in integrations.shorts(db):
+            return True
+        try:
+            get_adapter(short)
+        except KeyError:
+            return False
+        return True
+
+    for number in range(1, 1000):
+        suffix = "" if number == 1 else f"-{number}"
+        short = entry.slug[: 60 - len(suffix)] + suffix
+        if not taken(short):
+            return short
+    return entry.slug
+
+
 @dataclass
 class Plan:
     """What an installation would make: the entry, the texts (the card first), and the own connections on offer."""
