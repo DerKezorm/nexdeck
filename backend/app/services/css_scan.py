@@ -27,12 +27,29 @@ def _local(address: str) -> bool:
     return address.strip().lower().startswith("data:")
 
 
+#: How deep blocks and functions may nest. A real sheet stays far below; thousands of brackets ran into the limit of
+#: Python's own recursion and the look answered 500 instead of saying no (found in a real run on 1.0.1).
+MAX_DEPTH = 64
+
+
+class TooDeep(Exception):
+    """The sheet nests blocks or functions deeper than :data:`MAX_DEPTH`."""
+
+
 def _walk(nodes: Iterable[ast.Node] | None) -> Iterator[ast.Node]:
-    for node in nodes or ():
+    """Every node, each before what is inside it, with a stack of its own instead of recursion."""
+    stack: list[Iterator[ast.Node]] = [iter(nodes or ())]
+    while stack:
+        node = next(stack[-1], None)
+        if node is None:
+            stack.pop()
+            continue
         yield node
-        for inner in (getattr(node, "prelude", None), getattr(node, "content", None), getattr(node, "arguments", None)):
+        for inner in reversed((getattr(node, "prelude", None), getattr(node, "content", None), getattr(node, "arguments", None))):
             if isinstance(inner, list):
-                yield from _walk(inner)
+                if len(stack) > MAX_DEPTH:
+                    raise TooDeep
+                stack.append(iter(inner))
 
 
 def _fetching(function: ast.FunctionBlock) -> str | None:
@@ -47,7 +64,10 @@ def _fetching(function: ast.FunctionBlock) -> str | None:
 
 
 def what_fetches(css: str) -> str | None:
-    """Why the sheet would fetch something, or None when it fetches nothing."""
+    """Why the sheet would fetch something, or None when it fetches nothing.
+
+    Raises :class:`TooDeep` for a sheet that nests deeper than any real one.
+    """
     for node in _walk(tinycss2.parse_stylesheet(css, skip_comments=True, skip_whitespace=True)):
         if isinstance(node, ast.AtRule) and node.lower_at_keyword == "import":
             return "@import fetches a file from somewhere else; put the style sheet in here instead."
