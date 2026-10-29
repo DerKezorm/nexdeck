@@ -195,8 +195,8 @@ def _type(value: Any) -> str:
 
 
 def _is_a_name(key: str) -> bool:
-    """A field name that reads as one; a hash, a host name, a token or a person as a key is data and stays out."""
-    return bool(_NAME.match(key)) and demo.data_kind(key) is None and next(credentials.find(key), None) is None
+    """A field name that reads as one; a hash, a host name, the name of a machine (``nas01``), a token as a key is data and stays out."""
+    return bool(_NAME.match(key)) and demo.data_kind(key) is None and not demo.machine_key(key) and next(credentials.find(key), None) is None
 
 
 def _credential_field(key: str) -> bool:
