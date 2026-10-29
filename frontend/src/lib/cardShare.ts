@@ -130,6 +130,7 @@ export const SHARE_PROBLEMS = [
   'secret_in_text',
   'too_long',
   'unchanged_from_shop',
+  'secret_in_demo',
 ] as const
 
 /**

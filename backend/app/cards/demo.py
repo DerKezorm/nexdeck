@@ -34,6 +34,7 @@ from datetime import datetime, timedelta
 from typing import Any
 
 from ..adapters.base import AdapterError
+from .credentials import HIDDEN, access_key, placeholder
 from .probe import clean
 
 #: What the examples of all requests of one card may weigh together, in characters of JSON. A definition holds 60,000
@@ -418,6 +419,9 @@ def _made_up(value: Any, key: str | None = None, shift: timedelta | None = None)
     """``key`` is the name the value stands under (a list takes the name of its own key); ``shift`` moves the moments."""
     if isinstance(value, bool) or value is None:
         return value
+    if isinstance(value, int | float | str) and key is not None and access_key(key) and not placeholder(str(value)):
+        # ⚠️ A value under a key that sounds like access is not made up but hidden: shared, it would be refused (S3).
+        return HIDDEN
     if isinstance(value, int | float):
         return disguise_number(value, moment=names_a_time(key))
     if isinstance(value, str):

@@ -138,3 +138,56 @@ def find(data: Any, path: tuple[str | int, ...] = (), *, demo: bool = False) -> 
         what = _value(data, structure=not demo)
         if what:
             yield Found(path, "card_secret_value", what)
+
+
+#: Parts of a key in demo answers that say its value grants access (S3), upper or lower case, wherever they stand.
+ACCESS_KEYS = (
+    "apikey", "api_key", "token", "secret", "password", "passwd", "authorization", "cookie", "session", "private_key",
+    "client_secret", "access_key",
+)  # fmt: skip
+#: What stands in demo answers where a credential was: the mark of a hidden value, dots, ``xxx…``, ``<…>``.
+HIDDEN = "[hidden]"
+_DOTS = re.compile(r"[.…•*]+")
+
+
+def access_key(key: str) -> bool:
+    lowered = key.lower()
+    return any(part in lowered for part in ACCESS_KEYS)
+
+
+def placeholder(text: str) -> bool:
+    """A value that is obviously no credential but stands in for one."""
+    text = text.strip()
+    return (
+        not text or text == HIDDEN or bool(_DOTS.fullmatch(text)) or text.lower().startswith("xxx")
+        or (text.startswith("<") and text.endswith(">"))
+    )
+
+
+def demo_secrets(demo: Any, known: frozenset[str] | set[str] = frozenset()) -> list[tuple[str, str]]:
+    """``(place, key)`` of every value in demo answers that is a credential, never the value itself (S3).
+
+    ⚠️ A value under a key that sounds like access (:data:`ACCESS_KEYS`) that is not empty, null or a placeholder, and any
+    value that is a credential of a connection of this installation (``known``), whatever its key. Demo answers are
+    copied from a probe, and a service names its own key in some of them: shared, they would stand in a public issue.
+    """
+    found: list[tuple[str, str]] = []
+
+    def walk(value: Any, place: str, key: str) -> None:
+        if isinstance(value, dict):
+            for name, child in value.items():
+                walk(child, f"{place}.{name}", str(name))
+        elif isinstance(value, list):
+            for index, child in enumerate(value):
+                walk(child, f"{place}[{index}]", key)
+        elif value is None or isinstance(value, bool):
+            return
+        elif isinstance(value, str | int | float):
+            text = str(value)
+            if (access_key(key) and not placeholder(text)) or text.strip() in known:
+                found.append((place, key))
+
+    if isinstance(demo, dict):
+        for name, answer in demo.items():
+            walk(answer, f"demo.{name}", "")
+    return found

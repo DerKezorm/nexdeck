@@ -371,3 +371,17 @@ describe('My submissions', () => {
     expect(calls('POST', '/workshop/submit/check')[0].body).toEqual({ type: 'card', slug: SLUG })
   })
 })
+
+describe('a credential in the demo data (S3)', () => {
+  it('karten8s s3: secret_in_demo is said in the words of the interface with its place, and nothing can be shared', async () => {
+    world.given['POST /workshop/submit/check'] = {
+      status: 200,
+      body: CHECK({ problems: [{ code: 'secret_in_demo', message: 'The demo data hold a credential at demo.host.apiKey (key apiKey).', path: 'demo.host.apiKey' }] }),
+    }
+    const dialog = await openDialog()
+    const list = await within(dialog).findByTestId('share-problems')
+    expect(within(list).getByText('The demo data hold a key or a password at demo.host.apiKey. Replace it with "[hidden]" or a made-up value.')).toBeInTheDocument()
+    await userEvent.click(within(dialog).getByRole('checkbox', { name: /MIT License/ }))
+    expect(shareButton(dialog)).toBeDisabled()
+  })
+})

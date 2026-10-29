@@ -20,9 +20,11 @@ export type SaveTrouble =
   | { kind: 'session' }
   | { kind: 'gone' }
   | { kind: 'error'; message: string }
+  /** Saved, but the demo data hold what looks like a credential: sharing is refused until it is gone (S3). */
+  | { kind: 'secretInDemo'; places: string[] }
   | null
 
-type Saved = CustomCardRow & { yaml?: string }
+type Saved = CustomCardRow & { yaml?: string; warnings?: { code: string; path: string; key: string }[] }
 
 export function useSaveCard() {
   const { t } = useTranslation()
@@ -49,6 +51,8 @@ export function useSaveCard() {
         queryClient.invalidateQueries({ queryKey: ['custom-cards'] }),
         queryClient.invalidateQueries({ queryKey: ['cards-library'] }),
       ])
+      const places = (saved.warnings ?? []).filter((one) => one.code === 'secret_in_demo').map((one) => one.path)
+      if (places.length) setTrouble({ kind: 'secretInDemo', places })
       return saved
     } catch (failure) {
       if (failure instanceof ApiError) {

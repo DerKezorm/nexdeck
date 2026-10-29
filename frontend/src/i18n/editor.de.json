@@ -164,6 +164,7 @@
       "body": "Deine Änderungen an dieser Karte sind noch nicht gespeichert. Wenn du gehst, sind sie weg.",
       "leave": "Verlassen"
     },
+    "secretInDemo": "Gespeichert. Die Demo-Daten enthalten bei {{places}} etwas, das wie ein Schlüssel oder ein Passwort aussieht. Der Card shop nimmt die Karte erst, wenn es durch \"[hidden]\" oder einen erfundenen Wert ersetzt ist.",
     "conflict": {
       "title": "Inzwischen von {{by}} geändert",
       "body": "{{by}} hat diese Karte um {{time}} gespeichert, während du sie offen hattest. Überschreibe diese Fassung mit deiner, oder lade sie neu und verwirf deine Änderungen.",

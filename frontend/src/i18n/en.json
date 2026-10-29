@@ -3053,7 +3053,8 @@
         "changes": "An update needs a list of changes.",
         "secret_in_text": "The text seems to hold a key or a password. Take it out.",
         "too_long": "The submission is too long for GitHub. Shorten the definition or its demo data.",
-        "unchanged_from_shop": "This came unchanged from the Card shop. Change it to share your own version."
+        "unchanged_from_shop": "This came unchanged from the Card shop. Change it to share your own version.",
+        "secret_in_demo": "The demo data hold a key or a password at {{path}}. Replace it with \"[hidden]\" or a made-up value."
       },
       "realValues": {
         "title": "These demo values look like real ones from your last probe",

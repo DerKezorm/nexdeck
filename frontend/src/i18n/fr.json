@@ -3053,7 +3053,8 @@
         "changes": "Une mise à jour a besoin d'une liste de changements.",
         "secret_in_text": "Le texte semble contenir une clé ou un mot de passe. Retirez-le.",
         "too_long": "L'envoi est trop long pour GitHub. Raccourcissez la définition ou ses données de démonstration.",
-        "unchanged_from_shop": "Ceci vient tel quel du Card shop. Modifiez-le pour partager votre propre version."
+        "unchanged_from_shop": "Ceci vient tel quel du Card shop. Modifiez-le pour partager votre propre version.",
+        "secret_in_demo": "Les données de démonstration contiennent à {{path}} une clé ou un mot de passe. Remplacez-le par \"[hidden]\" ou par une valeur inventée."
       },
       "realValues": {
         "title": "Ces valeurs de démonstration ressemblent à de vraies valeurs de votre dernier essai",

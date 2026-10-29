@@ -739,3 +739,27 @@ describe('Fix and resend (KARTEN-16 AC-10)', () => {
     expect(sent('PUT', '/cards/queue')).toHaveLength(1)
   })
 })
+
+describe('a credential in the demo data (S3)', () => {
+  it('karten8s s3: saving keeps the card and says where the demo data hold what looks like a key, never the value', async () => {
+    stub({
+      'PUT /cards/queue': { status: 200, body: { slug: 'queue', updated_at: '2026-10-25T12:00:00Z', yaml: CARD, warnings: [{ code: 'secret_in_demo', path: 'demo.queue.apiKey', key: 'apiKey' }] } },
+    })
+    await openQueue()
+    act(() => editor().set(['name'], 'Waiting'))
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }))
+    const note = await screen.findByTestId('save-secret-in-demo')
+    expect(note).toHaveTextContent('Saved. The demo data hold what looks like a key or a password at demo.queue.apiKey.')
+    expect(note).toHaveTextContent('"[hidden]"')
+    expect(note.className).toContain('break-words')
+    expect(editorDe.editor.secretInDemo).toContain('{{places}}')
+  })
+
+  it('karten8s s3: a save without such a value shows no note', async () => {
+    await openQueue()
+    act(() => editor().set(['name'], 'Waiting'))
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }))
+    await screen.findByText('Saved. Every board shows the new version.')
+    expect(screen.queryByTestId('save-secret-in-demo')).toBeNull()
+  })
+})

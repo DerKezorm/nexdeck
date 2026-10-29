@@ -31,6 +31,7 @@ from ..cards import credentials, load, schema
 from ..cards import integration as integration_loader
 from ..cards import integration_store as integrations
 from ..models import CardRecord, User
+from ..services.integrations import every_secret
 from . import catalog, github_login, installed, real_values, state
 from .github_login import GithubError, login_needed
 
@@ -263,8 +264,19 @@ def problem(code: str, message: str, path: str = "") -> dict[str, str]:
     return {"code": code, "message": message, "path": path}
 
 
-def read_definition(one: Subject) -> list[dict[str, str]]:
-    """What is wrong with the text for the Workshop (nothing, when the list is empty); fills in what the dialog shows."""
+SECRET_IN_DEMO = "The demo data hold a credential at {place} (key {key}). Replace it with \"[hidden]\" or a made-up value."
+
+
+def secrets_in_demo(demo: Any, known: frozenset[str] = frozenset()) -> list[dict[str, str]]:
+    """``secret_in_demo`` for every credential in the demo answers: the place and the key, never the value (S3)."""
+    return [problem("secret_in_demo", SECRET_IN_DEMO.format(place=place, key=key), place) for place, key in credentials.demo_secrets(demo, known)]
+
+
+def read_definition(one: Subject, known: frozenset[str] = frozenset()) -> list[dict[str, str]]:
+    """What is wrong with the text for the Workshop (nothing, when the list is empty); fills in what the dialog shows.
+
+    ``known`` are the credentials of the connections of this installation (``integrations.every_secret``).
+    """
     problems: list[dict[str, str]] = []
     if len(one.text) > schema.MAX_DEFINITION:
         return [problem("too_long", f"The definition is {len(one.text)} characters long, the limit is {schema.MAX_DEFINITION}.")]
@@ -282,6 +294,7 @@ def read_definition(one: Subject) -> list[dict[str, str]]:
             one.description = plain(definition.description)
             one.category = definition.category or ""
             one.demo = definition.demo
+            problems += secrets_in_demo(definition.demo, known)
         else:
             made = integration_loader.load_integration(one.text, saved=[])
             definition = made.definition
@@ -537,7 +550,7 @@ async def check(db: Session, user: User, kind: str, slug: str) -> dict[str, Any]
     The words the administrator types are not judged here: the dialog asks for them while they are typed, sending judges them again.
     """
     one = subject_of(db, kind, slug)
-    problems = read_definition(one)
+    problems = read_definition(one, every_secret(db))
     signed = github_login.status(db, user.id)
     out: dict[str, Any] = {
         "type": one.type,
@@ -623,7 +636,7 @@ async def submit(db: Session, user: User, kind: str, slug: str, form: Form) -> d
     try:
         ctx = await context(db, user)
         one = subject_of(db, kind, slug)
-        problems = read_definition(one)
+        problems = read_definition(one, every_secret(db))
         based_on, own, lineage_problems = lineage(one, ctx.access.github_id)
         problems += lineage_problems
         past = await history(ctx, kind, slug)
@@ -680,7 +693,7 @@ async def resend(db: Session, user: User, number: int) -> dict[str, Any]:
     _busy.add(key)
     try:
         one = subject_of(db, kind, slug)
-        problems = read_definition(one)
+        problems = read_definition(one, every_secret(db))
         form = Form(
             category=next((key_ for key_, label in CATEGORIES.items() if label.lower() == fields.get("category", "").lower()), ""),
             description=fields.get("description", ""),
@@ -727,7 +740,7 @@ def form_link(repo: str, one: Subject, form: Form, based_on: str | None) -> str:
 async def offline(db: Session, user: User, kind: str, slug: str, form: Form) -> dict[str, Any]:
     """The submission as a file and a link to the form on GitHub, for an administrator who does not sign in (AC-9)."""
     one = subject_of(db, kind, slug)
-    problems = read_definition(one)
+    problems = read_definition(one, every_secret(db))
     signed = github_login.status(db, user.id)
     based_on, _own, lineage_problems = lineage(one, signed["github_id"])
     problems += lineage_problems + read_form(form, update=bool(form.changes.strip()))

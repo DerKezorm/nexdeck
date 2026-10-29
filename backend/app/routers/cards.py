@@ -515,7 +515,18 @@ def create_card(body: CardText, user: AdminUser, db: DbSession) -> dict[str, Any
     logger.info("Custom card %r created by %s.", row.slug, user.username)
     chronicle.record("card_definition_added", user_id=user.id, name=row.slug, detail="made", db=db)
     db.commit()
-    return _view(row, {})
+    return {**_view(row, {}), "warnings": _demo_warnings(db, row)}
+
+
+def _demo_warnings(db: Session, row: CardRecord) -> list[dict[str, str]]:
+    """Saving keeps a card with a credential in its demo answers, and says so: sharing it is refused (S3)."""
+    from ..services.integrations import every_secret
+
+    demo = (row.definition or {}).get("demo")
+    return [
+        {"code": "secret_in_demo", "path": place, "key": key}
+        for place, key in credentials.demo_secrets(demo, every_secret(db) if demo else frozenset())
+    ]
 
 
 def _refused(failure: exchange.Refused) -> HTTPException:
@@ -612,7 +623,7 @@ def replace_card(slug: str, body: ReplaceBody, user: AdminUser, db: DbSession) -
         chronicle.record("card_definition_changed", user_id=user.id, name=slug, detail="text changed", db=db)
         db.commit()
     _tell(db, slug)
-    return {**_view(row, _placed(db)), "yaml": row.yaml_source}
+    return {**_view(row, _placed(db)), "yaml": row.yaml_source, "warnings": _demo_warnings(db, row)}
 
 
 @router.delete("/{slug}", summary="Delete a custom card; the cards that show it say that the definition is missing")

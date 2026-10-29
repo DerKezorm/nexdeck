@@ -164,6 +164,7 @@
       "body": "Vos modifications de cette carte ne sont pas encore enregistrées. Elles sont perdues si vous quittez.",
       "leave": "Quitter"
     },
+    "secretInDemo": "Enregistré. Les données de démonstration contiennent à {{places}} quelque chose qui ressemble à une clé ou à un mot de passe. Le Card shop n'accepte la carte que lorsque c'est remplacé par \"[hidden]\" ou par une valeur inventée.",
     "conflict": {
       "title": "Modifiée entre-temps par {{by}}",
       "body": "{{by}} a enregistré cette carte à {{time}} pendant que vous l'aviez ouverte. Remplacez cette version par la vôtre, ou rechargez-la et abandonnez vos modifications.",

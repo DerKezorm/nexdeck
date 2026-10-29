@@ -164,6 +164,7 @@
       "body": "Tus cambios en esta tarjeta todavía no están guardados. Si sales, se pierden.",
       "leave": "Salir"
     },
+    "secretInDemo": "Guardado. Los datos de demostración contienen en {{places}} algo que parece una clave o una contraseña. El Card shop no acepta la tarjeta hasta que se sustituya por \"[hidden]\" o por un valor inventado.",
     "conflict": {
       "title": "{{by}} la cambió mientras tanto",
       "body": "{{by}} guardó esta tarjeta a las {{time}} mientras la tenías abierta. Sobrescribe esa versión con la tuya, o vuelve a cargarla y descarta tus cambios.",

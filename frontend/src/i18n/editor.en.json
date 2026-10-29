@@ -164,6 +164,7 @@
       "body": "Your changes to this card are not saved yet. They are lost when you leave.",
       "leave": "Leave"
     },
+    "secretInDemo": "Saved. The demo data hold what looks like a key or a password at {{places}}. The Card shop does not take the card until it is replaced by \"[hidden]\" or a made-up value.",
     "conflict": {
       "title": "Changed by {{by}} meanwhile",
       "body": "{{by}} saved this card at {{time}} while you had it open. Overwrite that version with yours, or reload it and drop your changes.",

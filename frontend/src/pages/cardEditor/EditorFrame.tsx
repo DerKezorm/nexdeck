@@ -261,6 +261,11 @@ export function EditorFrame({ offer, onOfferDone }: { offer: CardDraft | null; o
             <p className="text-muted">{t('cards.deletedBody')}</p>
           </div>
         )}
+        {trouble?.kind === 'secretInDemo' && (
+          <p className="text-sm rounded-lg border border-warn/40 px-3 py-2 break-words hyphens-auto" role="status" data-testid="save-secret-in-demo">
+            {t('editor.secretInDemo', { places: trouble.places.join(', ') })}
+          </p>
+        )}
         {trouble?.kind === 'error' && (
           <p className="text-sm text-bad rounded-lg border border-bad/40 px-3 py-2" role="alert">
             {trouble.message}

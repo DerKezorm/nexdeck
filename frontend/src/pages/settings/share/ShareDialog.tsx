@@ -25,7 +25,7 @@ const ImportPreview = lazy(() => import('../ImportPreview'))
 
 /** The sentence of a problem the server found: its own words for the codes the interface knows, else the server's English. */
 function problemText(t: (key: string, options?: Record<string, unknown>) => string, problem: ShareProblem, version?: string): string {
-  if ((SHARE_PROBLEMS as readonly string[]).includes(problem.code)) return t(`cards.share.problem.${problem.code}`, { defaultValue: problem.message, version: version ?? '' })
+  if ((SHARE_PROBLEMS as readonly string[]).includes(problem.code)) return t(`cards.share.problem.${problem.code}`, { defaultValue: problem.message, version: version ?? '', path: problem.path })
   return problem.message
 }
 

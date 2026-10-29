@@ -108,6 +108,27 @@ def broken_lines(kind: str, config: dict[str, Any]) -> list[str]:
     ]
 
 
+#: Shorter credentials are not looked for in demo answers: "admin" or "1234" stand there for other reasons.
+KNOWN_FROM = 6
+
+
+def every_secret(db: Any) -> frozenset[str]:
+    """The values of the secret fields of every connection of this installation (S3): what demo answers must not hold."""
+    from sqlalchemy import select
+
+    found: set[str] = set()
+    for row in db.scalars(select(Integration)):
+        for f in _fields(row.kind):
+            value = (row.config or {}).get(f.name)
+            if not f.secret or not isinstance(value, str) or not value:
+                continue
+            try:
+                found.add(decrypt(value).strip())
+            except Exception:  # noqa: BLE001 - a secret that cannot be read cannot be compared either
+                continue
+    return frozenset(one for one in found if len(one) >= KNOWN_FROM)
+
+
 def has_plain_secrets(integration: Integration) -> bool:
     return any(
         f.secret and isinstance(integration.config.get(f.name), str)
