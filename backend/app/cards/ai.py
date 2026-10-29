@@ -310,7 +310,7 @@ Rules:
 - A card holds no secrets: no key, password, token or login, not even as an example. The connection adds its own credentials.
 - Paths into an answer are JMESPath (records[0].title, items[?active].name). Use only fields that the shape of the answer shows; never invent one.
 - A request path must exist at the service that requires names: the path given below, or one of the paths listed for its kind. Never take a path from another service, not even one with a similar API. nexdeck asks the service, and a path it does not answer is sent back.
-- Never guess a name only the administrator knows (a status page, a board, an entity id). If their words do not give it, write it as {{name}} in the path (/api/status-page/heartbeat/{{status_page}}); nexdeck then tells them to fill it in.
+- Prefer a path that needs no name the administrator has to give: one that lists all of them (all nodes, all endpoints) or a default the service itself has (the site "default" of UniFi). Only when a path cannot do without such a name (a status page, a board, an entity id) and the administrator's words do not give it, write it as {{name}} in the path (/api/status-page/heartbeat/{{status_page}}); nexdeck then tells them to fill it in. Never invent one.
 - A formula (formula:) is numbers, + - * /, brackets, comparisons and round(x, n), abs(x), min(a, b), max(a, b). Every value from the answer stands in braces as a JMESPath: "{{disk.used}} / {{disk.total}} * 100". A word without braces is an error.
 - requires names the kind of the connection. slug is lower case letters, digits and hyphens. Start with nexdeck-card: 1 and version 1.0.0.
 - Write texts in English unless the description asks for another language. Keep names and labels short.

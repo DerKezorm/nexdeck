@@ -175,4 +175,4 @@ def test_karten17v_a_name_left_open_for_the_administrator_is_not_asked_and_not_h
     body = admin.post("/api/v1/cards/ai", json={"mode": "change", "description": "One series", "yaml": ai.EXAMPLE}, headers=CSRF).json()
     assert body["ok"] is True and body["summary"]["paths"] == ["/api/v3/series/{series_id}"] and stand_in.call_count == 0
     rules = ai.outbound(ai.Ask(mode="change", yaml=ai.EXAMPLE)).system
-    assert "Never guess a name only the administrator knows" in rules and '"{disk.used} / {disk.total} * 100"' in rules
+    assert "Prefer a path that needs no name the administrator has to give" in rules and "Never invent one." in rules and '"{disk.used} / {disk.total} * 100"' in rules
