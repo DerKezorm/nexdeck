@@ -109,7 +109,7 @@ Mount `/var/run/docker.sock` (already in the compose file) to see this host's co
 | `NEXDECK_KEEP_NOTICES_DAYS` | `90` | How long messages in the notice centre are kept. |
 | `NEXDECK_KEEP_OUTAGES_DAYS` | `365` | How long finished outages are kept, and maintenance that is over. A running one is never swept. |
 | `NEXDECK_KEEP_EVENTS_DAYS` | `365` | How long the lines of the chronicle are kept. |
-| `NEXDECK_WORKSHOP_TOKEN` | empty | Test phase only: a key that may read the private Workshop repository for the Card shop. Not needed once the repository is public. |
+| `NEXDECK_WORKSHOP_TOKEN` | empty | Only for a private copy of the Workshop: a key that may read that repository. The public Workshop needs none. |
 | `NEXDECK_WORKSHOP_CLIENT_ID` | the Client ID of the "nexdeck Workshop" GitHub App | The public Client ID used to sign administrators in to GitHub when they share a card. There is no secret to go with it. |
 | `PUID`, `PGID` | `1000` | Owner of the files in the data volume. |
 | `DOCKER_GID` | detected | Group of the mounted Docker socket, when detection fails. |
