@@ -20,7 +20,7 @@ from pydantic_core import PydanticCustomError
 
 from ..adapters.base import AdapterError
 from .formula import compile_ref
-from .schema import LABEL_MAX, Label, Part, _local_text, stays_underneath
+from .schema import LABEL_MAX, Label, Part, _local_text, lenient_reading, stays_underneath
 
 #: The most buttons a card has (KARTEN-8 AC-10).
 MAX_BUTTONS = 10
@@ -291,9 +291,11 @@ def fits_an_address(value: Any) -> bool:
     """A value that may stand in the path of a button: not empty, one plain piece, nothing that ends or climbs a path.
 
     ⚠️ A single ``.`` is a segment the client drops when it builds the address: ``/torrents/.`` goes out as ``/torrents``.
+    What stands in for a dot (``．．``, ``‥``) is refused as well: a server that normalises reads it as ``..`` (S4).
     """
     text = as_text(value)
-    return bool(text) and text != "." and ".." not in text and not NOT_IN_AN_ADDRESS.search(text)
+    read = lenient_reading(text) if text else None
+    return bool(text) and read is not None and text != "." and read != "." and ".." not in text + read and not NOT_IN_AN_ADDRESS.search(text)
 
 
 def offered_values(button: Button, find: Any) -> dict[str, Any] | None:

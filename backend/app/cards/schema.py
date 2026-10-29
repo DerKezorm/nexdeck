@@ -17,7 +17,9 @@ nexdeck (KARTEN-1 AC-5, AC-6).
 from __future__ import annotations
 
 import re
+import unicodedata
 from typing import Annotated, Any, Literal
+from urllib.parse import unquote
 
 from pydantic import (
     AfterValidator,
@@ -264,6 +266,39 @@ class Size(Part):
     h: int = Field(ge=1, le=24)
 
 
+#: ``%u002e``: the way IIS writes a character in an address.
+_WIDE = re.compile(r"%[uU]([0-9a-fA-F]{4})")
+#: ``%c0%ae``: a dot in two or three bytes of UTF-8 where one is enough, which old servers decoded all the same.
+_OVERLONG = re.compile(r"%([cC][01])%([89abAB][0-9a-fA-F])|%([eE]0)%([89][0-9a-fA-F])%([89abAB][0-9a-fA-F])")
+#: How often an address is decoded at most: a server behind a proxy decodes twice, three rounds is more than any does.
+DECODE_ROUNDS = 3
+
+
+def _from_overlong(found: re.Match[str]) -> str:
+    if found.group(1):
+        return chr(((int(found.group(1), 16) & 0x1F) << 6) | (int(found.group(2), 16) & 0x3F))
+    return chr(((int(found.group(3), 16) & 0x0F) << 12) | ((int(found.group(4), 16) & 0x3F) << 6) | (int(found.group(5), 16) & 0x3F))
+
+
+def lenient_reading(text: str) -> str | None:
+    """A piece of an address as the most lenient server reads it, or ``None`` when it holds what stands in for a dot.
+
+    ⚠️ Decoded until it stays the same (three rounds at most), with ``%u`` and overlong UTF-8, and normalised by NFKC: a
+    server that does any of that reads ``%c0%ae%c0%ae``, ``%u002e%u002e``, ``．．`` (fullwidth) and ``‥`` as ``..``
+    (S4). A character that NFKC turns into something with a dot, and a control character, are refused as they are.
+    """
+    for _round in range(DECODE_ROUNDS):
+        decoded = unquote(_OVERLONG.sub(_from_overlong, _WIDE.sub(lambda found: chr(int(found.group(1), 16)), text)), errors="replace")
+        if decoded == text:
+            break
+        text = decoded
+    if any(unicodedata.category(char) == "Cc" for char in text):
+        return None
+    if any(not char.isascii() and "." in unicodedata.normalize("NFKC", char) for char in text):
+        return None
+    return unicodedata.normalize("NFKC", text)
+
+
 def stays_underneath(path: str) -> bool:
     """A path that begins with a single /, names no host and climbs nowhere (KARTEN-2 AC-4).
 
@@ -280,7 +315,10 @@ def stays_underneath(path: str) -> bool:
     lowered = before_query.lower()
     if ";" in lowered or any(coded in lowered for coded in ("%2f", "%5c", "%25")):
         return False
-    return not any(segment.replace("%2e", ".") in (".", "..") for segment in lowered.split("/"))
+    read = lenient_reading(before_query)
+    if read is None or ".." in read:
+        return False
+    return not any(segment.replace("%2e", ".") in (".", "..") for segment in [*lowered.split("/"), *read.split("/")])
 
 
 def spaces_are_the_only_fault(path: str) -> bool:
