@@ -606,6 +606,8 @@ def edit_board_yaml(slug: str, body: EditYamlBody, user: CurrentUser, db: DbSess
         collector.schedule(widget_id)
     _announce(board.id)
     logger.info("Board %r changed as YAML by %s.", board.name, user.username)
+    # The session keeps what it loaded after a commit; the pages and cards the import replaced would still show their old state.
+    db.expire_all()
     return board_view(db, board, permission)
 
 
