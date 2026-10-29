@@ -3,6 +3,13 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## Unreleased
+
+### Added
+
+- **Skins.** A skin redraws more than the colours of nexdeck, in three layers: colours, corners and type; building blocks that are only data (little pixel pictures drawn as rows of characters, frames cut from them, a tile for the desk, decorations at the corners of a part, symbols of their own for ok, warning and fault, motions from a fixed list and short synth sounds); and a style sheet of its own. That style sheet names parts of nexdeck such as `card`, `card-titlebar` or `button`, never its classes, and nexdeck writes it anew from what it allows: nothing in a skin fetches from anywhere, covers a dialog or hides a button, and symbols for a fault have to differ in shape, not only in colour. An administrator brings skins in under System, Look (a look or a theme comes in as a skin of colours), chooses the one everybody wears, and every account can wear another one for itself under Profile, with its sounds switched on if it likes. Pages that ask for a password, a key or a confirmation always keep nexdeck's own drawing, with the skin's colours.
+- **1984 is a skin.** It looks exactly as before and keeps its four choices; a look saved before still means 1984.
+
 ## 1.0.1 (2026-10-29)
 
 ### Fixed
@@ -13,11 +20,6 @@ project uses semantic versioning.
 - **Years are written as years.** A whole number in a field named for a year (year, productionYear, release_year) shows as 2005, not 2,005, on every custom card.
 - **The step Data offers only paths a card can read.** Paths that the built-in cards ask only with a window of dates (nexcrate's calendar answered 422 without one) and Prometheus text are no longer offered.
 - **Readable in every language.** The hint under a failure of a custom card is translated, the selection in the YAML editors is readable in the dark theme, and the note under a proposal says that the tick for sample values is used up with the request it went with.
-
-### Added
-
-- **Skins.** A skin redraws more than the colours of nexdeck, in three layers: colours, corners and type; building blocks that are only data (little pixel pictures drawn as rows of characters, frames cut from them, a tile for the desk, decorations at the corners of a part, symbols of their own for ok, warning and fault, motions from a fixed list and short synth sounds); and a style sheet of its own. That style sheet names parts of nexdeck such as `card`, `card-titlebar` or `button`, never its classes, and nexdeck writes it anew from what it allows: nothing in a skin fetches from anywhere, covers a dialog or hides a button, and symbols for a fault have to differ in shape, not only in colour. An administrator brings skins in under System, Look (a look or a theme comes in as a skin of colours), chooses the one everybody wears, and every account can wear another one for itself under Profile, with its sounds switched on if it likes. Pages that ask for a password, a key or a confirmation always keep nexdeck's own drawing, with the skin's colours.
-- **1984 is a skin.** It looks exactly as before and keeps its four choices; a look saved before still means 1984.
 
 ### Security
 
