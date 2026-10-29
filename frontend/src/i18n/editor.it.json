@@ -1159,7 +1159,7 @@
       "header": "Ogni richiesta porta un'intestazione con la chiave, per esempio X-Api-Key: {key} o Authorization: Bearer {key}.",
       "basic": "Ogni richiesta porta utente e password come accesso semplice (Basic).",
       "query": "Ogni richiesta porta la chiave come parametro in fondo all'indirizzo. Non compare in nessun registro di nexdeck.",
-      "session": "nexdeck accede una volta a un indirizzo di login, conserva il ticket ricevuto e lo invia. Con un 401 accede di nuovo una volta e richiede."
+      "session": "nexdeck accede una volta a un indirizzo di login, conserva il ticket ricevuto e lo invia. Con un 401 accede di nuovo una volta e richiede. Nella vista YAML, lifetime (secondi, o il punto di expires_in nella risposta del login) lo fa accedere un minuto prima che il ticket scada, e renew_on (401, 403, 419, 440, 500) indica altre risposte che valgono come disconnesso."
     },
     "insert": "Inserisci campo",
     "insertField": "Inserisci un campo in {{label}}",

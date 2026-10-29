@@ -1159,7 +1159,7 @@
       "header": "Cada petición lleva una cabecera con la clave, por ejemplo X-Api-Key: {key} o Authorization: Bearer {key}.",
       "basic": "Cada petición lleva usuario y contraseña como inicio de sesión básico.",
       "query": "Cada petición lleva la clave como parámetro al final de la dirección. No aparece en ningún registro de nexdeck.",
-      "session": "nexdeck inicia sesión una vez en una dirección de acceso, guarda el ticket y lo envía. Ante un 401 inicia sesión de nuevo una vez y vuelve a preguntar."
+      "session": "nexdeck inicia sesión una vez en una dirección de acceso, guarda el ticket y lo envía. Ante un 401 inicia sesión de nuevo una vez y vuelve a preguntar. En la vista YAML, lifetime (segundos, o el lugar de expires_in en la respuesta del inicio de sesión) hace que inicie sesión un minuto antes de que caduque el ticket, y renew_on (401, 403, 419, 440, 500) nombra otras respuestas que cuentan como sesión cerrada."
     },
     "insert": "Insertar campo",
     "insertField": "Insertar un campo en {{label}}",

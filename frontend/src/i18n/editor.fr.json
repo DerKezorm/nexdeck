@@ -1159,7 +1159,7 @@
       "header": "Chaque requête porte un en-tête avec la clé, par exemple X-Api-Key: {key} ou Authorization: Bearer {key}.",
       "basic": "Chaque requête porte l'utilisateur et le mot de passe en connexion simple (Basic).",
       "query": "Chaque requête porte la clé comme paramètre à la fin de l'adresse. Elle n'apparaît dans aucun journal de nexdeck.",
-      "session": "nexdeck se connecte une fois à une adresse de connexion, garde le ticket reçu et l'envoie. Sur un 401 il se reconnecte une fois et redemande."
+      "session": "nexdeck se connecte une fois à une adresse de connexion, garde le ticket reçu et l'envoie. Sur un 401 il se reconnecte une fois et redemande. Dans la vue YAML, lifetime (secondes, ou l'emplacement de expires_in dans la réponse de connexion) le fait se reconnecter une minute avant la fin du ticket, et renew_on (401, 403, 419, 440, 500) nomme d'autres réponses qui valent déconnexion."
     },
     "insert": "Insérer un champ",
     "insertField": "Insérer un champ dans {{label}}",

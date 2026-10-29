@@ -1159,7 +1159,7 @@
       "header": "Jede Anfrage trägt eine Kopfzeile mit dem Schlüssel, etwa X-Api-Key: {key} oder Authorization: Bearer {key}.",
       "basic": "Jede Anfrage trägt Benutzer und Passwort als einfache Anmeldung (Basic).",
       "query": "Jede Anfrage trägt den Schlüssel als Parameter am Ende der Adresse. In keinem Protokoll von nexdeck taucht er auf.",
-      "session": "nexdeck meldet sich einmal an einer Anmeldeadresse an, merkt sich das Ticket und schickt es mit. Bei einem 401 meldet es sich einmal neu an und fragt noch einmal."
+      "session": "nexdeck meldet sich einmal an einer Anmeldeadresse an, merkt sich das Ticket und schickt es mit. Bei einem 401 meldet es sich einmal neu an und fragt noch einmal. In der YAML-Ansicht lässt lifetime (Sekunden oder der Ort von expires_in in der Antwort der Anmeldung) es sich eine Minute vor Ablauf des Tickets neu anmelden, und renew_on (401, 403, 419, 440, 500) nennt weitere Antworten, die als abgemeldet gelten."
     },
     "insert": "Feld einfügen",
     "insertField": "Feld in {{label}} einfügen",

@@ -1159,7 +1159,7 @@
       "header": "Every request carries a header with the key, such as X-Api-Key: {key} or Authorization: Bearer {key}.",
       "basic": "Every request carries user and password as plain basic sign-in.",
       "query": "Every request carries the key as a parameter at the end of the address. It appears in no log of nexdeck.",
-      "session": "nexdeck signs in once at a login address, keeps the ticket it gets and sends it along. On a 401 it signs in again once and asks again."
+      "session": "nexdeck signs in once at a login address, keeps the ticket it gets and sends it along. On a 401 it signs in again once and asks again. In the YAML view, lifetime (seconds, or the place of expires_in in the sign-in answer) makes it sign in a minute before the ticket runs out, and renew_on (401, 403, 419, 440, 500) names more answers that count as signed out."
     },
     "insert": "Insert field",
     "insertField": "Insert a field into {{label}}",
