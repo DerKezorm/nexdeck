@@ -46,7 +46,7 @@
       "accept": "Accepter",
       "takeAnyway": "Reprendre dans l'éditeur",
       "discard": "Rejeter",
-      "sentValues": "Des valeurs d'exemple du service sont parties avec cette demande.",
+      "sentValues": "Des valeurs d'exemple du service sont parties avec cette demande. La case est utilisée ; coche-la de nouveau pour les envoyer avec la suivante.",
       "sentNoValues": "Aucune valeur n'est partie, seulement des noms et des types de champs.",
       "leaveBody": "Une réponse de l'IA attend, sans avoir été reprise ni rejetée. Elle est perdue si tu pars.",
       "previewFailed": "L'aperçu de cette carte n'a pas pu être dessiné.",

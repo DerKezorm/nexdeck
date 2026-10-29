@@ -46,7 +46,7 @@
       "accept": "Accetta",
       "takeAnyway": "Porta nell'editor",
       "discard": "Scarta",
-      "sentValues": "Con questa richiesta sono partiti valori di esempio del servizio.",
+      "sentValues": "Con questa richiesta sono partiti valori di esempio del servizio. La spunta è usata; rimettila per inviarli con la prossima.",
       "sentNoValues": "Non è partito nessun valore, solo nomi e tipi dei campi.",
       "leaveBody": "Una risposta dell'IA è in attesa e non è stata né accettata né scartata. Se esci, va persa.",
       "previewFailed": "Non è stato possibile disegnare l'anteprima di questa scheda.",

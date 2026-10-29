@@ -102,7 +102,8 @@ export function problemsOf(failure: unknown): CardProblem[] {
  * server's English sentence.
  *
  * ⚠️ A blank that names a kind of value (`expected`, `what`) is a code too, and is worded through `errors.cardTerms`.
- * Where it is a list of choices (`must be one of …`), it stays as it came.
+ * Where it is a list of choices (`must be one of …`), it stays as it came. `failure` is the code of a card's own error
+ * (a path the service did not answer) and is worded the way the card says it (`errors.widget`).
  */
 export function problemText(t: TFunction, problem: CardProblem): string {
   const params: Record<string, unknown> = { ...problem.params }
@@ -110,6 +111,7 @@ export function problemText(t: TFunction, problem: CardProblem): string {
     const value = params[name]
     if (typeof value === 'string') params[name] = t(`errors.cardTerms.${value}`, { defaultValue: value })
   }
+  if (typeof params.failure === 'string') params.failure = t(`errors.widget.${params.failure}`, { defaultValue: params.failure })
   return t(`errors.card.${problem.code}`, { ...params, defaultValue: problem.message })
 }
 

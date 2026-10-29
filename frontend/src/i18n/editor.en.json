@@ -46,7 +46,7 @@
       "accept": "Accept",
       "takeAnyway": "Take into the editor",
       "discard": "Discard",
-      "sentValues": "Sample values of the service went along with this request.",
+      "sentValues": "Sample values of the service went along with this request. The tick is used up with it; set it again to send them with the next one.",
       "sentNoValues": "No values went along, only field names and types.",
       "leaveBody": "An answer of the AI is waiting and has not been taken or discarded. It is lost when you leave.",
       "previewFailed": "The preview of this card could not be drawn.",

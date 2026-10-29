@@ -28,6 +28,10 @@ const theme = EditorView.theme({
   '.cm-activeLine': { backgroundColor: 'color-mix(in srgb, var(--nd-text) 5%, transparent)' },
   '.cm-activeLineGutter': { backgroundColor: 'transparent', color: 'var(--nd-text-muted)' },
   '&.cm-focused': { outline: 'none' },
+  // The selection in nexdeck's accent, in light and dark: CodeMirror's own is a light lilac under light text (found in a real run on 1.0.0).
+  '.cm-selectionBackground, &.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-content ::selection': {
+    backgroundColor: 'color-mix(in srgb, var(--nd-accent) 30%, transparent)',
+  },
   '.cm-scroller': { overflow: 'auto', lineHeight: '1.6' },
   '.cm-tooltip': { backgroundColor: 'var(--nd-bg-elev)', color: 'var(--nd-text)', border: '1px solid var(--nd-border)' },
 })

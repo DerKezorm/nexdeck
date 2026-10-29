@@ -40,13 +40,17 @@ BASE = "https://svc.example.com"
 #: The most a card of one kind may add: a page of paths, not a copy of the API.
 LONGEST = 300
 
-#: A value that says when it was written (a day, a moment, seconds since 1970): it changes with every run, and what it
-#: bounds is the card's window of time, not part of where the data lives. The request without it is still one to offer.
+#: A value that says when it was written (a day, a moment, seconds since 1970): it changes with every run, and a card
+#: cannot send one, its path being fixed. A request that needs it is not offered: without it nexcrate's calendar answers
+#: 422 (found in a real run on 1.0.0), and offering such a path to the editor or the card help only sets them up to fail.
 WHEN = re.compile(r"^(\d{4}-\d{2}-\d{2}([T ][\d:.]+(Z|[+-]\d{2}:?\d{2})?)?|\d{10}(\d{3})?)$")
 #: Options a card needs before it asks anything, for the kinds whose cards stop at "nothing is set" or "not owner/name";
 #: the marker is written as the place given in :data:`PLACES`.
 OPTIONS: dict[str, dict[str, Any]] = {"github": {"repos": "Zkowner/Zkrepo"}}
 PLACES: dict[str, str] = {"Zkowner/Zkrepo": "{owner}/{repo}", "Zkentityids": "{entity_id}"}
+#: Paths a built-in card reads that answer in a form a custom card cannot read: Prometheus text is neither JSON nor a short
+#: value (found in a real run on 1.0.0: Uptime Kuma's /metrics was offered and failed).
+NOT_JSON: dict[str, frozenset[str]] = {"caddy": frozenset({"/metrics"}), "uptimekuma": frozenset({"/metrics"})}
 #: What a kind offers that no card of it asks, from its documentation. Home Assistant's cards of its own speak WebSocket;
 #: the same data is on its REST API, which a custom card can read. ``widgets`` empty: no card behind it.
 EXTRA: dict[str, list[dict[str, Any]]] = {
@@ -94,6 +98,7 @@ def _options(widget: Any) -> dict[str, Any]:
 
 POST = "asks with POST only (JSON-RPC, XML-RPC, SOAP, GraphQL or a form), and a custom card reads with GET"
 SIGN_IN = "opens a session first in a way the stand-in cannot answer, so no card gets as far as asking"
+DATED = "its cards ask every path with a window of dates, which a card cannot send, its path being fixed"
 #: Readable kinds for which the code gives no GET to offer, each with the reason. ``tests/test_cards_card_reads.py`` holds this
 #: list against the result: a kind that gains reads, or one that is new and has none, turns the test red until it is put right.
 GAPS: dict[str, str] = {
@@ -105,9 +110,11 @@ GAPS: dict[str, str] = {
     "deluge": POST + " (JSON-RPC)",
     "duplicati": SIGN_IN,
     "freshrss": SIGN_IN,
+    "firefly": DATED,
     "frigate": SIGN_IN,
     "fritzbox": POST + " (SOAP)",
     "ghostfolio": SIGN_IN,
+    "goatcounter": DATED,
     "ical": "the address of the connection is the calendar file itself, there is nothing under it to ask",
     "kodi": POST + " (JSON-RPC)",
     "komodo": POST,
@@ -162,8 +169,10 @@ def _entry(url: str, base: str, secrets: list[str], places: dict[str, str], name
     if f"{parts.scheme}://{parts.netloc}".lower() != f"{origin.scheme}://{origin.netloc}".lower() or not parts.path.startswith(prefix):
         return None
     lowered = {name.lower() for name in names}
-    pairs = [(name, value) for name, value in parse_qsl(parts.query, keep_blank_values=True)
-             if not is_credential_name(name) and name.lower() not in lowered and not WHEN.match(value)]
+    every = parse_qsl(parts.query, keep_blank_values=True)
+    if any(WHEN.match(value) for _name, value in every):
+        return None
+    pairs = [(name, value) for name, value in every if not is_credential_name(name) and name.lower() not in lowered]
     path = parts.path[len(prefix):] or "/"
     if not path.startswith("/") or path == "/":
         return None
@@ -207,7 +216,7 @@ async def _reads_of(kind: str, client: httpx.AsyncClient, why: dict[str, str] | 
             noted = [str(call.request.url) for call in router.calls if call.request.method == "GET"]
         for url in noted:
             path = _entry(url, base, secrets, {**places, **{str(v): n for n, v in options.items() if isinstance(v, str) and v.startswith("Zk")}}, names)
-            if path is None:
+            if path is None or path in NOT_JSON.get(kind, frozenset()):
                 continue
             if path not in by_path:
                 by_path[path] = {"path": path, "widgets": []}

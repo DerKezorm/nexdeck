@@ -1861,6 +1861,23 @@
         "Eigene Karten und Anbindungen gehen als Datei hinaus, und ein Board-Export nimmt seine eigenen Karten mit.",
         "Eine eigene Karte liest nur, fragt nur die Adresse ihrer Verbindung und bekommt nie deren Schlüssel."
       ]
+    },
+    "1.0.1": {
+      "lead": "Die KI-Hilfe baut jetzt Karten, die funktionieren: Sie liest deinen Dienst, bevor sie dir einen Vorschlag zeigt.",
+      "sections": [
+        {
+          "title": "KI fragen prüft die eigene Karte",
+          "body": "Die KI bekommt die Adressen, die nexdeck beim Dienst schon abfragt, und nexdeck fragt jede Adresse ihres Vorschlags ab, bevor du ihn siehst. Eine Adresse, die der Dienst nicht kennt, oder Felder, die es in der Antwort nicht gibt, gehen einmal an die KI zurück. So liest die Karte, was dein Dienst wirklich schickt. Die Vorschau neben dem Vorschlag zeigt die Karte jetzt mit Beispieldaten aus dieser Antwort.",
+          "path": "System > Eigene Karten > Karte bauen > KI fragen"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Jahreszahlen stehen auf jeder eigenen Karte als 2005, nicht als 2.005.",
+        "Der Schritt „Daten“ bietet nur noch Adressen an, die eine Karte lesen kann; Adressen, die ein Datumsfenster brauchen, sind weg.",
+        "Der Hinweis unter einem Fehler einer eigenen Karte steht in deiner Sprache, und die Markierung in den YAML-Editoren ist im Dunkeln lesbar.",
+        "Das eigene CSS eines Looks wird so geprüft, wie ein Browser es liest, damit keine versteckte Adresse darin etwas von woanders lädt."
+      ]
     }
   }
 }

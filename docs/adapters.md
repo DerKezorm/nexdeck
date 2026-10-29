@@ -380,14 +380,16 @@ Rules:
   only the fetch knows what the whole is, and slices taken from `secondary`
   would add up to something that does not exist.
 - `demo()` must return believable, moving data for every widget kind; a test checks that.
-- **Custom cards read through a connection** (`raw_access = True`). A card an
+- **Custom cards read through a connection** (`raw_access`). A card an
   administrator describes as data asks a connection its requests with the
-  connection's own credentials. The base class already does it for a kind that
-  sends a key in a header (`_headers`) or a user and password (`_auth`), at
-  `raw_base(config)`; a kind that signs in with a session stays off. Switch it
-  on only with a row in `backend/tests/test_cards_source.py` that asks a
-  recorded answer through it: the list of kinds there is a test. A request is
-  a GET underneath the address, never follows a redirect (httpx drops
-  `Authorization` on a change of host but not `X-Api-Key`), and reads at most
-  2 MB.
+  connection's own credentials, at `raw_base(config)`: a key in a header
+  (`_headers`), a user and password (`_auth`), parameters in the address
+  (`raw_params`) or the kind's own sign-in, renewed when the service says 401
+  (`raw_client`, `raw_sign_in`). Every kind that speaks HTTP may be read; a
+  kind that cannot goes into `NOT_READ_BY_CARDS` in `adapters/base.py` with
+  its reason. A request is a GET underneath the address, never follows a
+  redirect (httpx drops `Authorization` on a change of host but not
+  `X-Api-Key`), and reads at most 2 MB. After a change of what a kind asks,
+  run `python tools/card_reads.py` in `backend`: the editor and the card help
+  offer those paths, and a test compares the file with the code.
 - Add a test with recorded answers under `backend/tests/`, using `respx`.

@@ -488,6 +488,7 @@ async def draft_card(bench: Bench, given: dict[str, Any]) -> str:
     from ...adapters.custom import plain
     from ...cards import ai, card_reads, credentials, demo, load, schema
     from ...models import Conversation, ConversationDraft, Integration
+    from ...routers.card_ai import _verifier
     from ...routers.cards import _ask, _connection
     from . import chat, settings
 
@@ -533,12 +534,13 @@ async def draft_card(bench: Bench, given: dict[str, Any]) -> str:
             held.grants = [one for one in held.grants or [] if one != grant]
     config, key = settings.stored(bench.db), settings.key_of(bench.db)
     integration_id, conversation_id, user_id = chosen.id, bench.conversation_id, bench.user.id
+    verify = _verifier(integration_id, user_id, bench.user.username)
     bench.db.commit()
 
     async def work() -> tuple[Any, Any]:
         adapter, connection, ctx = await _connection(integration_id)
         answer = await _ask(adapter, connection, ctx, request)
-        return answer, await ai.generate(ai.Ask(mode="new", description=description, connection_kind=adapter.kind, path=path, answer=answer, include_values=values), config, key)
+        return answer, await ai.generate(ai.Ask(mode="new", description=description, connection_kind=adapter.kind, path=path, answer=answer, include_values=values), config, key, verify)
 
     # One request per administrator, like the editor's, and the one that ends when the provider is taken away (KARTEN-17 AC-8, EC-6).
     try:

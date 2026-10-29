@@ -94,6 +94,7 @@
       "card_needs_newer_format": "Questa scheda è scritta nel formato {{format}} e richiede un nexdeck più recente; questo legge fino al formato {{known}}.",
       "card_needs_newer": "Questa scheda richiede nexdeck {{need}} o successivo; questo è {{have}}.",
       "card_unknown_field": "{{field}} qui non è un campo di una scheda.",
+      "card_path_failed": "{{path}} non funziona con questo servizio: {{failure}}",
       "card_too_long": "Sono {{length}} caratteri; il limite è {{limit}}.",
       "card_too_few": "Qui ne servono almeno {{minimum}}.",
       "card_too_many": "Qui ne sono ammessi al massimo {{limit}}.",

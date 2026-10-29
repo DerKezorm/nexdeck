@@ -201,14 +201,6 @@
    ]
   },
   {
-   "path": "/metrics",
-   "widgets": [
-    "overview",
-    "sites",
-    "upstreams"
-   ]
-  },
-  {
    "path": "/reverse_proxy/upstreams",
    "widgets": [
     "upstreams"
@@ -417,14 +409,6 @@
    ]
   },
   {
-   "path": "/System/ActivityLog/Entries?StartIndex=0&Limit=500",
-   "widgets": [
-    "findings",
-    "users",
-    "top"
-   ]
-  },
-  {
    "path": "/Plugins",
    "widgets": [
     "findings"
@@ -494,26 +478,6 @@
    "path": "/api/worker",
    "widgets": [
     "running"
-   ]
-  }
- ],
- "firefly": [
-  {
-   "path": "/api/v1/summary/basic",
-   "widgets": [
-    "overview"
-   ]
-  },
-  {
-   "path": "/api/v1/bills",
-   "widgets": [
-    "subscriptions"
-   ]
-  },
-  {
-   "path": "/api/v1/budgets",
-   "widgets": [
-    "budgets"
    ]
   }
  ],
@@ -774,26 +738,6 @@
    ]
   }
  ],
- "goatcounter": [
-  {
-   "path": "/api/v0/stats/total",
-   "widgets": [
-    "visits"
-   ]
-  },
-  {
-   "path": "/api/v0/stats/hits?limit=8",
-   "widgets": [
-    "pages"
-   ]
-  },
-  {
-   "path": "/api/v0/stats/toprefs?limit=8",
-   "widgets": [
-    "referrers"
-   ]
-  }
- ],
  "gotify": [
   {
    "path": "/message?limit=20",
@@ -1029,14 +973,6 @@
    "path": "/ScheduledTasks",
    "widgets": [
     "findings"
-   ]
-  },
-  {
-   "path": "/System/ActivityLog/Entries?StartIndex=0&Limit=500",
-   "widgets": [
-    "findings",
-    "users",
-    "top"
    ]
   },
   {
@@ -1292,12 +1228,6 @@
    "widgets": [
     "status"
    ]
-  },
-  {
-   "path": "/api/v1/calendar?includeSeries=true&includeArtist=true&includeAuthor=true",
-   "widgets": [
-    "calendar"
-   ]
   }
  ],
  "linkding": [
@@ -1497,12 +1427,6 @@
   }
  ],
  "mealie": [
-  {
-   "path": "/api/households/mealplans?perPage=100",
-   "widgets": [
-    "plan"
-   ]
-  },
   {
    "path": "/api/households/shopping/items?perPage=-1",
    "widgets": [
@@ -1827,12 +1751,6 @@
    ]
   },
   {
-   "path": "/api/v1/calendar",
-   "widgets": [
-    "calendar"
-   ]
-  },
-  {
    "path": "/api/v1/events?after=0&limit=1",
    "widgets": [
     "arrivals"
@@ -1862,27 +1780,9 @@
  ],
  "nexlore": [
   {
-   "path": "/api/v1/dashboard",
-   "widgets": [
-    "overview"
-   ]
-  },
-  {
    "path": "/api/v1/me",
    "widgets": [
     "overview",
-    "tasks"
-   ]
-  },
-  {
-   "path": "/api/v1/tasks?when=overdue&limit=8",
-   "widgets": [
-    "tasks"
-   ]
-  },
-  {
-   "path": "/api/v1/tasks?when=today&limit=8",
-   "widgets": [
     "tasks"
    ]
   },
@@ -1928,12 +1828,6 @@
    "path": "/api/v1/results?limit=1",
    "widgets": [
     "latest"
-   ]
-  },
-  {
-   "path": "/api/v1/results?limit=5000",
-   "widgets": [
-    "history"
    ]
   },
   {
@@ -2515,13 +2409,6 @@
    "widgets": [
     "users"
    ]
-  },
-  {
-   "path": "/status/sessions/history/all?sort=viewedAt%3Adesc&X-Plex-Container-Start=0&X-Plex-Container-Size=500",
-   "widgets": [
-    "users",
-    "top"
-   ]
   }
  ],
  "pocketid": [
@@ -2722,12 +2609,6 @@
    "widgets": [
     "status"
    ]
-  },
-  {
-   "path": "/api/v3/calendar?includeSeries=true&includeArtist=true&includeAuthor=true",
-   "widgets": [
-    "calendar"
-   ]
   }
  ],
  "readarr": [
@@ -2753,12 +2634,6 @@
    "path": "/api/v1/author",
    "widgets": [
     "status"
-   ]
-  },
-  {
-   "path": "/api/v1/calendar?includeSeries=true&includeArtist=true&includeAuthor=true",
-   "widgets": [
-    "calendar"
    ]
   }
  ],
@@ -2819,12 +2694,6 @@
    "path": "/downloads?limit=6",
    "widgets": [
     "downloads"
-   ]
-  },
-  {
-   "path": "/traffic/details",
-   "widgets": [
-    "traffic"
    ]
   },
   {
@@ -3007,12 +2876,6 @@
    "widgets": [
     "status"
    ]
-  },
-  {
-   "path": "/api/v3/calendar?includeSeries=true&includeArtist=true&includeAuthor=true",
-   "widgets": [
-    "calendar"
-   ]
   }
  ],
  "speedtest": [
@@ -3039,12 +2902,6 @@
   }
  ],
  "sportarr": [
-  {
-   "path": "/api/calendar",
-   "widgets": [
-    "upcoming"
-   ]
-  },
   {
    "path": "/api/wanted/missing?page=1&pageSize=8",
    "widgets": [
@@ -3174,12 +3031,6 @@
   }
  ],
  "tandoor": [
-  {
-   "path": "/api/meal-plan/?page_size=100",
-   "widgets": [
-    "plan"
-   ]
-  },
   {
    "path": "/api/shopping-list-entry/?page_size=200",
    "widgets": [
@@ -3369,13 +3220,6 @@
  ],
  "uptimekuma": [
   {
-   "path": "/metrics",
-   "widgets": [
-    "monitors",
-    "summary"
-   ]
-  },
-  {
    "path": "/api/status-page/heartbeat/{status_page}",
    "widgets": [
     "monitors",
@@ -3499,12 +3343,6 @@
   }
  ],
  "yourspotify": [
-  {
-   "path": "/spotify/listened_to",
-   "widgets": [
-    "stats"
-   ]
-  },
   {
    "path": "/spotify/gethistory?number=8&offset=0",
    "widgets": [
