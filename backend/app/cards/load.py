@@ -307,7 +307,7 @@ def _from_pydantic(error: Any, lines: dict[Path, int]) -> Problem:
             expected = ", ".join(blocks.KINDS)
             return Problem("card_bad_block", f"type must be one of {expected}.", where, line, {"expected": expected})
         expected = "value, stats, list, posters, builder"
-        return Problem("card_bad_form", f"form must be one of {expected}.", where, line, {"expected": expected})
+        return Problem("card_not_allowed", f"form must be one of {expected}.", where, line, {"expected": expected})
     if kind in ("greater_than_equal", "less_than_equal", "greater_than", "less_than"):
         bound = next(iter(context.values()), "")
         return Problem("card_out_of_range", f"This is outside what is allowed ({bound}).", where, line, {"bound": bound})
