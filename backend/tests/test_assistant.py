@@ -79,7 +79,7 @@ def _call(name: str, number: int = 1, **given: object) -> dict:
 def test_the_assistant_is_off_until_an_administrator_chooses_a_provider(client: TestClient) -> None:
     setup_admin(client)
     assert client.get("/api/v1/settings/assistant").json() == {
-        "provider": "off", "base_url": "", "model": "", "has_key": False, "ready": False, "leaves_the_house": False,
+        "provider": "off", "base_url": "", "model": "", "has_key": False, "ready": False, "vision": False, "leaves_the_house": False,
     }
     refused = client.post("/api/v1/assistant/chat", json={"text": "Is anything wrong?"}, headers=CSRF)
     assert refused.status_code == 409 and refused.json()["detail"]["code"] == "off"
@@ -101,7 +101,7 @@ def test_the_key_is_kept_encrypted_and_never_comes_back(client: TestClient) -> N
     assert client.get("/api/v1/settings/assistant").json()["has_key"] is True
     client.put("/api/v1/settings/assistant", json={"provider": "anthropic", "model": "claude-sonnet-5-5", "key": ""}, headers=CSRF)
     assert client.get("/api/v1/settings/assistant").json() | {} == {
-        "provider": "anthropic", "base_url": "", "model": "claude-sonnet-5-5", "has_key": False, "ready": False, "leaves_the_house": True,
+        "provider": "anthropic", "base_url": "", "model": "claude-sonnet-5-5", "has_key": False, "ready": False, "vision": False, "leaves_the_house": True,
     }
 
 

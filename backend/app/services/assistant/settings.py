@@ -42,7 +42,13 @@ def stored(db: Session) -> dict[str, Any]:
     value = _value(db)
     provider = value.get("provider") if value.get("provider") in PROVIDERS else "off"
     return {"provider": provider, "base_url": str(value.get("base_url") or ""), "model": str(value.get("model") or ""),
-            "key": str(value.get("key") or "")}
+            "key": str(value.get("key") or ""), "vision": value.get("vision") is True}
+
+
+def sees(db: Session) -> bool:
+    """Whether the provider understands a picture: Claude always, a service of the OpenAI form when the administrator says so."""
+    value = stored(db)
+    return ready(db) and (value["provider"] == "anthropic" or (value["provider"] == "openai" and value["vision"]))
 
 
 def key_of(db: Session) -> str:
@@ -95,7 +101,7 @@ def public(db: Session) -> dict[str, Any]:
     value = stored(db)
     return {
         "provider": value["provider"], "base_url": value["base_url"], "model": value["model"],
-        "has_key": bool(value["key"]), "ready": ready(db),
+        "has_key": bool(value["key"]), "ready": ready(db), "vision": value["vision"],
         "leaves_the_house": leaves_the_house(value["provider"], value["base_url"]),
     }
 
@@ -110,8 +116,8 @@ def ready(db: Session) -> bool:
     return False
 
 
-def store(db: Session, *, provider: str, base_url: str, model: str, key: str | None) -> dict[str, Any]:
-    """``key=None`` keeps the stored one, ``""`` removes it."""
+def store(db: Session, *, provider: str, base_url: str, model: str, key: str | None, vision: bool | None = None) -> dict[str, Any]:
+    """``key=None`` keeps the stored one, ``""`` removes it; ``vision=None`` keeps whether the model understands pictures."""
     if provider not in PROVIDERS:
         raise Refused("bad_provider", "No such provider.")
     base_url = base_url.strip().rstrip("/")
@@ -124,7 +130,8 @@ def store(db: Session, *, provider: str, base_url: str, model: str, key: str | N
         raise Refused("missing_model", "Name the model to use.")
     value = stored(db)
     secret = value["key"] if key is None else crypto.encrypt_for(key.strip(), CONTEXT) if key.strip() else ""
-    new = {"provider": provider, "base_url": base_url if provider == "openai" else "", "model": model if provider != "off" else "", "key": secret}
+    new = {"provider": provider, "base_url": base_url if provider == "openai" else "", "model": model if provider != "off" else "", "key": secret,
+           "vision": value["vision"] if vision is None else vision}
     setting = db.get(Setting, SETTING)
     if setting is None:
         db.add(Setting(key=SETTING, value=new))

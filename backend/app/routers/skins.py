@@ -11,8 +11,12 @@ from typing import Any
 from fastapi import APIRouter, Request, Response, status
 from pydantic import BaseModel, Field
 
+from ..cards import ai as card_ai
+from ..db import db_session
 from ..deps import AdminUser, DbSession, OptionalUser, error, kiosk_from_request
 from ..services import appearance
+from ..services.assistant import settings as assistant
+from ..skins import ai as skin_ai
 from ..skins import compile as skin_compile
 from ..skins import css, schema, store
 
@@ -46,7 +50,7 @@ def listing(request: Request, user: OptionalUser, db: DbSession) -> dict:
 
 
 @router.get("/schema", summary="What a skin may hold: parts, properties, functions, motions, limits")
-def described(admin: AdminUser) -> dict:
+def described(admin: AdminUser, db: DbSession) -> dict:
     data = css.registry()
     return {
         "parts": data["parts"], "groups": data["groups"], "container_refused": data["container_refused"],
@@ -57,7 +61,54 @@ def described(admin: AdminUser) -> dict:
             "animation_ms": list(css.ANIMATION_MS), "transition_ms": list(css.TRANSITION_MS), "content": css.CONTENT_CHARACTERS,
         },
         "engine": skin_compile.ENGINE,
+        # Whether the editor offers its tab "AI", and whether the provider can be shown the stage.
+        "ai": {"ready": assistant.ready(db), "vision": assistant.sees(db)},
     }
+
+
+class AiBody(BaseModel):
+    prompt: str = Field(default="", max_length=2000)
+    skin: dict[str, Any]
+    locked: list[str] = Field(default_factory=list, max_length=len(skin_ai.SECTIONS))
+    review: bool = False
+    image: str = Field(default="", max_length=skin_ai.MAX_IMAGE)
+    image_type: str = "image/jpeg"
+    audit: list[str] = Field(default_factory=list, max_length=skin_ai.MAX_AUDIT)
+
+
+_HTTP = {"assistant_off": 409, "ai_busy": 409, "ai_cancelled": 409, "bad_request": 400}
+
+
+@router.post("/ai", summary="Have the provider of the assistant make or change a skin")
+async def skin_with_ai(body: AiBody, admin: AdminUser, db: DbSession) -> dict[str, Any]:
+    """Administrators only, one request at a time, cancellable; what leaves is built in skins/ai.py, nowhere else."""
+    if not assistant.ready(db):
+        raise error("assistant_off", "The assistant is not set up.", status.HTTP_409_CONFLICT)
+    if body.image and (not assistant.sees(db) or body.image_type not in skin_ai.IMAGE_TYPES):
+        raise error("bad_request", "This provider is not shown pictures.", status.HTTP_400_BAD_REQUEST)
+    if len(json.dumps(body.skin)) > MAX_FILE:
+        raise error("bad_request", "The skin is too large to send.", status.HTTP_400_BAD_REQUEST)
+    config, key = assistant.stored(db), assistant.key_of(db)
+    userid, username = admin.id, admin.username
+    db.rollback()  # the provider may take minutes; no read transaction waits with it
+    ask = skin_ai.Ask(prompt=body.prompt, skin=body.skin, locked=body.locked, review=body.review, image=body.image, image_type=body.image_type, audit=body.audit)
+    try:
+        finished, outcome = await card_ai.supervised(userid, skin_ai.generate(ask, config, key))
+    except card_ai.Busy:
+        raise error("ai_busy", "The assistant is working for you already. Wait for it or cancel it.", status.HTTP_409_CONFLICT) from None
+    except card_ai.AiError as failure:
+        raise error(failure.code, failure.message, _HTTP.get(failure.code, status.HTTP_502_BAD_GATEWAY)) from None
+    if not finished:
+        with db_session() as fresh:
+            gone = not assistant.ready(fresh)
+        raise error("assistant_off" if gone else "ai_cancelled", "The assistant was switched off." if gone else "The request was cancelled.", status.HTTP_409_CONFLICT)
+    logger.info("%s had a skin %s by the assistant%s.", username, "made" if outcome.ok else "tried", " after a look at the stage" if body.review else "")
+    return outcome.body()
+
+
+@router.delete("/ai", summary="Cancel the skin being made for you")
+def cancel_ai(admin: AdminUser) -> dict[str, bool]:
+    return {"cancelled": card_ai.cancel(admin.id)}
 
 
 @router.get("/starters", summary="What a new skin can start from: nothing, a look nexdeck ships, an example")
