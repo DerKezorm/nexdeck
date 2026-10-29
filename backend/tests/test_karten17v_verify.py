@@ -164,3 +164,15 @@ def test_karten17v_a_path_whose_answer_the_provider_never_saw_goes_back_once_wit
     monkeypatch.setattr(providers, "turn", script)
     asked = ai.Ask(mode="new", description="Show my queue", connection_kind="sonarr", path=RIGHT, answer=ANSWER)
     assert asyncio.run(ai.generate(asked, CONFIG, "key", verify)).ok and len(script.seen) == 1
+
+
+@respx.mock
+def test_karten17v_a_name_left_open_for_the_administrator_is_not_asked_and_not_held_against_the_card(admin: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:  # noqa: F811
+    switch_on(admin)
+    connection(admin)
+    stand_in = respx.get(url__regex=r".*").mock(return_value=httpx.Response(404))
+    monkeypatch.setattr(providers, "turn", Script(proposing("/api/v3/series/{series_id}")))
+    body = admin.post("/api/v1/cards/ai", json={"mode": "change", "description": "One series", "yaml": ai.EXAMPLE}, headers=CSRF).json()
+    assert body["ok"] is True and body["summary"]["paths"] == ["/api/v3/series/{series_id}"] and stand_in.call_count == 0
+    rules = ai.outbound(ai.Ask(mode="change", yaml=ai.EXAMPLE)).system
+    assert "Never guess a name only the administrator knows" in rules and '"{disk.used} / {disk.total} * 100"' in rules
