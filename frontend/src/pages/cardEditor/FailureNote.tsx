@@ -1,13 +1,13 @@
 import { AlertTriangle } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
-import { tLabel } from '../../i18n/texts'
+import { tAdapter, tLabel } from '../../i18n/texts'
 import { pausedUntil } from '../../lib/testResult'
 import type { Failure } from './connections'
 
 /**
  * A failure in the words a card uses for it (KARTEN-9 EC-2): English shows the server's own sentence with its
- * specifics, every other language the sentence for its code, and the hint below.
+ * specifics, every other language the sentence for its code, and the hint below, through the table of server texts.
  */
 export function failureText(t: (key: string, options?: Record<string, unknown>) => string, language: string, failure: Failure): string {
   if (failure.code === 'network') return t('errors.network')
@@ -22,7 +22,7 @@ export function FailureNote({ failure }: { failure: Failure }) {
       <AlertTriangle size={18} className="text-bad flex-none mt-0.5" aria-hidden="true" />
       <div className="min-w-0">
         <p className="text-sm font-medium text-bad break-words hyphens-auto">{failureText(t, i18n.language, failure)}</p>
-        {failure.hint && <p className="text-[12px] text-muted break-words hyphens-auto">{failure.hint}</p>}
+        {failure.hint && <p className="text-[12px] text-muted break-words hyphens-auto">{tAdapter(failure.hint)}</p>}
       </div>
     </div>
   )
