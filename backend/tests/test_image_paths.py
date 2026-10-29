@@ -26,6 +26,7 @@ from app.adapters import kodi as kodi_module
 from app.adapters import nexcanvas as nexcanvas_module
 from app.adapters.base import Adapter, AdapterError, Context, ImagePath, WidgetData, image_path
 from app.routers import widgets as widgets_router
+from app.services.collector import collector
 
 from .conftest import CSRF, setup_admin
 from .test_boards import _board, _widget
@@ -360,7 +361,10 @@ def test_a_connection_whose_adapter_names_no_pictures_fetches_none(client: TestC
 
 
 @respx.mock
-def test_a_reolink_reboot_never_reaches_the_device(client: TestClient) -> None:
+def test_a_reolink_reboot_never_reaches_the_device(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    # The collector would log in to the camera for the new widget on its own, at a moment that depends on the load of the machine;
+    # what is checked here is the image route, so nothing else may talk to the device.
+    monkeypatch.setattr(collector, "running", False)
     setup_admin(client)
     page = _board(client)["pages"][0]["id"]
     made = client.post("/api/v1/integrations", json={"kind": "reolink", "name": "Cams", "config": {"url": "http://cam", "username": "nexdeck", "password": "pw"}}, headers=CSRF).json()
