@@ -58,6 +58,7 @@
         "withButtons": "With buttons",
         "readOnly": "Read only",
         "none": "None",
+        "asked": "To check the card nexdeck asked the connection {{name}} ({{kind}}), the first one of the kind the card names. Only field names and types of its answer went to the AI, no values.",
         "forms": {
           "value": "One value",
           "stats": "Statistics",

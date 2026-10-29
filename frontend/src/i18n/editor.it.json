@@ -58,6 +58,7 @@
         "withButtons": "Con pulsanti",
         "readOnly": "Sola lettura",
         "none": "Nessuna",
+        "asked": "Per controllare la scheda nexdeck ha interrogato la connessione {{name}} ({{kind}}), la prima del tipo che la scheda nomina. Della sua risposta sono andati all'IA solo nomi e tipi dei campi, nessun valore.",
         "forms": {
           "value": "Un valore",
           "stats": "Statistiche",

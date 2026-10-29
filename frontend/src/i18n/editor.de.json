@@ -58,6 +58,7 @@
         "withButtons": "Mit Knöpfen",
         "readOnly": "Nur lesend",
         "none": "Keine",
+        "asked": "Zum Prüfen der Karte hat nexdeck die Verbindung {{name}} ({{kind}}) gefragt, die erste der Art, die die Karte nennt. Von ihrer Antwort gingen nur Feldnamen und Typen an die KI, keine Werte.",
         "forms": {
           "value": "Ein Wert",
           "stats": "Kennzahlen",

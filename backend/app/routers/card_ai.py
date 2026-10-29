@@ -104,23 +104,29 @@ def note_asked(userid: int, username: str, number: int, asked: list[tuple[str, s
     logger.info("%s had the card help ask %s at %s (%s)%s.", username, number, detail, how, f": {', '.join(failed)}" if failed else "")
 
 
-def _tried_with(preferred: int | None, kinds: list[str]) -> int | None:
-    """The connection a proposal is asked through: the editor's own when the card names its kind, else the first real one of such a kind."""
+def _tried_with(preferred: int | None, kinds: list[str]) -> tuple[int, dict[str, str] | None] | None:
+    """The connection a proposal is asked through, and ``{"name", "kind"}`` of it when it is not the chosen one.
+
+    The one chosen in the editor (in the chat the one the draft is for) when the card names its kind; only when the card names
+    another kind the first real one of such a kind ("Ask AI" on an empty card). The administrator is told which one that was.
+    """
     with db_session() as db:
         chosen = db.get(Integration, preferred) if preferred is not None else None
         if chosen is not None and chosen.kind in kinds:
-            return chosen.id
-        found = select(Integration.id).where(Integration.kind.in_(kinds), Integration.enabled.is_(True), Integration.demo.is_(False))
-        return db.scalar(found.order_by(Integration.id).limit(1))
+            return chosen.id, None
+        found = select(Integration).where(Integration.kind.in_(kinds), Integration.enabled.is_(True), Integration.demo.is_(False))
+        other = db.scalar(found.order_by(Integration.id).limit(1))
+        return (other.id, {"name": other.name, "kind": other.kind}) if other is not None else None
 
 
 class _Verifier:
     """Asks the service every request of a proposal, the way the editor's preview will (found in a real run on 1.0.0).
 
     The provider guessed paths from a lookalike service (Sonarr's for nexcrate), and the card failed only once taken over.
-    Nothing of the answers goes to the provider, only which path failed and nexdeck's own sentence for it. Without a real
-    connection of the kind, in demo mode, or with the service down, nothing can be said and nothing is held against the card.
-    The answers of the last card asked stay in ``answers`` (request id -> answer) for its examples.
+    Nothing of the answers goes to the provider, only which path failed and nexdeck's own sentence for it, and the shape of an
+    answer it has not seen, never its values (:func:`ai._shapes`). Without a real connection of the kind, in demo mode, or with
+    the service down, nothing can be said and nothing is held against the card. The answers of the last card asked stay in
+    ``answers`` (request id -> answer) for its examples.
     """
 
     def __init__(self, preferred: int | None, userid: int, username: str) -> None:
@@ -130,9 +136,10 @@ class _Verifier:
     async def __call__(self, definition: Any) -> ai.Checked:
         self.answers = {}
         preferred, userid, username = self.preferred, self.userid, self.username
-        number = _tried_with(preferred, list(definition.requires))
-        if number is None:
+        tried = _tried_with(preferred, list(definition.requires))
+        if tried is None:
             return ai.Checked([])
+        number, other = tried
         try:
             adapter, config, ctx = await _connection(number, list(definition.requires))
         except AdapterError:
@@ -153,7 +160,7 @@ class _Verifier:
                         params={"path": request.path, "failure": failure.code},
                     ))
         note_asked(userid, username, number, asked, "card help, check")
-        return ai.Checked(problems, dict(self.answers))
+        return ai.Checked(problems, dict(self.answers), other if asked else None)
 
 
 def _verifier(preferred: int | None, userid: int, username: str) -> _Verifier:
