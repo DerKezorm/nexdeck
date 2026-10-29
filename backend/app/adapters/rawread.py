@@ -17,13 +17,14 @@ redirect to another place when a card asks, and a card cannot set a header itsel
 from __future__ import annotations
 
 import asyncio
+import base64
 import copy
 import json
 import re
 import time
 from dataclasses import dataclass, field
 from typing import Any
-from urllib.parse import parse_qsl, unquote, urlencode, urlsplit
+from urllib.parse import parse_qsl, quote, quote_plus, unquote, unquote_plus, urlencode, urlsplit
 
 import httpx
 
@@ -389,6 +390,111 @@ def _no_answer(error: AdapterError) -> AdapterError:
     return error
 
 
+#: What stands in an answer instead of a text that holds a credential of the connection.
+HIDDEN = "[hidden]"
+#: Shorter credentials are not looked for: "admin" or "1234" would hide half of every answer.
+HIDE_FROM = 6
+#: Names that say who asks, not what proves it: a login name is no secret.
+ONLY_WHO = frozenset({"user", "username", "login"})
+
+
+def _proves(name: str) -> bool:
+    return is_credential_name(name) and not set(words_of(name)) <= ONLY_WHO
+
+
+def _parts_of(value: str) -> set[str]:
+    """A header value and what may stand alone of it: ``Bearer <token>``, ``name=<ticket>; other=<ticket>``."""
+    found = {value}
+    for token in re.split(r"[\s;,]+", value):
+        found.add(token)
+        named = re.fullmatch(r"[A-Za-z0-9_.\-]+=(.+)", token)
+        if named:
+            found.add(named.group(1))
+    return found
+
+
+def credentials_of(adapter: Adapter, config: dict[str, Any], sent: list[Sent], cookies: httpx.Cookies | None = None) -> set[str]:
+    """Every credential a request of a card was signed with: the secret fields of the connection, keys, passwords, tickets."""
+    found = {str(config[name]) for name in adapter.secret_field_names() if isinstance(config.get(name), str | int)}
+    for one in sent:
+        for name, value in one.headers.items():
+            if value and _proves(name):
+                found |= _parts_of(str(value))
+        found |= {str(value) for name, value in one.params.items() if value not in (None, "") and _proves(str(name))}
+        if isinstance(one.auth, tuple):
+            # A login of another shape (Digest) proves itself with a password of a secret field, which is there already.
+            found |= {str(one.auth[1]), f"{one.auth[0]}:{one.auth[1]}"}
+    if cookies is not None:
+        found |= {str(cookie.value) for cookie in cookies.jar if cookie.value}
+    return {value for value in found if len(value) >= HIDE_FROM}
+
+
+def _encoded(value: str) -> set[str]:
+    """The ways a credential may stand in an answer besides itself: in an address and in Base64."""
+    raw = value.encode()
+    return {
+        quote(value, safe=""), quote_plus(value),
+        base64.b64encode(raw).decode().rstrip("="), base64.urlsafe_b64encode(raw).decode().rstrip("="),
+    }
+
+
+def holds_a_credential(credentials: set[str]) -> Any:
+    """A test whether a text holds one of ``credentials``: as it is, as a part, percent-encoded or in Base64."""
+    shapes = set(credentials)
+    for one in credentials:
+        shapes |= _encoded(one)
+
+    def holds(text: str) -> bool:
+        if any(shape in text for shape in shapes):
+            return True
+        # An address may write the credential with lower-case percent signs, or a space as a plus.
+        return ("%" in text or "+" in text) and any(one in unquote(text) or one in unquote_plus(text) for one in credentials)
+
+    return holds
+
+
+def _without(value: Any, holds: Any) -> Any:
+    if isinstance(value, str):
+        return HIDDEN if holds(value) else value
+    if isinstance(value, bool) or value is None:
+        return value
+    if isinstance(value, int | float):
+        return HIDDEN if holds(str(value)) else value
+    if isinstance(value, list):
+        return [_without(one, holds) for one in value]
+    if isinstance(value, dict):
+        return {(HIDDEN if holds(str(name)) else name): _without(one, holds) for name, one in value.items()}
+    return value
+
+
+def hide_credentials(response: httpx.Response, credentials: set[str]) -> httpx.Response:
+    """The answer with every text that holds a credential of the connection replaced by ``[hidden]``.
+
+    ⚠️ The one place where an answer of a service reaches a card: its data, the probe, the preview, the demo, the answer of
+    a button and the tree of the editor all come past here. A card reads any path under the connection, and a service
+    that names its own key there (``/api/v3/config/host``) would hand it to every viewer of the board. A JSON answer keeps
+    its shape and a text in it that holds the credential, even as a part, percent-encoded or in Base64, becomes
+    ``[hidden]``; any other answer that holds it becomes ``[hidden]`` as a whole.
+    """
+    content = response.content
+    if not credentials or not content:
+        return response
+    holds = holds_a_credential(credentials)
+    try:
+        answer = json.loads(content)
+        kept = _without(answer, holds)
+        if kept == answer:
+            return response
+        cleaned = json.dumps(kept, ensure_ascii=False).encode()
+    except (ValueError, RecursionError):
+        if not holds(content.decode("utf-8", errors="replace")) and not any(one.encode() in content for one in credentials):
+            return response
+        cleaned = HIDDEN.encode()
+    skipped = ("content-length", "content-encoding", "transfer-encoding")
+    headers = [(name, value) for name, value in response.headers.multi_items() if name.lower() not in skipped]
+    return httpx.Response(response.status_code, headers=headers, content=cleaned, request=response.request, extensions=response.extensions)
+
+
 async def _send(
     adapter: Adapter,
     method: str,
@@ -403,17 +509,43 @@ async def _send(
     max_bytes: int = READ_AT_MOST,
     acting: bool = False,
 ) -> httpx.Response:
-    """A request of a card or of a button: signed, renewed after a refusal the way the kind does it, never redirected."""
+    """A request of a card or of a button, and its answer without the credentials of the connection (:func:`hide_credentials`)."""
     from .jsonapi import join_path
 
     url = join_path(adapter.raw_base(config), path)
     held = adapter.raw_client(config, ctx)
     if held is not None:
-        return await _through_the_clients_own_cookies(
+        response = await _through_the_clients_own_cookies(
             adapter, held, url, config, ctx, params, method=method, json_body=json_body, data=data, max_bytes=max_bytes, acting=acting,
         )
+        return hide_credentials(response, credentials_of(adapter, config, [Sent(adapter.raw_headers(config))], held.cookies))
+    seen: list[Sent] = []
+    response = await _signed_send(
+        adapter, method, url, config, ctx, seen,
+        params=params, json_body=json_body, data=data, cache_seconds=cache_seconds, max_bytes=max_bytes, acting=acting,
+    )
+    return hide_credentials(response, credentials_of(adapter, config, seen))
+
+
+async def _signed_send(
+    adapter: Adapter,
+    method: str,
+    url: str,
+    config: dict[str, Any],
+    ctx: Context,
+    seen: list[Sent],
+    *,
+    params: dict[str, Any] | None,
+    json_body: Any,
+    data: Any,
+    cache_seconds: float,
+    max_bytes: int,
+    acting: bool,
+) -> httpx.Response:
+    """Signed, renewed after a refusal the way the kind does it, never redirected; ``seen`` gets what signed it."""
     signins = adapter.raw_signins(ctx)
     sent = await signed(adapter, config, ctx)
+    seen.append(sent)
     # ⚠️ One sign-in per fetch (KARTEN-3 EC-3): a ticket made for this very request, because the one before had run out of its
     # lifetime, is not signed in for again when the service refuses it.
     new_ticket = adapter.raw_signins(ctx) != signins
@@ -463,6 +595,7 @@ async def _send(
                         raise
                     if renewed is not None and attempt == 0:
                         sent = Sent(dict(renewed[0]), dict(renewed[1]), renewed[2])
+                        seen.append(sent)
                         continue
                 if odd and answered is not None:
                     return answered
@@ -472,6 +605,7 @@ async def _send(
             if attempt == 1 or _is_static(adapter) or (renewed := await renew(adapter, config, ctx, sent)) is None:
                 raise
             sent = renewed
+            seen.append(sent)
     raise AdapterError("The service did not accept the sign-in.", code="auth_failed")  # pragma: no cover
 
 
