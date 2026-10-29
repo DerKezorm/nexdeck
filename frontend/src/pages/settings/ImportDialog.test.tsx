@@ -97,7 +97,8 @@ describe('looking at a file before anything is made', () => {
     expect(within(card).getByText('Memos')).toBeInTheDocument()
     expect(within(card).getByText('Pause')).toBeInTheDocument()
     expect(within(card).getByText('POST /api/pause')).toBeInTheDocument()
-    const drawn = await within(card).findByRole('region', { name: 'Queue' })
+    // The renderer of the cards is a chunk of its own, loaded when the first card is drawn: on a busy machine that takes longer than a second.
+    const drawn = await within(card).findByRole('region', { name: 'Queue' }, { timeout: 15_000 })
     expect(drawn).toHaveTextContent('Waiting')
     // The example data of the card, not a connection: and only the text of the card's own document goes.
     expect(sent('POST', '/cards/preview')[0].body).toEqual({ yaml: CARD, demo: true })
