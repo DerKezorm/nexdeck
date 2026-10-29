@@ -1,0 +1,26 @@
+{
+  "nexdeck_skin": 1,
+  "key": "console",
+  "name": "Retro console",
+  "description": "Bold colours, thick round frames, bricks behind the cards.",
+  "tokens": {"radius": 10, "font": "pixel"},
+  "options": [{"key": "desk", "label": "Desk", "choices": [{"key": "bricks", "label": "Bricks"}, {"key": "plain", "label": "Plain"}], "default": "bricks"}],
+  "sprites": {
+    "brick": {"palette": {"B": "#c0582b", "D": "#6b2a10"}, "rows": ["BBBBBBBD", "BBBBBBBD", "BBBBBBBD", "DDDDDDDD", "BBBDBBBB", "BBBDBBBB", "BBBDBBBB", "DDDDDDDD"]},
+    "block": {"palette": {"K": "#1a1a1a", "Y": "#f5c400"}, "rows": ["KKKKKKKK", "KYYYYYYK", "KYKKKYYK", "KYYYYKYK", "KYYYKYYK", "KYYYYYYK", "KYYYKYYK", "KKKKKKKK"]},
+    "coin": {"palette": {"K": "#1a1a1a", "Y": "#f5c400", "W": "#ffffff", "O": "#c77800"}, "rows": ["..KKKK..", ".KYYYYK.", "KYYWYYOK", "KYYWYYOK", "KYYWYYOK", "KYYYYYOK", ".KYOOOK.", "..KKKK.."]},
+    "warn": {"palette": {"K": "#1a1a1a", "Y": "#f5c400"}, "rows": ["...KK...", "..KYYK..", "..KYYK..", ".KYKKYK.", ".KYKKYK.", "KYYYYYYK", "KYYKKYYK", "KKKKKKKK"]},
+    "cross": {"palette": {"K": "#1a1a1a", "R": "#e52521"}, "rows": ["KK....KK", "KRK..KRK", ".KRKKRK.", "..KRRK..", "..KRRK..", ".KRKKRK.", "KRK..KRK", "KK....KK"]}
+  },
+  "frames": {"block": {"sprite": "block", "slice": 2, "width": 4}},
+  "desk": {"tile": "brick", "scale": 4},
+  "decorations": [{"part": "card", "anchor": "top-right", "sprite": "block", "size": 18}],
+  "status": {"ok": "coin", "warn": "warn", "bad": "cross"},
+  "parts": {
+    "card": {"motion": {"name": "hop", "on": "hover", "ms": 350}},
+    "button": {"sound": "blip"}
+  },
+  "sounds": {"blip": {"wave": "square", "from": 520, "to": 1040, "ms": 120, "volume": 0.06}},
+  "switches": {"blur": "off"},
+  "css": "[data-part=card-titlebar] { background: #e52521; color: #ffffff; border-bottom: 3px solid #1a1a1a }\n[data-part=desk]:option(desk=plain) { background-image: none }\n[data-part=button]:active { transform: translateY(3px); box-shadow: none }"
+}
