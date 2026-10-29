@@ -114,6 +114,15 @@ def test_karten16w2_a_catalog_that_names_only_the_address_is_looked_up_by_it(sho
     assert shop.get(f"{BASE}/entries/{ENTRY}").json()["discussion"] == named["url"]
 
 
+
+def test_karten16w2_a_discussion_deleted_since_the_catalog_was_made_has_no_thumb(shop: TestClient, hub: Hub, moment: list[float]) -> None:
+    hub.publish(card_text(), discussion=f"https://github.com/{REPO}/discussions/3")
+    sign_in(shop, hub, moment, hub.person("someone", 4242))
+    assert shop.get(THUMB).json() == {"signed_in": True, "on": None}
+    assert shop.put(THUMB, json={"on": True}, headers=CSRF).status_code == 409
+    assert [one["variables"] for one in graphql(hub)] == [{"owner": REPO.split("/")[0], "name": REPO.split("/")[1], "number": 3}] * 2
+
+
 @pytest.mark.parametrize(
     "address",
     [

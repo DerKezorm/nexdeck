@@ -142,18 +142,25 @@ class Hub(GitHub):
             (found["thumbs"].add if "addReaction" in query else found["thumbs"].discard)(who["login"])
             return httpx.Response(200, json={"data": {"addReaction" if "addReaction" in query else "removeReaction": {"reaction": {"content": "THUMBS_UP"}}}})
         if "resource(" in query:
-            node = next((key for key, one in self.discussions.items() if one["url"] == variables.get("url")), None)
+            # As GitHub: a discussion is no UniformResourceLocatable, the whole question is refused.
+            return httpx.Response(200, json={"errors": [{"extensions": {"code": "cannotSpreadFragment"}, "message": "Fragment on Discussion can't be spread inside UniformResourceLocatable"}]})
+        by_number = "discussion(number:" in query
+        if by_number:
+            address = f"https://github.com/{variables.get('owner')}/{variables.get('name')}/discussions/{variables.get('number')}"
+            node = next((key for key, one in self.discussions.items() if one["url"] == address), None)
         else:
             node = variables.get("id") if variables.get("id") in self.discussions else None
+        if node is None and by_number:
+            return httpx.Response(200, json={"data": {"repository": {"discussion": None}}, "errors": [{"type": "NOT_FOUND", "message": "Could not resolve to a Discussion"}]})
         if node is None:
-            return httpx.Response(200, json={"data": {"resource": None, "node": None}})
+            return httpx.Response(200, json={"data": {"node": None}})
         groups = [
             {"content": "THUMBS_UP", "viewerHasReacted": who["login"] in self.discussions[node]["thumbs"]},
             {"content": "HEART", "viewerHasReacted": False},
         ]
         home = "/".join(self.discussions[node]["url"].split("/")[3:5])
         found = {"id": node, "repository": {"nameWithOwner": home}, "reactionGroups": groups}
-        return httpx.Response(200, json={"data": {"resource": found, "node": found}})
+        return httpx.Response(200, json={"data": {"repository": {"discussion": found}} if by_number else {"node": found}})
 
     def answer_login(self, request: httpx.Request) -> httpx.Response:
         self.requests.append(request)

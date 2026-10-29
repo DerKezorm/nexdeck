@@ -29,9 +29,11 @@ NO_DISCUSSIONS = "The Workshop app may not react to discussions yet. Rate it on 
 
 #: ⚠️ With the repository: a catalog may name the id of any discussion, and the thumb goes only on one of the Workshop.
 READ = "query($id: ID!) { node(id: $id) { ... on Discussion { id repository { nameWithOwner } reactionGroups { content viewerHasReacted } } } }"
-#: For a catalog that names the address of the discussion and not its id.
-READ_BY_ADDRESS = (
-    "query($url: URI!) { resource(url: $url) { ... on Discussion { id repository { nameWithOwner } reactionGroups { content viewerHasReacted } } } }"
+#: For a catalog that names the address of the discussion and not its id. ⚠️ Not ``resource(url:)``: a discussion is no
+#: ``UniformResourceLocatable``, and GitHub refuses the whole question.
+READ_BY_NUMBER = (
+    "query($owner: String!, $name: String!, $number: Int!) { repository(owner: $owner, name: $name) "
+    "{ discussion(number: $number) { id repository { nameWithOwner } reactionGroups { content viewerHasReacted } } } }"
 )
 ADD = "mutation($id: ID!) { addReaction(input: {subjectId: $id, content: THUMBS_UP}) { reaction { content } } }"
 REMOVE = "mutation($id: ID!) { removeReaction(input: {subjectId: $id, content: THUMBS_UP}) { reaction { content } } }"
@@ -53,11 +55,12 @@ def _lock(user_id: int, entry_id: str) -> asyncio.Lock:
 
 
 def target(entry: catalog.Entry, repo: str) -> tuple[str, str] | None:
-    """What the catalog names of the discussion: ``("id", node id)`` or ``("url", address in this repository)``; none when it names nothing usable."""
+    """What the catalog names of the discussion: ``("id", node id)`` or ``("number", its number in this repository)``; none when it names nothing usable."""
     if entry.discussion_id:
         return "id", entry.discussion_id
-    if entry.discussion and re.fullmatch(rf"https://github\.com/{re.escape(repo)}/discussions/\d{{1,9}}", entry.discussion):
-        return "url", entry.discussion
+    found = re.fullmatch(rf"https://github\.com/{re.escape(repo)}/discussions/(\d{{1,9}})", entry.discussion or "")
+    if found:
+        return "number", found.group(1)
     return None
 
 
@@ -66,8 +69,12 @@ def _rejected(why: str) -> GithubError:
     return GithubError("github_rejected", "GitHub did not take the thumb. Try again later.")
 
 
-async def _ask(db: Session, user: User, query: str, variables: dict[str, str]) -> dict[str, Any]:
-    """One GraphQL question in the name of this administrator; the ``data`` of the answer."""
+async def _ask(db: Session, user: User, query: str, variables: dict[str, Any], missing_is_none: bool = False) -> dict[str, Any]:
+    """One GraphQL question in the name of this administrator; the ``data`` of the answer.
+
+    With ``missing_is_none`` a question that GitHub answers only with ``NOT_FOUND`` gives its ``data`` (where the missing
+    part is none) instead of an error: a discussion deleted since the catalog was made.
+    """
     access = await github_login.session(db, user.id)
     response = await github_login.call("POST", GRAPHQL, token=access.token, json={"query": query, "variables": variables})
     code = response.status_code
@@ -91,6 +98,8 @@ async def _ask(db: Session, user: User, query: str, variables: dict[str, str]) -
             raise GithubError("github_no_discussions", NO_DISCUSSIONS, 403)
     if code == 403:
         raise GithubError("github_no_discussions", NO_DISCUSSIONS, 403)
+    if missing_is_none and code == 200 and problems and all(one.get("type") == "NOT_FOUND" for one in problems) and isinstance(reply.get("data"), dict):
+        return reply["data"]
     if problems or code != 200 or not isinstance(reply.get("data"), dict):
         raise _rejected(", ".join(str(one.get("type") or "error") for one in problems) or f"status {code}")
     return reply["data"]
@@ -112,8 +121,9 @@ async def _look(db: Session, user: User, named: tuple[str, str], repo: str) -> d
         data = await _ask(db, user, READ, {"id": named[1]})
         found = data.get("node")
     else:
-        data = await _ask(db, user, READ_BY_ADDRESS, {"url": named[1]})
-        found = data.get("resource")
+        owner, name = repo.split("/", 1)
+        data = await _ask(db, user, READ_BY_NUMBER, {"owner": owner, "name": name, "number": int(named[1])}, missing_is_none=True)
+        found = (data.get("repository") or {}).get("discussion")
     if not isinstance(found, dict) or not found.get("id"):
         return None
     home = found.get("repository")
