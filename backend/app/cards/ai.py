@@ -1,8 +1,8 @@
 """A card written, changed or translated by the provider of "Ask nexdeck" (KARTEN-17, KARTEN-18).
 
 ⚠️ Everything that leaves for the provider is built in **one** place, :func:`outbound`, so a test can read it whole:
-the schema of a card (shortened), the forms and blocks, the administrator's own words, the kind of connection and the
-chosen path, and the **shape** of the service's answer: for every node its path, its type and, for a list, its length.
+the schema of a card (shortened), the forms and blocks, the administrator's own words, the kind of connection, the paths
+nexdeck's own cards read from that kind (from the code, not from this installation), the chosen path, and the **shape** of the service's answer: for every node its path, its type and, for a list, its length.
 No values. A key that is data itself (a hash, a host name, a number) becomes ``<key>``. Values of the answer go only
 with the administrator's tick for this one request, cut like the examples of a card (10 entries, 200 characters).
 Never: the address or the name of the connection, a credential, a host name or an address of the network: even with the tick
@@ -22,7 +22,7 @@ import json
 import re
 import types
 import typing
-from collections.abc import Coroutine
+from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -31,7 +31,7 @@ from pydantic import BaseModel
 
 from .. import credential_names
 from ..services.assistant import providers
-from . import credentials, demo, load, schema
+from . import card_reads, credentials, demo, load, schema
 from .load import Problem
 
 MODES = ("new", "change", "translate")
@@ -47,6 +47,8 @@ MAX_SHAPE_DEPTH = 8
 #: With the tick: entries of a list and characters of a text that go along.
 VALUE_ENTRIES = 10
 VALUE_CHARS = 200
+#: Paths of one kind that go along: what nexdeck's own cards read from it.
+MAX_KNOWN_PATHS = 30
 
 MISSING: Any = object()
 
@@ -307,6 +309,7 @@ Rules:
 - A card only reads: requests are GET paths that start with a single / and are underneath the address of the connection. Never a host, an address or a port.
 - A card holds no secrets: no key, password, token or login, not even as an example. The connection adds its own credentials.
 - Paths into an answer are JMESPath (records[0].title, items[?active].name). Use only fields that the shape of the answer shows; never invent one.
+- A request path must exist at the service that requires names: the path given below, or one of the paths listed for its kind. Never take a path from another service, not even one with a similar API. nexdeck asks the service, and a path it does not answer is sent back.
 - requires names the kind of the connection. slug is lower case letters, digits and hyphens. Start with nexdeck-card: 1 and version 1.0.0.
 - Write texts in English unless the description asks for another language. Keep names and labels short.
 - Leave out demo; nexdeck makes the examples itself.
@@ -323,6 +326,16 @@ An example of a valid card:
 
 The schema of a card as JSON:
 {json.dumps(_without(schema.json_schema()), separators=(",", ":"))}"""
+
+
+def known_paths(kind: str) -> list[str]:
+    """What nexdeck's own cards read from a kind: the real API of the service, from nexdeck's code, not from this installation."""
+    return [read["path"] for read in card_reads.reads_of(kind)][:MAX_KNOWN_PATHS]
+
+
+def _known(kind: str, paths: list[str]) -> str:
+    lines = "\n".join(f"- {path}" for path in paths)
+    return f"Paths nexdeck's own cards read from {kind} (its real API; read one of these unless the administrator names another):\n{lines}"
 
 
 def _quoted(text: str) -> str:
@@ -346,6 +359,8 @@ def outbound(ask: Ask) -> Outbound:
         parts.append(f"The administrator says:\n{ask.description.strip()}")
     if ask.connection_kind:
         parts.append(f"Kind of the connection: {ask.connection_kind}")
+        if ask.mode != "translate" and (known := known_paths(ask.connection_kind)):
+            parts.append(_known(ask.connection_kind, known))
     if ask.path:
         parts.append(f"Path to read: {ask.path}")
     if ask.yaml.strip():
@@ -521,9 +536,15 @@ def check(ask: Ask, text: str) -> tuple[Any, list[Problem]]:
     return (None, problems) if problems else (loaded, [])
 
 
-def _feedback(problems: list[Problem]) -> str:
+def _feedback(problems: list[Problem], loaded: Any = None) -> str:
     lines = [f"- {problem.message}" + (f" (line {problem.line})" if problem.line else f" ({problem.path})" if problem.path else "") for problem in problems[:20]]
-    return "nexdeck did not accept this card. What is wrong:\n" + "\n".join(lines) + "\nHand in the whole corrected card."
+    text = "nexdeck did not accept this card. What is wrong:\n" + "\n".join(lines)
+    # A path the service did not answer: the paths it does answer go along, for the kinds the card names.
+    if loaded is not None and any(problem.code == PATH_FAILED for problem in problems):
+        for kind in loaded.definition.requires:
+            if known := known_paths(kind):
+                text += "\n\n" + _known(kind, known)
+    return text + "\nHand in the whole corrected card."
 
 
 def candidate(turn: providers.Turn) -> str:
@@ -579,8 +600,18 @@ def summarize(loaded: Any) -> dict[str, Any]:
     }
 
 
-async def generate(ask: Ask, config: dict[str, Any], key: str) -> Outcome:
-    """Ask the provider for a card, check it, ask once more with the problems, and say how it went."""
+#: The problem of a request the service did not answer; ``params``: ``path`` and ``failure``, the code of the card's own error.
+PATH_FAILED = "card_path_failed"
+#: Asks the service every request of a card that passed the check; the problems of those it did not answer.
+Verify = Callable[[Any], Awaitable[list[Problem]]]
+
+
+async def generate(ask: Ask, config: dict[str, Any], key: str, verify: Verify | None = None) -> Outcome:
+    """Ask the provider for a card, check it, ask once more with the problems, and say how it went.
+
+    With ``verify`` a card that passed the check is asked of the service too (not a translation, which keeps every path):
+    a path the service does not answer is a problem like the others and goes back once, with the paths of its kind.
+    """
     if ask.mode not in MODES:
         raise AiError("bad_request", "Say whether to write a new card, change one or translate one.")
     if ask.mode == "translate":
@@ -596,14 +627,16 @@ async def generate(ask: Ask, config: dict[str, Any], key: str) -> Outcome:
         turn = await _turn(config, key, out.system, transcript, out.tools)
         text, last_text = candidate(turn), turn.text
         loaded, problems = check(ask, text)
-        if loaded is not None:
+        if loaded is not None and verify is not None and ask.mode != "translate":
+            problems = await verify(loaded.definition)
+        if loaded is not None and not problems:
             card = text
             if ask.mode != "new":
                 card = restore_demo(ask, text)
             return Outcome(True, card, last_text, [], summarize(loaded), sent, loaded.definition)
         if attempt == 0:
             transcript.append({"role": "assistant", "text": turn.text, "calls": turn.calls, "provider": config["provider"], "raw": turn.raw})
-            feedback = _feedback(problems)
+            feedback = _feedback(problems, loaded)
             if turn.calls:
                 transcript.append({"role": "tool", "results": [{"id": call["id"], "content": feedback, "is_error": True} for call in turn.calls]})
             else:

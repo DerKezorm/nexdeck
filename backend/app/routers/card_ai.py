@@ -12,9 +12,11 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field, StringConstraints, ValidationError
+from sqlalchemy import select
 
 from ..adapters.base import AdapterError
 from ..cards import ai, credentials, schema
+from ..cards.load import Problem
 from ..db import db_session
 from ..deps import AdminUser, DbSession, error
 from ..models import Integration
@@ -28,6 +30,9 @@ logger = logging.getLogger("nexdeck.cards")
 #: Code of the answer to a request that was cancelled, and the HTTP answer of each code of :class:`ai.AiError`.
 CANCELLED = "ai_cancelled"
 _HTTP = {"assistant_off": 409, "ai_busy": 409, CANCELLED: 409, "bad_request": 400}
+#: Failures that say a path is wrong for the service. A service that is down or turns the connection away says nothing
+#: about the card, so those are no problem of the proposal.
+_PATH_FAILURES = frozenset({"http_error", "not_json", "redirected", "answer_too_large", "command_refused", "bad_path", "bad_param"})
 
 
 class AiBody(BaseModel):
@@ -80,6 +85,53 @@ async def _asked(body: AiBody, request: schema.Request | None, userid: int, user
     return adapter.kind, answer
 
 
+def _tried_with(preferred: int | None, kinds: list[str]) -> int | None:
+    """The connection a proposal is asked through: the editor's own when the card names its kind, else the first real one of such a kind."""
+    with db_session() as db:
+        chosen = db.get(Integration, preferred) if preferred is not None else None
+        if chosen is not None and chosen.kind in kinds:
+            return chosen.id
+        found = select(Integration.id).where(Integration.kind.in_(kinds), Integration.enabled.is_(True), Integration.demo.is_(False))
+        return db.scalar(found.order_by(Integration.id).limit(1))
+
+
+def _verifier(preferred: int | None, userid: int, username: str) -> ai.Verify:
+    """Asks the service every request of a proposal, the way the editor's preview will (found in a real run on 1.0.0).
+
+    The provider guessed paths from a lookalike service (Sonarr's for nexcrate), and the card failed only once taken over.
+    Nothing of the answers goes to the provider, only which path failed and nexdeck's own sentence for it. Without a real
+    connection of the kind, in demo mode, or with the service down, nothing can be said and nothing is held against the card.
+    """
+
+    async def verify(definition: Any) -> list[Problem]:
+        number = _tried_with(preferred, list(definition.requires))
+        if number is None:
+            return []
+        try:
+            adapter, config, ctx = await _connection(number, list(definition.requires))
+        except AdapterError:
+            return []
+        problems: list[Problem] = []
+        for index, request in enumerate(definition.requests):
+            try:
+                await _ask(adapter, config, ctx, request)
+            except AdapterError as failure:
+                if failure.code in _PATH_FAILURES:
+                    problems.append(Problem(
+                        ai.PATH_FAILED, f"The service did not answer {request.path}: {failure.message}", path=f"requests[{index}].path",
+                        params={"path": request.path, "failure": failure.code},
+                    ))
+        paths = ", ".join(request.path for request in definition.requests)
+        with db_session() as db:
+            name = db.get(Integration, number)
+            chronicle.record("card_probe", user_id=userid, integration_id=number, name=name.name if name else "", detail=f"{paths} (card help, check)", db=db)
+            db.commit()
+        logger.info("%s had a proposed card asked of %s at %s.", username, number, paths)
+        return problems
+
+    return verify
+
+
 @router.post("/ai", summary="Have the provider of the assistant write, change or translate a card")
 async def card_with_ai(body: AiBody, user: AdminUser, db: DbSession) -> dict[str, Any]:
     if not settings.ready(db):
@@ -93,7 +145,7 @@ async def card_with_ai(body: AiBody, user: AdminUser, db: DbSession) -> dict[str
         kind, answer = await _asked(body, request, userid, username)
         return await ai.generate(
             ai.Ask(mode=body.mode, description=body.description, yaml=body.yaml, connection_kind=kind, path=body.path or "", answer=answer, include_values=body.include_values),
-            config, key,
+            config, key, _verifier(body.connection_id, userid, username),
         )
 
     try:
