@@ -57,3 +57,9 @@ pyasn1==0.6.4
 # Custom cards pick values out of a service's answer with JMESPath (pure Python, no
 # dependencies; the language can read and compare and cannot run anything).
 jmespath==1.0.1
+
+# The look's own style sheet is read as a browser reads it: tokens, with CSS
+# escapes decoded, so \75 rl( counts as url( (services/css_scan.py). tinycss2
+# (BSD-3-Clause, Kozea) is pure Python; its only dependency is webencodings
+# (BSD). Both checked against OSV on 29.10.2026: no advisories.
+tinycss2==1.5.1
