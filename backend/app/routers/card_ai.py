@@ -108,16 +108,16 @@ class _Verifier:
         self.preferred, self.userid, self.username = preferred, userid, username
         self.answers: dict[str, Any] = {}
 
-    async def __call__(self, definition: Any) -> list[Problem]:
+    async def __call__(self, definition: Any) -> ai.Checked:
         self.answers = {}
         preferred, userid, username = self.preferred, self.userid, self.username
         number = _tried_with(preferred, list(definition.requires))
         if number is None:
-            return []
+            return ai.Checked([])
         try:
             adapter, config, ctx = await _connection(number, list(definition.requires))
         except AdapterError:
-            return []
+            return ai.Checked([])
         problems: list[Problem] = []
         for index, request in enumerate(definition.requests):
             try:
@@ -134,7 +134,7 @@ class _Verifier:
             chronicle.record("card_probe", user_id=userid, integration_id=number, name=name.name if name else "", detail=f"{paths} (card help, check)", db=db)
             db.commit()
         logger.info("%s had a proposed card asked of %s at %s.", username, number, paths)
-        return problems
+        return ai.Checked(problems, dict(self.answers))
 
 
 def _verifier(preferred: int | None, userid: int, username: str) -> _Verifier:

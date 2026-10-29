@@ -49,10 +49,10 @@ def test_karten17v_the_provider_is_shown_the_paths_nexdeck_reads_from_the_kind()
 def test_karten17v_a_path_the_service_does_not_answer_goes_back_once_with_the_known_paths(monkeypatch: pytest.MonkeyPatch) -> None:
     asked: list[list[str]] = []
 
-    async def verify(definition: Any) -> list[Problem]:
+    async def verify(definition: Any) -> ai.Checked:
         paths = [request.path for request in definition.requests]
         asked.append(paths)
-        return [Problem(ai.PATH_FAILED, f"The service did not answer {path}.", params={"path": path, "failure": "http_error"}) for path in paths if path != RIGHT]
+        return ai.Checked([Problem(ai.PATH_FAILED, f"The service did not answer {path}.", params={"path": path, "failure": "http_error"}) for path in paths if path != RIGHT])
 
     script = Script(proposing(WRONG), proposing(RIGHT))
     monkeypatch.setattr(providers, "turn", script)
@@ -80,17 +80,20 @@ def test_karten17v_the_route_asks_a_real_connection_of_the_kind_even_when_the_ed
     connection(admin)
     wrong = respx.get(f"{BASE}/api/v3/wanted/missing").mock(return_value=httpx.Response(404, json={"message": "NotFound"}))
     right = respx.get(f"{BASE}{RIGHT}").mock(return_value=httpx.Response(200, json=ANSWER))
-    script = Script(proposing(WRONG), proposing(RIGHT))
+    script = Script(proposing(WRONG), proposing(RIGHT), proposing(RIGHT))
     monkeypatch.setattr(providers, "turn", script)
     # As in the real run: "Ask AI" on an empty new card, no service and no connection chosen, so the text goes as a change.
     answer = admin.post("/api/v1/cards/ai", json={"mode": "change", "description": "How many are missing", "yaml": ai.EXAMPLE}, headers=CSRF)
     assert answer.status_code == 200, answer.text
     body = answer.json()
     assert body["ok"] is True and body["summary"]["paths"] == [RIGHT]
-    assert wrong.call_count == 1 and right.call_count == 1
+    assert wrong.call_count == 1 and right.call_count == 1 and len(script.seen) == 3
     assert "HTTP 404" in json.dumps(script.seen[1]["transcript"][-1])
-    # Nothing of the service's answers went to the provider, only which path failed.
+    # Of the failed path only which it was and nexdeck's sentence went to the provider, never the service's own words.
     assert "NotFound" not in script.sent() and "svc.example.com" not in script.sent()
+    # The provider chose the path itself and never saw its answer: it is shown the shape once, without values.
+    shapes = json.dumps(script.seen[2]["transcript"][-1])
+    assert f"At {RIGHT} the service answered" in shapes and "records[0].title: string" in shapes and "Zq-Marker-Alpha" not in script.sent()
     lines = admin.get("/api/v1/chronicle").json()["events"]
     assert any(line["kind"] == "card_probe" and "(card help, check)" in json.dumps(line) for line in lines)
 
@@ -122,8 +125,9 @@ def test_karten17v_the_connection_chosen_in_the_editor_is_asked_before_the_first
     chosen = connection(admin, config={"url": other, "api_key": "key-2"})
     first = respx.get(f"{BASE}{RIGHT}").mock(return_value=httpx.Response(200, json=ANSWER))
     second = respx.get(f"{other}{RIGHT}").mock(return_value=httpx.Response(200, json=ANSWER))
-    monkeypatch.setattr(providers, "turn", Script(proposing(RIGHT)))
+    monkeypatch.setattr(providers, "turn", Script(proposing(RIGHT), proposing(RIGHT)))
     body = admin.post("/api/v1/cards/ai", json={"mode": "change", "description": "Show my queue", "yaml": ai.EXAMPLE, "connection_id": chosen}, headers=CSRF).json()
+    # Asked twice, the second time from the answers nexdeck keeps for five seconds.
     assert body["ok"] is True and second.call_count == 1 and first.call_count == 0
 
 
@@ -132,7 +136,7 @@ def test_karten17v_a_proposal_comes_with_examples_made_from_the_answers_so_its_p
     switch_on(admin)
     connection(admin)
     respx.get(f"{BASE}{RIGHT}").mock(return_value=httpx.Response(200, json=ANSWER))
-    monkeypatch.setattr(providers, "turn", Script(proposing(RIGHT)))
+    monkeypatch.setattr(providers, "turn", Script(proposing(RIGHT), proposing(RIGHT)))
     body = admin.post("/api/v1/cards/ai", json={"mode": "change", "description": "Show my queue", "yaml": ai.EXAMPLE}, headers=CSRF).json()
     assert body["ok"] is True and "\ndemo:" in body["yaml"]
     # Made up like a card's demo data: the real text of the answer is not in it.
@@ -140,3 +144,23 @@ def test_karten17v_a_proposal_comes_with_examples_made_from_the_answers_so_its_p
     # The preview beside the proposal asks with its examples, and gets a card.
     drawn = admin.post("/api/v1/cards/preview", json={"yaml": body["yaml"], "demo": True}, headers=CSRF)
     assert drawn.status_code == 200, drawn.text
+
+
+def test_karten17v_a_path_whose_answer_the_provider_never_saw_goes_back_once_with_its_shape(monkeypatch: pytest.MonkeyPatch) -> None:
+    async def verify(definition: Any) -> ai.Checked:
+        return ai.Checked([], {request.id: ANSWER for request in definition.requests})
+
+    # As in the real run: the provider chose the path and guessed the fields ("@", "title") of an answer it never saw.
+    script = Script(proposing(RIGHT), proposing(RIGHT))
+    monkeypatch.setattr(providers, "turn", script)
+    result = asyncio.run(ai.generate(ai.Ask(mode="change", description="How many are missing", yaml=ai.EXAMPLE), CONFIG, "key", verify))
+    assert result.ok and len(script.seen) == 2
+    shapes = json.dumps(script.seen[1]["transcript"][-1])
+    assert f"At {RIGHT} the service answered, as paths and types (no values)" in shapes and "records[0].title: string" in shapes
+    assert "Zq-Marker-Alpha" not in script.sent(), "no value without the tick"
+
+    # A path whose answer went along with the request is not shown again.
+    script = Script(proposing(RIGHT))
+    monkeypatch.setattr(providers, "turn", script)
+    asked = ai.Ask(mode="new", description="Show my queue", connection_kind="sonarr", path=RIGHT, answer=ANSWER)
+    assert asyncio.run(ai.generate(asked, CONFIG, "key", verify)).ok and len(script.seen) == 1

@@ -602,15 +602,37 @@ def summarize(loaded: Any) -> dict[str, Any]:
 
 #: The problem of a request the service did not answer; ``params``: ``path`` and ``failure``, the code of the card's own error.
 PATH_FAILED = "card_path_failed"
-#: Asks the service every request of a card that passed the check; the problems of those it did not answer.
-Verify = Callable[[Any], Awaitable[list[Problem]]]
+
+
+@dataclass
+class Checked:
+    """What the service said to the requests of a card: the problems of those it did not answer, the answers of the others by request id."""
+
+    problems: list[Problem]
+    answers: dict[str, Any] = field(default_factory=dict)
+
+
+#: Asks the service every request of a card that passed the check.
+Verify = Callable[[Any], Awaitable[Checked]]
+#: Answers of the provider at most: the card, a second try with the problems, one with the shapes it had not seen.
+TURNS = 3
+
+
+def _shapes(ask: Ask, unseen: dict[str, Any]) -> str:
+    """The shapes of answers the provider has not seen, the way :func:`outbound` sends a shape (values only with the tick)."""
+    parts = [f"At {path} the service answered, as paths and types{' and values' if ask.include_values else ' (no values)'}:\n{shape(answer, values=ask.include_values)}"
+             for path, answer in unseen.items()]
+    return ("nexdeck asked the service. " + "\n\n".join(parts) + "\n\nEvery path into an answer (select, value, title, total, …) must exist in these "
+            "shapes; fix the ones that do not. Hand in the whole card, unchanged if it is right.")
 
 
 async def generate(ask: Ask, config: dict[str, Any], key: str, verify: Verify | None = None) -> Outcome:
     """Ask the provider for a card, check it, ask once more with the problems, and say how it went.
 
     With ``verify`` a card that passed the check is asked of the service too (not a translation, which keeps every path):
-    a path the service does not answer is a problem like the others and goes back once, with the paths of its kind.
+    a path the service does not answer is a problem like the others and goes back once, with the paths of its kind. A path
+    whose answer the provider never saw (it chose the path itself) goes back once with the shape of that answer, so that
+    the fields the card reads are the service's and not guessed (both found in a real run on 1.0.0).
     """
     if ask.mode not in MODES:
         raise AiError("bad_request", "Say whether to write a new card, change one or translate one.")
@@ -623,24 +645,36 @@ async def generate(ask: Ask, config: dict[str, Any], key: str, verify: Verify | 
     out = outbound(ask)
     transcript: list[dict[str, Any]] = [{"role": "user", "text": out.message}]
     text, last_text, problems = "", "", []
-    for attempt in range(2):
+    # The paths whose answer the provider has seen; the problems go back once, the shapes once.
+    seen = {ask.path} if ask.answer is not MISSING and ask.path else set()
+    told, shown = False, False
+    for _turn_number in range(TURNS):
         turn = await _turn(config, key, out.system, transcript, out.tools)
         text, last_text = candidate(turn), turn.text
         loaded, problems = check(ask, text)
+        unseen: dict[str, Any] = {}
         if loaded is not None and verify is not None and ask.mode != "translate":
-            problems = await verify(loaded.definition)
-        if loaded is not None and not problems:
+            checked = await verify(loaded.definition)
+            problems = checked.problems
+            unseen = {request.path: checked.answers[request.id] for request in loaded.definition.requests
+                      if request.id in checked.answers and request.path not in seen}
+        if loaded is not None and not problems and (shown or not unseen):
             card = text
             if ask.mode != "new":
                 card = restore_demo(ask, text)
             return Outcome(True, card, last_text, [], summarize(loaded), sent, loaded.definition)
-        if attempt == 0:
-            transcript.append({"role": "assistant", "text": turn.text, "calls": turn.calls, "provider": config["provider"], "raw": turn.raw})
-            feedback = _feedback(problems, loaded)
-            if turn.calls:
-                transcript.append({"role": "tool", "results": [{"id": call["id"], "content": feedback, "is_error": True} for call in turn.calls]})
-            else:
-                transcript.append({"role": "user", "text": feedback})
+        if problems and told:
+            break
+        if problems:
+            feedback, told = _feedback(problems, loaded), True
+        else:
+            feedback, shown = _shapes(ask, unseen), True
+            seen |= set(unseen)
+        transcript.append({"role": "assistant", "text": turn.text, "calls": turn.calls, "provider": config["provider"], "raw": turn.raw})
+        if turn.calls:
+            transcript.append({"role": "tool", "results": [{"id": call["id"], "content": feedback, "is_error": bool(problems)} for call in turn.calls]})
+        else:
+            transcript.append({"role": "user", "text": feedback})
     return Outcome(False, text, last_text, [problem.as_dict() for problem in problems], summarize(None), sent)
 
 
