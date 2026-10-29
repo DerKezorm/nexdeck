@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import re
 from typing import Any
 
 from sqlalchemy.orm import Session
@@ -52,7 +53,7 @@ def target(entry: catalog.Entry, repo: str) -> tuple[str, str] | None:
     """What the catalog names of the discussion: ``("id", node id)`` or ``("url", address in this repository)``; none when it names nothing usable."""
     if entry.discussion_id:
         return "id", entry.discussion_id
-    if entry.discussion and entry.discussion.startswith(f"https://github.com/{repo}/discussions/"):
+    if entry.discussion and re.fullmatch(rf"https://github\.com/{re.escape(repo)}/discussions/\d{{1,9}}", entry.discussion):
         return "url", entry.discussion
     return None
 
