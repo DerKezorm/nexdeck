@@ -42,4 +42,16 @@ regexes = [
   # "vfs:///etc/passwd" and "/etc/passwd". The word in them is what the rule saw.
   '''dmZzOi8vL2V0Yy9wYXNzd2Q''',
   '''L2V0Yy9wYXNzd2Q''',
+  # Made-up keys of the custom card tests: each one stands for a connection's
+  # secret, and the tests check that it never reaches a card, the demo data, a
+  # submission or the AI.
+  '''tok-0123456789''',
+  '''0123456789abcdef''',
+  '''key-of-the-sonarr-0001''',
+  '''ghp_the-key-of-the-operator-0123456789''',
+  '''apikeyzeta998877aabbccdd''',
+  '''tok_Q9vX2mK7pL4wZ8rT''',
+  '''9f86d081884c7d659a2feaa0''',
+  '''k-0123456789''',
+  '''Zk-Key-0123456789''',
 ]
