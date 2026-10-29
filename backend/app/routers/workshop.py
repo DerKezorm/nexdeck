@@ -177,6 +177,10 @@ async def read_example(author: str, slug: str, user: AdminUser, db: DbSession) -
         text = await files.definition(repo, entry)
     except catalog.CatalogError as failure:
         raise _failure(failure) from failure
+    # ⚠️ Checked in full the moment it is fetched, the way an installation checks it, not only when the draft is saved.
+    refused = install.check_text(entry, text)
+    if refused is not None:
+        raise _failure(refused)
     return {"id": entry.id, "type": entry.type, "slug": install.free_short(db, entry), "text": text}
 
 
@@ -184,8 +188,10 @@ async def read_example(author: str, slug: str, user: AdminUser, db: DbSession) -
 async def entry_image(author: str, slug: str, theme: str, user: AdminUser, db: DbSession, v: str = "") -> Response:
     """The browser asks this server and never GitHub, so opening the shop tells GitHub nothing about the visitor.
 
-    ``v`` is the ``picture_version`` of the entry: the address changes with it, so the browser and this server keep the
-    pictures of an older version apart from the new ones.
+    ``v`` is the ``picture_version`` of the entry: the address changes with it, so the browser keeps the pictures of an
+    older version apart from the new ones. ⚠️ This server keeps them by the ``picture_version`` of the catalog, not by
+    ``v``: a ``v`` the catalog does not name would otherwise fetch the picture from GitHub again, with the key of the shop,
+    as often as somebody changes it.
     """
     if theme not in ("light", "dark"):
         raise error("no_such_picture", "The theme is light or dark.", 404)
@@ -194,7 +200,7 @@ async def entry_image(author: str, slug: str, theme: str, user: AdminUser, db: D
     repo, found, _warning = await _catalog(db)
     entry = _entry(found, author, slug)
     try:
-        body = await files.image(repo, getattr(entry.files, theme), v)
+        body = await files.image(repo, getattr(entry.files, theme), views.picture_version(entry))
     except catalog.CatalogError as failure:
         raise _failure(failure) from failure
     if body is None:

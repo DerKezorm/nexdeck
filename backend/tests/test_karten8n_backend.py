@@ -202,7 +202,9 @@ def test_karten8n_n2_a_picture_is_kept_by_its_version_and_a_new_version_is_fetch
     clock[0] += 700
     assert me.get(f"{IMAGE}/light?v=1.1.0").content.endswith(b"new"), "the same minute, the same server, a new address"
     assert hub.count("preview-light.png") == 2
-    assert me.get(f"{IMAGE}/light?v=1.0.0").content.endswith(b"old"), "the old address still has its own picture"
+    # The server keeps the picture of the version the catalog names (security review of stage 8, hint b): an old address gets the picture
+    # there is now, and asks GitHub nothing.
+    assert me.get(f"{IMAGE}/light?v=1.0.0").content.endswith(b"new"), "the server keeps what the catalog names, whatever v says"
     assert hub.count("preview-light.png") == 2
 
 

@@ -140,7 +140,7 @@ def test_karten16w2_a_subject_id_in_the_request_is_never_used(shop: TestClient, 
     assert put.status_code == 200 and put.json() == {"on": True}
     assert hub.discussions[stranger["id"]]["thumbs"] == set()
     assert hub.discussions[named["id"]]["thumbs"] == {"someone"}
-    assert [one["variables"] for one in graphql(hub)] == [{"id": named["id"]}]
+    assert [one["variables"] for one in graphql(hub)] == [{"id": named["id"]}] * 2, "looked at, then the thumb set"
 
 
 def test_karten16w2_an_administrator_never_uses_the_sign_in_of_another(shop: TestClient, hub: Hub, moment: list[float]) -> None:

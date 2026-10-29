@@ -27,9 +27,12 @@ GRAPHQL = f"{github_login.API}/graphql"
 CONTENT = "THUMBS_UP"
 NO_DISCUSSIONS = "The Workshop app may not react to discussions yet. Rate it on GitHub instead."
 
-READ = "query($id: ID!) { node(id: $id) { ... on Discussion { id reactionGroups { content viewerHasReacted } } } }"
+#: ⚠️ With the repository: a catalog may name the id of any discussion, and the thumb goes only on one of the Workshop.
+READ = "query($id: ID!) { node(id: $id) { ... on Discussion { id repository { nameWithOwner } reactionGroups { content viewerHasReacted } } } }"
 #: For a catalog that names the address of the discussion and not its id.
-READ_BY_ADDRESS = "query($url: URI!) { resource(url: $url) { ... on Discussion { id reactionGroups { content viewerHasReacted } } } }"
+READ_BY_ADDRESS = (
+    "query($url: URI!) { resource(url: $url) { ... on Discussion { id repository { nameWithOwner } reactionGroups { content viewerHasReacted } } } }"
+)
 ADD = "mutation($id: ID!) { addReaction(input: {subjectId: $id, content: THUMBS_UP}) { reaction { content } } }"
 REMOVE = "mutation($id: ID!) { removeReaction(input: {subjectId: $id, content: THUMBS_UP}) { reaction { content } } }"
 
@@ -99,15 +102,25 @@ def _asks_to_wait(response: Any) -> bool:
     return asks(response)
 
 
-async def _look(db: Session, user: User, named: tuple[str, str]) -> dict[str, Any] | None:
-    """The discussion with this administrator's reactions on it, or none when GitHub has no such discussion for him."""
+async def _look(db: Session, user: User, named: tuple[str, str], repo: str) -> dict[str, Any] | None:
+    """The discussion with this administrator's reactions on it, or none when GitHub has no such discussion for him.
+
+    ⚠️ None as well for a discussion outside the Workshop repository: an id in the catalog could name one anywhere on
+    GitHub, and the thumb would be set there in the name of the administrator.
+    """
     if named[0] == "id":
         data = await _ask(db, user, READ, {"id": named[1]})
         found = data.get("node")
     else:
         data = await _ask(db, user, READ_BY_ADDRESS, {"url": named[1]})
         found = data.get("resource")
-    return found if isinstance(found, dict) and found.get("id") else None
+    if not isinstance(found, dict) or not found.get("id"):
+        return None
+    home = found.get("repository")
+    if not isinstance(home, dict) or str(home.get("nameWithOwner") or "").lower() != repo.lower():
+        logger.info("The catalog names a discussion outside the Workshop repository; no thumb is read or set there.")
+        return None
+    return found
 
 
 async def read(db: Session, user: User, entry: catalog.Entry, repo: str) -> dict[str, Any]:
@@ -118,7 +131,7 @@ async def read(db: Session, user: User, entry: catalog.Entry, repo: str) -> dict
     if named is None:
         return {"signed_in": True, "on": None}
     try:
-        found = await _look(db, user, named)
+        found = await _look(db, user, named, repo)
     except GithubError as problem:
         if problem.code == "github_login_needed":
             return {"signed_in": False, "on": None}
@@ -136,12 +149,9 @@ async def put(db: Session, user: User, entry: catalog.Entry, repo: str, on: bool
     if named is None:
         raise GithubError("no_discussion", "This entry has no discussion on GitHub to react to.", 409)
     async with _lock(user.id, entry.id):
-        node = named[1]
-        if named[0] == "url":
-            found = await _look(db, user, named)
-            if found is None:
-                raise GithubError("no_discussion", "This entry has no discussion on GitHub to react to.", 409)
-            node = str(found["id"])
-        await _ask(db, user, ADD if on else REMOVE, {"id": node})
+        found = await _look(db, user, named, repo)
+        if found is None:
+            raise GithubError("no_discussion", "This entry has no discussion on GitHub to react to.", 409)
+        await _ask(db, user, ADD if on else REMOVE, {"id": str(found["id"])})
     logger.info("%s %s the thumb on %s.", user.username, "set" if on else "took away", entry.id)
     return {"on": on}

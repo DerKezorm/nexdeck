@@ -14,6 +14,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..cards import exchange, load
+from ..cards import integration as integration_loader
 from ..cards import integration_store as integrations
 from ..models import CardRecord
 from . import catalog, derived, files, state
@@ -28,6 +29,20 @@ def gate(entry: catalog.Entry) -> None:
         raise catalog.CatalogError("entry_removed", "This entry was removed from the Card shop.", 409)
     if load.needs_newer(entry.min_nexdeck):
         raise catalog.CatalogError("needs_newer_nexdeck", f"This needs nexdeck {entry.min_nexdeck} or newer.", 409, min_nexdeck=entry.min_nexdeck)
+
+
+def check_text(entry: catalog.Entry, text: str) -> catalog.CatalogError | None:
+    """What is wrong with the definition of an entry by the checks of this nexdeck, as an installation would find it; none when nothing is."""
+    try:
+        if entry.type == "card":
+            load.load_definition(text)
+        else:
+            integration_loader.load_integration(text, saved=[])
+    except load.CardInvalid as failure:
+        return catalog.CatalogError(
+            "entry_invalid", "This entry does not pass the check of this nexdeck.", 422, problems=[problem.as_dict() for problem in failure.problems],
+        )
+    return None
 
 
 def offers(db: Session, found: catalog.Catalog, entry: catalog.Entry, requires: list[str]) -> tuple[list[catalog.Entry], list[str]]:

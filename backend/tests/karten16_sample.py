@@ -151,7 +151,8 @@ class Hub(GitHub):
             {"content": "THUMBS_UP", "viewerHasReacted": who["login"] in self.discussions[node]["thumbs"]},
             {"content": "HEART", "viewerHasReacted": False},
         ]
-        found = {"id": node, "reactionGroups": groups}
+        home = "/".join(self.discussions[node]["url"].split("/")[3:5])
+        found = {"id": node, "repository": {"nameWithOwner": home}, "reactionGroups": groups}
         return httpx.Response(200, json={"data": {"resource": found, "node": found}})
 
     def answer_login(self, request: httpx.Request) -> httpx.Response:
