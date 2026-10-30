@@ -44,9 +44,11 @@ from .base import (
     AuthFailed,
     Context,
     Field,
+    ReadCommands,
     WidgetData,
     WidgetType,
     ago,
+    allowed,
     base_url,
 )
 
@@ -62,6 +64,10 @@ class WatchtowerAdapter(Adapter):
     #: Confirmed against a live instance on 2026-09-11.
     beta = False
     docs_url = "https://watchtower.nickfedor.com/"
+    #: ⚠️ ``GET /v1/update`` starts an update run (pull, new containers): the HTTP API does not look at the method, and the
+    #: documentation calls it as a GET (https://watchtower.nickfedor.com/, "HTTP API Mode"; containrrr/watchtower alike).
+    #: A card reads ``/v1/status`` and ``/v1/metrics`` (B1 of a review of 1.0.2).
+    raw_read_commands = ReadCommands(last=allowed("status", "metrics"))
     fields = (
         Field("url", "URL", type="url", required=True, placeholder="http://watchtower:8080"),
         Field("token", "API token", type="password", secret=True, required=True,

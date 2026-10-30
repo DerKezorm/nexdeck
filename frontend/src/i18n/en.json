@@ -174,7 +174,8 @@
       "card_integration_logo": "The logo is the name of a logo from the collection, or an image uploaded to nexdeck. A picture from the web is not allowed.",
       "import_unknown_document": "This is neither a card (nexdeck-card: 1) nor an integration (nexdeck: integration).",
       "import_twice": "This short name stands twice in the file.",
-      "card_picture_acts": "A picture only reads. This path asks the service to do something, and nexdeck does not fetch it with the connection's credentials."
+      "card_picture_acts": "A picture only reads. This path asks the service to do something, and nexdeck does not fetch it with the connection's credentials.",
+      "card_request_acts": "A card only reads. This request asks the service to do something, and nexdeck does not send it."
     },
     "cardTerms": {
       "text": "text",

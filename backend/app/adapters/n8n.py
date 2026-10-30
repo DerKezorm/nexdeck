@@ -25,8 +25,10 @@ from .base import (
     AuthFailed,
     Context,
     Field,
+    ReadCommands,
     WidgetData,
     WidgetType,
+    allowed,
     base_url,
     path_segment,
     percent,
@@ -85,6 +87,10 @@ class N8nAdapter(Adapter):
     description = "Workflows with their state, the last runs and how many of them failed."
     icon = "n8n"
     docs_url = "https://docs.n8n.io/api/"
+    #: ⚠️ ``GET /webhook/<path>`` runs a workflow: GET is the default method of the Webhook node
+    #: (https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.webhook/), the test and the waiting address alike.
+    #: A card reads the API under ``/api/v1`` (B1 of a review of 1.0.2).
+    raw_read_commands = ReadCommands(after={"webhook": allowed(), "webhook-test": allowed(), "webhook-waiting": allowed()})
     fields = (
         Field("url", "URL", type="url", required=True, placeholder="http://n8n:5678"),
         Field("api_key", "API key", type="password", secret=True, required=True,

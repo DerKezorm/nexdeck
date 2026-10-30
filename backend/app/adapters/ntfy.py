@@ -12,7 +12,17 @@ import json
 from typing import Any
 
 from . import demo as fake
-from .base import Adapter, AdapterError, Context, Field, WidgetData, WidgetType, base_url
+from .base import (
+    Adapter,
+    AdapterError,
+    Context,
+    Field,
+    ReadCommands,
+    WidgetData,
+    WidgetType,
+    allowed,
+    base_url,
+)
 
 
 def _status(priority: int) -> str:
@@ -30,6 +40,17 @@ class NtfyAdapter(Adapter):
     description = "The messages of an ntfy topic, newest first."
     icon = "ntfy"
     docs_url = "https://docs.ntfy.sh/subscribe/api/"
+    #: ⚠️ ``GET /<topic>/publish?message=…`` (also ``/send``, ``/trigger``) publishes a message, and ``email=`` or
+    #: ``call=`` make the server send a mail or call (https://docs.ntfy.sh/publish/, "Publish as GET" and "List of all
+    #: parameters"). The filters of a read (``message``, ``title``, ``priority``, ``tags``) stay; the parameters that only
+    #: sending knows are refused (B1 of a review of 1.0.2).
+    raw_read_commands = ReadCommands(
+        words=frozenset({"publish", "send", "trigger"}),
+        params={name: allowed() for name in (
+            "email", "mail", "e", "call", "delay", "at", "in", "x-delay", "actions", "action", "click", "attach", "a", "filename", "file", "f",
+            "icon", "markdown", "md", "firebase", "unifiedpush", "up", "cache", "m", "t", "p", "prio", "ta", "tag",
+        )},
+    )
     #: Seen against a live ntfy (05.09.2026).
     beta = False
     fields = (

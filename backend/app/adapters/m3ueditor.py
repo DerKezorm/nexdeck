@@ -45,6 +45,7 @@ from .base import (
     AuthFailed,
     Context,
     Field,
+    ReadCommands,
     WidgetData,
     WidgetType,
     ago,
@@ -168,6 +169,9 @@ class M3uEditorAdapter(Adapter):
     #: Out of beta on 07.10.2026: confirmed on the instance of the person who asked for it in #32.
     beta = False
     docs_url = "https://github.com/sparkison/m3u-editor"
+    #: ⚠️ ``GET /playlist/{uuid}/sync`` and ``GET /epg/{uuid}/sync`` sync a playlist or a guide, as the button of this kind
+    #: does (see the notes above and ``action``). Not for a card (B1 of a review of 1.0.2).
+    raw_read_commands = ReadCommands(words=frozenset({"sync"}))
     keywords = ("IPTV", "M3U", "Xtream", "EPG", "DVR", "playlist")
     fields = (
         Field("url", "URL", type="url", required=True, placeholder="http://m3u-editor:36400"),

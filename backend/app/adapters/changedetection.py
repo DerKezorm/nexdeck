@@ -29,9 +29,11 @@ from .base import (
     AuthFailed,
     Context,
     Field,
+    ReadCommands,
     WidgetData,
     WidgetType,
     ago,
+    allowed,
     base_url,
 )
 
@@ -50,6 +52,10 @@ class ChangeDetectionAdapter(Adapter):
     icon = "changedetection"
     beta = False
     docs_url = "https://changedetection.io/docs/api_v1/index.html"
+    #: ⚠️ ``GET /api/v1/watch?recheck_all=1`` queues every watch (the button of this kind does exactly that), and on a single
+    #: watch ``?recheck=1``, ``?paused=…`` and ``?muted=…`` act too (the API documentation, "Get single watch"). A card asks
+    #: without them (B1 of a review of 1.0.2).
+    raw_read_commands = ReadCommands(params={name: allowed() for name in ("recheck", "recheck_all", "paused", "muted")})
     fields = (
         Field("url", "URL", type="url", required=True, placeholder="http://changedetection:5000"),
         Field("api_key", "API key", type="password", secret=True, required=True,

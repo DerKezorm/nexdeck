@@ -22,6 +22,7 @@ from .base import (
     AdapterError,
     Context,
     Field,
+    ReadCommands,
     WidgetData,
     WidgetType,
     ago,
@@ -64,6 +65,9 @@ class CupAdapter(Adapter):
     icon = "cup"
     beta = False
     docs_url = "https://github.com/sergi0g/cup"
+    #: ⚠️ ``GET /api/v3/refresh`` checks every image again against its registry: the button of this kind sends exactly that
+    #: (see ``action``; Cup's documentation, "API"). Not for a card (B1 of a review of 1.0.2).
+    raw_read_commands = ReadCommands(words=frozenset({"refresh"}))
     fields = (
         Field("url", "URL", type="url", required=True, placeholder="http://cup:8000",
               help="Cup started with serve. It has no sign-in of its own, so keep its port inside the network."),

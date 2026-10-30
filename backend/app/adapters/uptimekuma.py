@@ -17,8 +17,10 @@ from .base import (
     AuthFailed,
     Context,
     Field,
+    ReadCommands,
     WidgetData,
     WidgetType,
+    allowed,
     base_url,
     ring_of,
 )
@@ -68,6 +70,9 @@ class UptimeKumaAdapter(Adapter):
     description = "Every monitor with state and response time."
     icon = "uptime-kuma"
     docs_url = "https://github.com/louislam/uptime-kuma/wiki/API-Keys"
+    #: ⚠️ ``GET /api/push/<token>?status=up`` records a heartbeat of a push monitor (the URL a push monitor shows, and the
+    #: wiki of Uptime Kuma). Not for a card (B1 of a review of 1.0.2).
+    raw_read_commands = ReadCommands(after={"push": allowed()})
     fields = (
         Field("url", "URL", type="url", required=True, placeholder="http://uptime-kuma:3001"),
         Field("api_key", "API key", type="password", secret=True, required=True, help="Settings > API Keys"),

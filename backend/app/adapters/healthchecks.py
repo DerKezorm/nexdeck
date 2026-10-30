@@ -25,9 +25,11 @@ from .base import (
     AuthFailed,
     Context,
     Field,
+    ReadCommands,
     WidgetData,
     WidgetType,
     ago,
+    allowed,
     base_url,
     duration_short,
     ring_of,
@@ -48,6 +50,10 @@ class HealthchecksAdapter(Adapter):
     icon = "healthchecks"
     beta = False
     docs_url = "https://healthchecks.io/docs/api/"
+    #: ⚠️ ``GET /ping/<uuid>`` (and ``/start``, ``/fail``, an exit code after it) records a ping: the pinging API takes
+    #: HEAD, GET and POST alike (https://healthchecks.io/docs/http_api/). A self-hosted instance answers it on the address
+    #: of the connection. Not for a card (B1 of a review of 1.0.2).
+    raw_read_commands = ReadCommands(after={"ping": allowed()})
     fields = (
         Field("url", "URL", type="url", required=True, placeholder="https://healthchecks.io",
               help="Your own instance, or https://healthchecks.io for the hosted service."),

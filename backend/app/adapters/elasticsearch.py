@@ -46,6 +46,7 @@ from .base import (
     AuthFailed,
     Context,
     Field,
+    ReadCommands,
     WidgetData,
     WidgetType,
     base_url,
@@ -95,6 +96,9 @@ class ElasticsearchAdapter(Adapter):
     icon = "elasticsearch"
     beta = False
     docs_url = "https://www.elastic.co/docs/api/doc/elasticsearch/"
+    #: ⚠️ ``GET /<index>/_refresh`` and ``GET /<index>/_flush`` refresh and flush indices: both APIs take GET besides POST
+    #: (the documentation of the refresh and the flush API). Not for a card (B1 of a review of 1.0.2).
+    raw_read_commands = ReadCommands(words=frozenset({"refresh", "flush"}))
     fields = (
         Field("url", "URL", type="url", required=True, placeholder="https://elasticsearch:9200"),
         Field("api_key", "API key", type="password", secret=True,

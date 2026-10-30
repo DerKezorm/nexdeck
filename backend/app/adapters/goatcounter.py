@@ -32,6 +32,7 @@ from .base import (
     AuthFailed,
     Context,
     Field,
+    ReadCommands,
     WidgetData,
     WidgetType,
     base_url,
@@ -61,6 +62,9 @@ class GoatcounterAdapter(Adapter):
     description = "Visits to your sites, the pages people read and where they came from, from GoatCounter."
     icon = "goatcounter"
     docs_url = "https://www.goatcounter.com/api"
+    #: ⚠️ ``GET /count?p=/page`` counts a page view: it is the pixel of count.js and of a page without JavaScript
+    #: (GoatCounter's help on counting without JavaScript). A card reads the API under ``/api/v0`` (B1 of a review of 1.0.2).
+    raw_read_commands = ReadCommands(words=frozenset({"count"}))
     #: Measured against one self-hosted GoatCounter with four visits.
     beta = True
     fields = (
