@@ -59,6 +59,7 @@
         "readOnly": "Sola lettura",
         "none": "Nessuna",
         "asked": "Per controllare la scheda nexdeck ha interrogato la connessione {{name}} ({{kind}}), la prima del tipo che la scheda nomina. Della sua risposta sono andati all'IA solo nomi e tipi dei campi, nessun valore.",
+        "unasked": "nexdeck non ha ancora interrogato {{paths}}: non l'hai indicato e le schede di nexdeck per questo tipo non lo leggono. Viene interrogato quando adotti la scheda e apri l'anteprima con dati reali.",
         "forms": {
           "value": "Un valore",
           "stats": "Statistiche",

@@ -15,7 +15,7 @@ from pydantic import BaseModel, Field, StringConstraints, ValidationError
 from sqlalchemy import select
 
 from ..adapters.base import AdapterError
-from ..cards import ai, credentials, demo, load, schema
+from ..cards import ai, card_reads, credentials, demo, load, schema
 from ..cards.load import Problem
 from ..db import db_session
 from ..deps import AdminUser, DbSession, error
@@ -120,17 +120,23 @@ def _tried_with(preferred: int | None, kinds: list[str]) -> tuple[int, dict[str,
 
 
 class _Verifier:
-    """Asks the service every request of a proposal, the way the editor's preview will (found in a real run on 1.0.0).
+    """Asks the service the requests of a proposal, the way the editor's preview will (found in a real run on 1.0.0).
 
     The provider guessed paths from a lookalike service (Sonarr's for nexcrate), and the card failed only once taken over.
     Nothing of the answers goes to the provider, only which path failed and nexdeck's own sentence for it, and the shape of an
     answer it has not seen, never its values (:func:`ai._shapes`). Without a real connection of the kind, in demo mode, or with
     the service down, nothing can be said and nothing is held against the card. The answers of the last card asked stay in
     ``answers`` (request id -> answer) for its examples.
+
+    ⚠️ Only paths the administrator named (``named``: the path he asked about, the paths of the card in the editor) or that
+    nexdeck's own cards of the kind read (:func:`card_reads.read_by_own_cards`). A GET is not always a read: ``/v1/update``
+    starts an update run of Watchtower, and the provider's proposal (or an instruction in the text of a shop card) would have
+    sent it before the administrator saw anything (B1 of a review of 1.0.2). Any other path is left for the preview with real
+    data after he takes the card over (``unasked``).
     """
 
-    def __init__(self, preferred: int | None, userid: int, username: str) -> None:
-        self.preferred, self.userid, self.username = preferred, userid, username
+    def __init__(self, preferred: int | None, userid: int, username: str, named: frozenset[str] = frozenset()) -> None:
+        self.preferred, self.userid, self.username, self.named = preferred, userid, username, named
         self.answers: dict[str, Any] = {}
 
     async def __call__(self, definition: Any) -> ai.Checked:
@@ -146,9 +152,13 @@ class _Verifier:
             return ai.Checked([])
         problems: list[Problem] = []
         asked: list[tuple[str, str | None]] = []
+        unasked: list[str] = []
         for index, request in enumerate(definition.requests):
             if "{" in request.path:
                 continue  # a name the administrator fills in later: nothing to ask yet, and not the provider's to guess
+            if request.path not in self.named and not card_reads.read_by_own_cards(adapter.kind, request.path):
+                unasked.append(request.path)
+                continue
             try:
                 self.answers[request.id] = await _ask(adapter, config, ctx, request)
                 asked.append((request.path, None))
@@ -160,11 +170,21 @@ class _Verifier:
                         params={"path": request.path, "failure": failure.code},
                     ))
         note_asked(userid, username, number, asked, "card help, check")
-        return ai.Checked(problems, dict(self.answers), other if asked else None)
+        return ai.Checked(problems, dict(self.answers), other if asked else None, unasked)
 
 
-def _verifier(preferred: int | None, userid: int, username: str) -> _Verifier:
-    return _Verifier(preferred, userid, username)
+def _verifier(preferred: int | None, userid: int, username: str, named: frozenset[str] = frozenset()) -> _Verifier:
+    return _Verifier(preferred, userid, username, named)
+
+
+def named_paths(body: AiBody) -> frozenset[str]:
+    """The paths the administrator named: the one he asks about, and those of the card he has in the editor."""
+    found = {body.path} if body.path else set()
+    try:
+        found |= {request.path for request in load.load_definition(body.yaml).definition.requests}
+    except load.CardInvalid:
+        pass  # a card with problems names no paths that count
+    return frozenset(found)
 
 
 def with_examples(outcome: ai.Outcome, answers: dict[str, Any]) -> None:
@@ -195,7 +215,7 @@ async def card_with_ai(body: AiBody, user: AdminUser, db: DbSession) -> dict[str
 
     async def work() -> ai.Outcome:
         kind, answer = await _asked(body, request, userid, username)
-        verify = _verifier(body.connection_id, userid, username)
+        verify = _verifier(body.connection_id, userid, username, named_paths(body) if body.mode != "translate" else frozenset())
         outcome = await ai.generate(
             ai.Ask(mode=body.mode, description=body.description, yaml=body.yaml, connection_kind=kind, path=body.path or "", answer=answer, include_values=body.include_values),
             config, key, verify,

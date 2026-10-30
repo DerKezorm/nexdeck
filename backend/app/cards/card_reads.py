@@ -12,6 +12,7 @@ kind on any board. Nothing in it proves who asks: that is dropped when the list 
 from __future__ import annotations
 
 import json
+import re
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
@@ -54,6 +55,26 @@ def reads_of(kind: str) -> list[dict[str, Any]]:
     a kind with nothing known.
     """
     return [{"path": str(one["path"]), "widgets": list(one.get("widgets") or [])} for one in _all().get(kind, [])]
+
+
+def read_by_own_cards(kind: str, path: str) -> bool:
+    """Whether a built-in card of the kind asks this path; a ``{placeholder}`` of the list stands for one name or value.
+
+    ⚠️ What the card help may ask on its own (B1 of a review of 1.0.2): a GET is not always a read (``/v1/update`` of
+    Watchtower starts an update run), and these are the paths nexdeck itself asks of the kind on every board. A path from
+    the documentation that no card asks (``widgets`` empty) does not count. The path is compared without its query: the
+    parameters may differ (``/api/v3/queue`` against the cards' ``/api/v3/queue?pageSize=100``), and every query still
+    passes the kind's own list of commands before anything is asked (``refuse_a_command``).
+    """
+    asked = path.split("?", 1)[0]
+    for one in reads_of(kind):
+        if not one["widgets"]:
+            continue
+        known = one["path"].split("?", 1)[0]
+        pattern = "".join("[^/?&#=]+" if part.startswith("{") else re.escape(part) for part in re.split(r"(\{[^{}]*\})", known) if part)
+        if re.fullmatch(pattern, asked):
+            return True
+    return False
 
 
 def kinds_with_reads() -> list[str]:

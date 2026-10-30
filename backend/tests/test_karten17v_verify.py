@@ -86,11 +86,13 @@ def test_karten17v_the_route_asks_a_real_connection_of_the_kind_even_when_the_ed
     answer = admin.post("/api/v1/cards/ai", json={"mode": "change", "description": "How many are missing", "yaml": ai.EXAMPLE}, headers=CSRF)
     assert answer.status_code == 200, answer.text
     body = answer.json()
-    assert body["ok"] is True and body["summary"]["paths"] == [RIGHT]
-    assert wrong.call_count == 1 and right.call_count == 1 and len(script.seen) == 3
-    assert "HTTP 404" in json.dumps(script.seen[1]["transcript"][-1])
-    # Of the failed path only which it was and nexdeck's sentence went to the provider, never the service's own words.
-    assert "NotFound" not in script.sent() and "svc.example.com" not in script.sent()
+    assert body["ok"] is True and body["summary"]["paths"] == [RIGHT] and body["summary"]["unasked"] == []
+    # A path nobody named and no card of the kind reads is not asked (a GET can act, B1 of a review of 1.0.2): the provider
+    # is pointed once at the paths nexdeck's own cards read, and takes one of them.
+    assert wrong.call_count == 0 and right.call_count == 1 and len(script.seen) == 3
+    pointed = json.dumps(script.seen[1]["transcript"][-1])
+    assert "nexdeck did not ask /api/v3/wanted/missing?pageSize=50" in pointed and "Paths nexdeck's own cards read from sonarr" in pointed
+    assert "svc.example.com" not in script.sent()
     # The provider chose the path itself and never saw its answer: it is shown the shape once, without values.
     shapes = json.dumps(script.seen[2]["transcript"][-1])
     assert f"At {RIGHT} the service answered" in shapes and "records[0].title: string" in shapes and "Zq-Marker-Alpha" not in script.sent()
@@ -176,3 +178,13 @@ def test_karten17v_a_name_left_open_for_the_administrator_is_not_asked_and_not_h
     assert body["ok"] is True and body["summary"]["paths"] == ["/api/v3/series/{series_id}"] and stand_in.call_count == 0
     rules = ai.outbound(ai.Ask(mode="change", yaml=ai.EXAMPLE)).system
     assert "Prefer a path that needs no name the administrator has to give" in rules and "Never invent one." in rules and '"{disk.used} / {disk.total} * 100"' in rules
+
+
+@respx.mock
+def test_karten8u_b1_a_path_kept_after_the_pointer_is_taken_over_unasked(admin: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:  # noqa: F811
+    switch_on(admin)
+    connection(admin)
+    wrong = respx.get(f"{BASE}/api/v3/wanted/missing").mock(return_value=httpx.Response(200, json={}))
+    monkeypatch.setattr(providers, "turn", Script(proposing(WRONG), proposing(WRONG)))
+    body = admin.post("/api/v1/cards/ai", json={"mode": "change", "description": "How many are missing", "yaml": ai.EXAMPLE}, headers=CSRF).json()
+    assert body["ok"] is True and body["summary"]["unasked"] == [WRONG] and wrong.call_count == 0

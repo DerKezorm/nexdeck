@@ -611,17 +611,18 @@ def summarize(loaded: Any) -> dict[str, Any]:
 
     ⚠️ From the card, not from the request: the provider may have changed the connection, the paths or the buttons.
     ``connection_kind`` and ``path`` name all of them, one after the other. ``asked`` (filled in by :func:`generate`) names the
-    connection nexdeck asked to check the card when it was not the one chosen.
+    connection nexdeck asked to check the card when it was not the one chosen, ``unasked`` the paths it did not ask (they are
+    asked when the administrator takes the card over and opens the preview with real data).
     """
     definition = loaded.definition if loaded is not None else None
     if definition is None:
-        return {"connection_kind": None, "path": None, "form": None, "buttons": False, "requires": [], "paths": [], "methods": [], "asked": None}
+        return {"connection_kind": None, "path": None, "form": None, "buttons": False, "requires": [], "paths": [], "methods": [], "asked": None, "unasked": []}
     requires = list(definition.requires)
     paths = [request.path for request in definition.requests]
     methods = sorted({button.method for button in definition.buttons})
     return {
         "connection_kind": ", ".join(requires) or None, "path": ", ".join(paths) or None, "form": definition.form, "buttons": bool(definition.buttons),
-        "requires": requires, "paths": paths, "methods": methods, "asked": None,
+        "requires": requires, "paths": paths, "methods": methods, "asked": None, "unasked": [],
     }
 
 
@@ -637,6 +638,8 @@ class Checked:
     answers: dict[str, Any] = field(default_factory=dict)
     #: ``{"name", "kind"}`` of the connection asked when it is not the one chosen (the card names another kind), else ``None``.
     asked: dict[str, str] | None = None
+    #: The paths of the card that were not asked: neither the administrator named them nor do nexdeck's own cards read them.
+    unasked: list[str] = field(default_factory=list)
 
 
 #: Asks the service every request of a card that passed the check.
@@ -654,6 +657,14 @@ def _shapes(unseen: dict[str, Any]) -> str:
     parts = [f"At {path} the service answered, as paths and types (no values):\n{shape(answer)}" for path, answer in unseen.items()]
     return ("nexdeck asked the service. " + "\n\n".join(parts) + "\n\nEvery path into an answer (select, value, title, total, …) must exist in these "
             "shapes; fix the ones that do not. Hand in the whole card, unchanged if it is right.")
+
+
+def _unasked(paths: list[str], offer: dict[str, list[str]]) -> str:
+    """Tells the provider which of its paths nexdeck did not ask, and the paths it does ask of the kind (B1 of a review of 1.0.2)."""
+    known = "\n\n".join(_known(kind, found) for kind, found in offer.items())
+    return (f"nexdeck did not ask {', '.join(paths)}: it asks on its own only the paths the administrator named and those its own "
+            f"cards read, because a GET can make a service act. {known}\nIf one of these gives what the administrator wants, use it. "
+            "If only your path does, hand in the card unchanged; it is asked once the administrator takes it over.")
 
 
 async def generate(ask: Ask, config: dict[str, Any], key: str, verify: Verify | None = None) -> Outcome:
@@ -677,8 +688,9 @@ async def generate(ask: Ask, config: dict[str, Any], key: str, verify: Verify | 
     text, last_text, problems = "", "", []
     # The paths whose answer the provider has seen; the problems go back once, the shapes once.
     seen = {ask.path} if ask.answer is not MISSING and ask.path else set()
-    told, shown = False, False
+    told, shown, pointed = False, False, False
     asked: dict[str, str] | None = None
+    unasked: list[str] = []
     for _turn_number in range(TURNS):
         turn = await _turn(config, key, out.system, transcript, out.tools)
         text, last_text = candidate(turn), turn.text
@@ -686,18 +698,22 @@ async def generate(ask: Ask, config: dict[str, Any], key: str, verify: Verify | 
         unseen: dict[str, Any] = {}
         if loaded is not None and verify is not None and ask.mode != "translate":
             checked = await verify(loaded.definition)
-            problems, asked = checked.problems, checked.asked
+            problems, asked, unasked = checked.problems, checked.asked, checked.unasked
             unseen = {request.path: checked.answers[request.id] for request in loaded.definition.requests
                       if request.id in checked.answers and request.path not in seen}
-        if loaded is not None and not problems and (shown or not unseen):
+        # Paths nexdeck did not ask, for a kind it knows paths of: pointed at those once, so a guessed path is not kept unseen.
+        offer = {kind: known for kind in (loaded.definition.requires if loaded is not None else []) if (known := known_paths(kind))}
+        if loaded is not None and not problems and (shown or not unseen) and (pointed or not (unasked and offer)):
             card = text
             if ask.mode != "new":
                 card = restore_demo(ask, text)
-            return Outcome(True, card, last_text, [], {**summarize(loaded), "asked": asked}, sent, loaded.definition)
+            return Outcome(True, card, last_text, [], {**summarize(loaded), "asked": asked, "unasked": unasked}, sent, loaded.definition)
         if problems and told:
             break
         if problems:
             feedback, told = _feedback(problems, loaded), True
+        elif unasked and offer and not pointed:
+            feedback, pointed = _unasked(unasked, offer), True
         else:
             feedback, shown = _shapes(unseen), True
             seen |= set(unseen)
@@ -706,7 +722,7 @@ async def generate(ask: Ask, config: dict[str, Any], key: str, verify: Verify | 
             transcript.append({"role": "tool", "results": [{"id": call["id"], "content": feedback, "is_error": bool(problems)} for call in turn.calls]})
         else:
             transcript.append({"role": "user", "text": feedback})
-    return Outcome(False, text, last_text, [problem.as_dict() for problem in problems], {**summarize(None), "asked": asked}, sent)
+    return Outcome(False, text, last_text, [problem.as_dict() for problem in problems], {**summarize(None), "asked": asked, "unasked": unasked}, sent)
 
 
 # -- one request at a time per administrator -----------------------------------------------------------

@@ -57,7 +57,7 @@ export interface DraftRef {
   id: number
   name: string
   form: string
-  summary: { connection_kind: string | null; path: string | null; form: string; buttons: boolean; methods?: string[]; asked?: { name: string; kind: string } | null }
+  summary: { connection_kind: string | null; path: string | null; form: string; buttons: boolean; methods?: string[]; asked?: { name: string; kind: string } | null; unasked?: string[] }
   sent: { values: boolean }
   keep_days: number
   url: string

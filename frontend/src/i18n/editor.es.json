@@ -59,6 +59,7 @@
         "readOnly": "Solo lectura",
         "none": "Ninguna",
         "asked": "Para comprobar la tarjeta, nexdeck consultó la conexión {{name}} ({{kind}}), la primera del tipo que nombra la tarjeta. De su respuesta solo llegaron a la IA nombres y tipos de campos, ningún valor.",
+        "unasked": "nexdeck aún no consultó {{paths}}: no lo nombraste y las tarjetas propias de nexdeck de este tipo no lo leen. Se consulta cuando adoptas la tarjeta y abres la vista previa con datos reales.",
         "forms": {
           "value": "Un valor",
           "stats": "Estadísticas",

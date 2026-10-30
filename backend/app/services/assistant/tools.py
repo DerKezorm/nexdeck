@@ -487,6 +487,11 @@ UNREAD = {
     "command_refused": "nexdeck does not ask this path: it reads like one that makes the service do something.",
     "bad_path": "The path starts with a single / and names no host.",
 }
+#: What the provider is told for a path nexdeck's own cards of the kind do not read: it is not asked from the chat.
+NOT_ASKED = (
+    "nexdeck does not ask this path from the chat: its own cards of this kind do not read it. Take one of known_paths, or tell "
+    "the person to try the path in the card editor's probe themselves."
+)
 UNREAD_OTHERWISE = "The service could not be read. Tell the person the code; the editor's probe shows the whole message."
 
 
@@ -531,8 +536,13 @@ async def draft_card(bench: Bench, given: dict[str, Any]) -> str:
     if not _readable(chosen.kind):
         return _json({"error": f"A {chosen.kind} connection {NO_OWN_CARDS}"})
     path = str(given.get("path") or "").strip()
+    known = [read["path"] for read in card_reads.reads_of(chosen.kind) if read["widgets"]][:12]
     if not path:
-        return _json({"error": "Name the path to read.", "known_paths": [read["path"] for read in card_reads.reads_of(chosen.kind)][:12]})
+        return _json({"error": "Name the path to read.", "known_paths": known})
+    if not card_reads.read_by_own_cards(chosen.kind, path):
+        # ⚠️ A GET is not always a read (``/v1/update`` starts an update run of Watchtower), and the path is the model's
+        # choice, maybe after reading something foreign: only what nexdeck's own cards of the kind ask (B1 of a review of 1.0.2).
+        return _json({"error": NOT_ASKED, "known_paths": known})
     try:
         request = schema.Request(id="probe", path=path)
     except ValueError:
@@ -552,7 +562,7 @@ async def draft_card(bench: Bench, given: dict[str, Any]) -> str:
             held.grants = [one for one in held.grants or [] if one != grant]
     config, key = settings.stored(bench.db), settings.key_of(bench.db)
     integration_id, conversation_id, user_id, username = chosen.id, bench.conversation_id, bench.user.id, bench.user.username
-    verify = _verifier(integration_id, user_id, username)
+    verify = _verifier(integration_id, user_id, username, frozenset({path}))
     bench.db.commit()
 
     async def work() -> tuple[Any, Any]:

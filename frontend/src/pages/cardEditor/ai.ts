@@ -25,6 +25,8 @@ export interface AiSummary {
   methods?: string[]
   /** The connection nexdeck asked to check the card when it was not the chosen one; only the shape of its answer went out. */
   asked?: { name: string; kind: string } | null
+  /** The paths of the card nexdeck did not ask: not named by the administrator and not read by its own cards of the kind. */
+  unasked?: string[]
 }
 
 export interface AiAnswer {

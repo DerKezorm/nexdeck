@@ -59,6 +59,7 @@
         "readOnly": "Nur lesend",
         "none": "Keine",
         "asked": "Zum Prüfen der Karte hat nexdeck die Verbindung {{name}} ({{kind}}) gefragt, die erste der Art, die die Karte nennt. Von ihrer Antwort gingen nur Feldnamen und Typen an die KI, keine Werte.",
+        "unasked": "nexdeck hat {{paths}} noch nicht gefragt: Du hast den Pfad nicht genannt, und nexdecks eigene Karten der Art lesen ihn nicht. Er wird erst gefragt, wenn du die Karte übernimmst und die Vorschau mit echten Daten öffnest.",
         "forms": {
           "value": "Ein Wert",
           "stats": "Kennzahlen",

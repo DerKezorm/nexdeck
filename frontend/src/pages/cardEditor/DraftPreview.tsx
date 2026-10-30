@@ -77,7 +77,8 @@ export function DraftPreview({ yaml }: { yaml: string }) {
 
 /**
  * What a draft uses (KARTEN-17 AC-10): the connection, the path, the form, buttons or not. When nexdeck checked the card
- * through a connection other than the chosen one (the card names another kind), a sentence says which one it was.
+ * through a connection other than the chosen one (the card names another kind), a sentence says which one it was; a path it
+ * did not ask (neither named nor read by nexdeck's own cards of the kind) is named with when it will be asked.
  */
 export function DraftSummary({ summary }: { summary: AiSummary }) {
   const { t } = useTranslation()
@@ -104,6 +105,11 @@ export function DraftSummary({ summary }: { summary: AiSummary }) {
       {summary.asked && (
         <p className="text-[12px] text-muted break-words" data-testid="card-ai-asked">
           {t('editor.ai.summary.asked', { name: summary.asked.name, kind: summary.asked.kind })}
+        </p>
+      )}
+      {summary.unasked && summary.unasked.length > 0 && (
+        <p className="text-[12px] text-muted break-words" data-testid="card-ai-unasked">
+          {t('editor.ai.summary.unasked', { paths: summary.unasked.join(', ') })}
         </p>
       )}
     </div>

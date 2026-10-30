@@ -59,6 +59,7 @@
         "readOnly": "Read only",
         "none": "None",
         "asked": "To check the card nexdeck asked the connection {{name}} ({{kind}}), the first one of the kind the card names. Only field names and types of its answer went to the AI, no values.",
+        "unasked": "nexdeck did not ask {{paths}} yet: you did not name it, and nexdeck's own cards of the kind do not read it. It is asked when you take the card over and open the preview with real data.",
         "forms": {
           "value": "One value",
           "stats": "Statistics",
