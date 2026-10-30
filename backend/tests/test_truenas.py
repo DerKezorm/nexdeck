@@ -449,6 +449,8 @@ async def test_the_system_card_shows_what_the_services_use_not_the_zfs_cache(ctx
     assert chips["Memory"] == "1.2 GB of 7.8 GB"
     assert chips["ZFS cache"] == "3.5 GB"
     assert system.metrics == {"cpu": 3.0, "memory": 15.5}
+    # The rows view draws a line beside a row only when the row names its metric.
+    assert next(entry for entry in system.secondary if entry["label"] == "Memory")["metric"] == "memory"
 
 
 async def test_without_a_realtime_event_the_load_average_stands_in(ctx: Context, monkeypatch: pytest.MonkeyPatch) -> None:

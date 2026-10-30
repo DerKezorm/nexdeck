@@ -444,7 +444,8 @@ class TruenasAdapter(Adapter):
             live = _live(read.get(REALTIME))
             if live is not None:
                 cpu, used, total, cache = live
-                chips = [{"label": "Memory", "value": f"{human_bytes(used)} of {human_bytes(total)}"}]
+                # The row names its metric, so the rows view draws its history as Docker's load does.
+                chips = [{"label": "Memory", "value": f"{human_bytes(used)} of {human_bytes(total)}", "metric": "memory"}]
                 if cache:
                     chips.append({"label": "ZFS cache", "value": human_bytes(cache)})
                 memory = round(100.0 * used / total, 1)

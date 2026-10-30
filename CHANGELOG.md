@@ -3,6 +3,12 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## Unreleased
+
+### Changed
+
+- **TrueNAS System draws the history of its memory.** In the rows view the Memory row shows a line of the last readings, as Docker load does, instead of an empty bar. CPU stays a bar coloured at 75 and 90 per cent.
+
 ## 1.1.1 (2026-10-30)
 
 ### Changed
