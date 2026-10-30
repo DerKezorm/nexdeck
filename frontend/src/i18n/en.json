@@ -3187,7 +3187,9 @@
         "recheck": "Saved. The text did not change, so the Workshop was asked to check issue {{number}} again.",
         "failed": "Saved, but not sent again: {{message}}"
       },
-      "skinTile": "A skin. The Workshop draws its pictures on the stage of the editor, dark and light."
+      "skinTile": "A skin. The Workshop draws its pictures on the stage of the editor, dark and light.",
+      "leadSkin": "Your skin goes into the Card shop as an issue in the Workshop, under your GitHub name. The Workshop checks it, and if everything passes it is added by itself. Everything you send is public and under the MIT License.",
+      "descriptionHelpSkin": "What it looks like, in English, in a few sentences. Plain text."
     }
   }
 }

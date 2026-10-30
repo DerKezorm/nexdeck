@@ -3187,7 +3187,9 @@
         "recheck": "Enregistrée. Le texte n'a pas changé, le Workshop a donc été prié de revérifier le ticket {{number}}.",
         "failed": "Enregistrée, mais pas renvoyée : {{message}}"
       },
-      "skinTile": "Un skin. Le Workshop dessine ses images sur la scène de l’éditeur, en sombre et en clair."
+      "skinTile": "Un skin. Le Workshop dessine ses images sur la scène de l’éditeur, en sombre et en clair.",
+      "leadSkin": "Votre skin arrive dans le Card shop sous forme de ticket dans le Workshop, sous votre nom GitHub. Le Workshop le vérifie et, si tout est bon, il est ajouté tout seul. Tout ce que vous envoyez est public et sous licence MIT.",
+      "descriptionHelpSkin": "À quoi il ressemble, en anglais, en quelques phrases. Texte simple."
     }
   }
 }

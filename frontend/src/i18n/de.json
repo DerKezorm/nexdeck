@@ -3187,7 +3187,9 @@
         "recheck": "Gespeichert. Der Text hat sich nicht geändert, deshalb wurde der Workshop gebeten, Issue {{number}} noch einmal zu prüfen.",
         "failed": "Gespeichert, aber nicht erneut gesendet: {{message}}"
       },
-      "skinTile": "Ein Skin. Der Workshop zeichnet seine Bilder auf der Bühne des Editors, dunkel und hell."
+      "skinTile": "Ein Skin. Der Workshop zeichnet seine Bilder auf der Bühne des Editors, dunkel und hell.",
+      "leadSkin": "Dein Skin geht als Issue im Workshop unter deinem GitHub-Namen in den Card shop. Der Workshop prüft ihn, und wenn alles passt, wird er von allein aufgenommen. Alles, was du sendest, ist öffentlich und steht unter der MIT-Lizenz.",
+      "descriptionHelpSkin": "Wie er aussieht, auf Englisch, in ein paar Sätzen. Nur Text."
     }
   }
 }

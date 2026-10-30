@@ -44,6 +44,8 @@ describe('sharing a skin', () => {
     renderWith(<ShareDialog kind="skin" slug="pixel-desk" name="Pixel desk" open onClose={() => undefined} />)
     const dialog = await screen.findByRole('dialog', { name: 'Share in the Card shop' })
     expect(await within(dialog).findByTestId('share-skin')).toHaveTextContent('The Workshop draws its pictures on the stage of the editor')
+    expect(within(dialog).getByText(/^Your skin goes into the Card shop/)).toBeInTheDocument()
+    expect(within(dialog).getByText('What it looks like, in English, in a few sentences. Plain text.')).toBeInTheDocument()
     expect(calls('POST', '/workshop/submit/check')[0].body).toEqual({ type: 'skin', slug: 'pixel-desk' })
     expect(within(dialog).getByLabelText('Category').closest('div')).not.toBeVisible()
     await userEvent.click(within(dialog).getByRole('checkbox', { name: /MIT License/ }))

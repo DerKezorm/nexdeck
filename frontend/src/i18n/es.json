@@ -3187,7 +3187,9 @@
         "recheck": "Guardada. El texto no cambió, así que se pidió al Workshop que revise otra vez la incidencia {{number}}.",
         "failed": "Guardada, pero no reenviada: {{message}}"
       },
-      "skinTile": "Un skin. El Workshop dibuja sus imágenes en el escenario del editor, en oscuro y en claro."
+      "skinTile": "Un skin. El Workshop dibuja sus imágenes en el escenario del editor, en oscuro y en claro.",
+      "leadSkin": "Tu skin llega al Card shop como una incidencia en el Workshop, con tu nombre de GitHub. El Workshop lo revisa y, si todo está bien, se añade solo. Todo lo que envías es público y va bajo la licencia MIT.",
+      "descriptionHelpSkin": "Cómo se ve, en inglés, en unas frases. Solo texto."
     }
   }
 }

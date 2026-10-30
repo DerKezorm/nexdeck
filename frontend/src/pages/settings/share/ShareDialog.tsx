@@ -210,7 +210,7 @@ export function ShareDialog({ kind, slug, name, form, open, onClose }: { kind: S
 
       {data && !sent && (
         <div className="grid gap-4">
-          <p className="text-sm text-muted">{t('cards.share.lead')}</p>
+          <p className="text-sm text-muted">{t(skin ? 'cards.share.leadSkin' : 'cards.share.lead')}</p>
 
           <div className="grid gap-1 text-sm" data-testid="share-mode">
             <span className="font-medium">{name || data.name || slug}</span>
@@ -299,7 +299,7 @@ export function ShareDialog({ kind, slug, name, form, open, onClose }: { kind: S
                 setDescription(event.target.value)
               }}
             />
-            <span className="text-[12px] text-muted">{t('cards.share.descriptionHelp')}</span>
+            <span className="text-[12px] text-muted">{t(skin ? 'cards.share.descriptionHelpSkin' : 'cards.share.descriptionHelp')}</span>
           </div>
 
           <div className="grid gap-1" hidden={skin}>
