@@ -82,7 +82,8 @@ function Stage({ spec }: { spec: Spec }) {
 
 function SkinStage() {
   return (
-    <div id="stage" style={{ ...SKIN_PICTURE, overflow: 'hidden', position: 'relative', background: 'var(--nd-bg)', color: 'var(--nd-text)' }} data-ready="true">
+    // No ground of its own: the desk of the skin (its tile, its picture) lies behind, on the page, as on a board.
+    <div id="stage" style={{ ...SKIN_PICTURE, overflow: 'hidden', position: 'relative', color: 'var(--nd-text)' }} data-ready="true">
       <StageScene dialog={false} />
     </div>
   )
@@ -96,7 +97,9 @@ function show(spec: Spec | SkinSpec): Promise<void> {
   // A skin brings its colours and its sheet; a card is drawn in nexdeck's own look, as it always was.
   if (skin) applyAppearance(wear(PLAIN, { key: spec.skin.key, options: {} }, spec.skin))
   document.documentElement.dataset.theme = spec.theme
-  document.documentElement.style.background = 'var(--nd-bg)'
+  // ⚠️ Not for a skin: a ground on <html> keeps <body> from handing its own to the page, and <body> then covers the
+  // desk, which lies below it (its tile came out as a plain colour in the pictures).
+  document.documentElement.style.background = skin ? '' : 'var(--nd-bg)'
   root.render(
     <StrictMode>
       <QueryClientProvider client={queryClient}>
