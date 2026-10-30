@@ -252,3 +252,19 @@ def test_a_new_skin_starts_from_nothing_a_look_or_an_example_and_each_compiles(a
     for starter in starters:
         assert admin_client.post("/api/v1/skins/check", headers=CSRF, json={"text": starter["text"]}).json()["ok"], starter["key"]
     assert user_client.get("/api/v1/skins/starters").status_code == 403
+
+
+def test_the_workshop_makes_a_skin_worn_by_everybody_and_leaves_the_rest_of_the_look(admin_client: TestClient, user_client: TestClient) -> None:
+    save_console(admin_client)
+    assert admin_client.put("/api/v1/settings/appearance", headers=CSRF, json={**LOOK, "accent": "#123456", "skin": {"key": "1984", "options": {"desk": "weave"}}}).status_code == 200
+    worn = admin_client.post("/api/v1/skins/console/wear", headers=CSRF, json={})
+    assert worn.status_code == 200, worn.text
+    assert worn.json()["skin"] == {"key": "console", "options": {"desk": "bricks"}}, "options left out take their defaults"
+    assert worn.json()["card_style"] == "glass" and worn.json()["accent"] == "#123456"
+    assert admin_client.post("/api/v1/skins/1984/wear", headers=CSRF, json={"options": {"desk": "grey"}}).json()["card_style"] == "window"
+    assert admin_client.get("/api/v1/settings/appearance").json()["retro"]["desk"] == "grey"
+    missing = admin_client.post("/api/v1/skins/nothing/wear", headers=CSRF, json={})
+    assert missing.status_code == 404 and missing.json()["detail"]["code"] == "no_such_skin"
+    wrong = admin_client.post("/api/v1/skins/console/wear", headers=CSRF, json={"options": {"desk": "moon"}})
+    assert wrong.status_code == 400 and wrong.json()["detail"]["code"] == "bad_skin_choice"
+    assert user_client.post("/api/v1/skins/console/wear", headers=CSRF, json={}).status_code == 403

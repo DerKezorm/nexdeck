@@ -291,7 +291,7 @@
       "assistant": "Assistente",
       "inventory": "Inventario",
       "cards": "Schede personali",
-      "skins": "Skin"
+      "skins": "Officina delle skin"
     },
     "mail": {
       "title": "Server di posta",
@@ -879,7 +879,7 @@
     "skins": {
       "title": "Skin",
       "help": "Uno skin ridisegna più dei colori: cornici, piccole immagini, movimento e suoni. Le pagine che chiedono una password, una chiave o una conferma mantengono sempre il disegno proprio di nexdeck, con i colori dello skin.",
-      "none": "Nessuno",
+      "none": "nexdeck, senza skin",
       "installation": "Quello dell’installazione",
       "off": "Disattivato, non è più adatto a questa versione",
       "yours": "Il tuo skin",
@@ -893,7 +893,14 @@
       "download": "{{name}} come file",
       "delete": "Elimina {{name}}",
       "deleteTitle": "Eliminare {{name}}?",
-      "deleteBody": "Chi lo indossa torna a indossare lo skin dell’installazione."
+      "deleteBody": "Chi lo indossa torna a indossare lo skin dell’installazione.",
+      "toWorkshop": "Le skin si creano, si importano e si condividono nell’officina delle skin.",
+      "toWorkshopLink": "All’officina delle skin",
+      "origin": {
+        "own": "Tua",
+        "shop": "Dal Card shop",
+        "builtin": "Inclusa in nexdeck"
+      }
     }
   },
   "menu": {

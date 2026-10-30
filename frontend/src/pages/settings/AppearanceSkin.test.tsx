@@ -5,6 +5,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('../../styles/retro.css', () => ({}))
@@ -38,7 +39,9 @@ afterEach(() => applyAppearance(null))
 function show() {
   render(
     <QueryClientProvider client={new QueryClient()}>
-      <AppearanceSettings />
+      <MemoryRouter>
+        <AppearanceSettings />
+      </MemoryRouter>
     </QueryClientProvider>,
   )
 }
@@ -67,7 +70,28 @@ describe('what the skin chosen for everybody replaces', () => {
     await waitFor(() => expect(screen.queryByTestId('skin-replaces')).toBeNull())
     await userEvent.click(within(skins).getByRole('button', { name: /Bricks/ }))
     await waitFor(() => expect(screen.getAllByTestId('skin-replaces')).toHaveLength(3))
-    await userEvent.click(within(skins).getByRole('button', { name: 'None' }))
+    await userEvent.click(within(skins).getByRole('button', { name: 'nexdeck, no skin' }))
     await waitFor(() => expect(screen.queryByTestId('skin-replaces')).toBeNull())
+  })
+})
+
+describe('the page wears what is chosen', () => {
+  it('paints the skin chosen for everybody while it is open, and asks the app for this account’s look on leaving', async () => {
+    const { usePaint } = await import('../../lib/skin/wear')
+    const { unmount } = render(
+      <QueryClientProvider client={new QueryClient()}>
+        <MemoryRouter>
+          <AppearanceSettings />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    )
+    await waitFor(() => expect(document.documentElement.dataset.skin).toBe('bricks'))
+    // A skin that names no author says where it comes from.
+    expect(within(screen.getByRole('list', { name: 'Skin' })).getByRole('button', { name: /Plain/ })).toHaveTextContent('PlainYour own')
+    await userEvent.click(within(screen.getByRole('list', { name: 'Skin' })).getByRole('button', { name: /Plain/ }))
+    await waitFor(() => expect(document.documentElement.dataset.skin).toBe('plain'))
+    const before = usePaint.getState().times
+    unmount()
+    expect(usePaint.getState().times).toBe(before + 1)
   })
 })

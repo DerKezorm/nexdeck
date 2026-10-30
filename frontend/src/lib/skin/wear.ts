@@ -8,6 +8,8 @@
  *
  * Whose skin: an account's own when it chose one, else the installation's.
  */
+import { create } from 'zustand'
+
 import { get } from '../../api/client'
 import type { Appearance, CardStyle, Theme } from '../appearance'
 
@@ -86,6 +88,12 @@ export function wear(look: Appearance, choice: SkinChoice, compiled: CompiledSki
     skin_fonts: compiled.fonts,
   }
 }
+
+/**
+ * Asks the app to put this account's look on again, from the server: a page that painted a look of its own while it
+ * was open (the settings of the look) asks for it when it is left, and so does whatever changed the skin everybody wears.
+ */
+export const usePaint = create<{ times: number; again: () => void }>((set) => ({ times: 0, again: () => set((current) => ({ times: current.times + 1 })) }))
 
 /** A setting of the look a skin can take the place of. */
 export type Replaced = 'theme' | 'accent' | 'card_style' | 'radius' | 'gap' | 'font'

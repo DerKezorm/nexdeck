@@ -32,7 +32,7 @@ export function useSkins() {
 export function SkinChooser({ value, onChange, forAccount = false }: { value: SkinChoice; onChange: (next: SkinChoice) => void; forAccount?: boolean }) {
   const { t } = useTranslation()
   const skins = useSkins()
-  const shown = (skins.data?.skins ?? []).filter((skin) => forAccount || skin.key !== NATIVE_1984)
+  const shown = skins.data?.skins ?? []
   const chosen = shown.find((skin) => skin.key === value.key)
   const words = useWords()
   const pick = (skin: SkinEntry | null) =>
@@ -42,7 +42,7 @@ export function SkinChooser({ value, onChange, forAccount = false }: { value: Sk
       <ul className="grid gap-2 sm:grid-cols-3" aria-label={t('settings.skins.title')}>
         <SkinButton label={forAccount ? t('settings.skins.installation') : t('settings.skins.none')} chosen={!value.key} onClick={() => pick(null)} />
         {shown.map((skin) => (
-          <SkinButton key={skin.key} label={skin.name} chosen={value.key === skin.key} swatches={skin.swatches} note={skin.wearable ? skin.author : t('settings.skins.off')} onClick={() => pick(skin)} />
+          <SkinButton key={skin.key} label={skin.name} chosen={value.key === skin.key} swatches={skin.swatches} note={skin.wearable ? skin.author || t(`settings.skins.origin.${skin.origin}`, { defaultValue: '' }) : t('settings.skins.off')} onClick={() => pick(skin)} />
         ))}
       </ul>
       {chosen && chosen.options.length > 0 && (

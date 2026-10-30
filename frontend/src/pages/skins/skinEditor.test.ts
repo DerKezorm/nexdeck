@@ -10,7 +10,6 @@ import { describe, expect, it } from 'vitest'
 
 import { change, redo, setAt, start, undo, type SkinDoc } from '../../lib/skin/draft'
 import { partAt, partOf, type Parts } from '../../lib/skin/partAt'
-import { LOOKS } from '../settings/LookShare'
 import { fromPixels, mirror, paint, resize, shift } from './SpriteEditor'
 
 const DOC: SkinDoc = { nexdeck_skin: 1, key: 'k', name: 'K' }
@@ -94,11 +93,12 @@ describe('the part a click lands on', () => {
 })
 
 describe('the looks a new skin starts from', () => {
-  it('are the looks the look’s page offers, without 1984, with the same shape', () => {
-    const shipped = JSON.parse(readFileSync(join(process.cwd(), '..', 'backend', 'app', 'skins', 'examples', 'looks.json'), 'utf8')) as {
-      looks: { key: string; theme: string | null; card_style: string; radius: number; gap: number; font?: string }[]
+  it('each have a name in every language, which the list of starting points shows', () => {
+    const shipped = JSON.parse(readFileSync(join(process.cwd(), '..', 'backend', 'app', 'skins', 'examples', 'looks.json'), 'utf8')) as { looks: { key: string }[] }
+    expect(shipped.looks.length).toBeGreaterThan(0)
+    for (const language of ['en', 'de', 'es', 'fr', 'it']) {
+      const names = (JSON.parse(readFileSync(join(process.cwd(), 'src', 'i18n', `${language}.json`), 'utf8')) as { settings: { appearance: { looks: Record<string, string> } } }).settings.appearance.looks
+      for (const look of shipped.looks) expect(names[look.key], `${language}: ${look.key}`).toBeTruthy()
     }
-    const offered = LOOKS.filter((look) => look.key !== '1984').map(({ key, theme, card_style, radius, gap, font }) => ({ key, theme, card_style, radius, gap, ...(font ? { font } : {}) }))
-    expect(shipped.looks.map(({ key, theme, card_style, radius, gap, font }) => ({ key, theme, card_style, radius, gap, ...(font ? { font } : {}) }))).toEqual(offered)
   })
 })

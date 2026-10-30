@@ -14,7 +14,7 @@ import { setLanguage, storedLanguage } from './i18n'
 import { applyAppearance, type Appearance } from './lib/appearance'
 import { SkinGuard } from './lib/skin/guard'
 import { listenForPresses } from './lib/skin/sound'
-import { chosenSkin, lookWithSkin, wear, type SkinChoice } from './lib/skin/wear'
+import { chosenSkin, lookWithSkin, usePaint, wear, type SkinChoice } from './lib/skin/wear'
 import { loadBrand, useBrand } from './lib/brand'
 import { BoardPage } from './pages/BoardPage'
 import { HomeRedirect } from './pages/HomeRedirect'
@@ -69,6 +69,7 @@ function Look() {
   const open = useBrand((s) => s.look)
   // Only the skin itself and the sounds, not every change of the account, ask the server again.
   const skin = JSON.stringify(user?.skin ?? {})
+  const times = usePaint((s) => s.times)
   useEffect(() => {
     if (user || !open || window.location.pathname.startsWith('/k/')) return
     // Signed out the brand names a skin only when it is 1984, which needs nothing more from the server.
@@ -89,7 +90,7 @@ function Look() {
     return () => {
       dropped = true
     }
-  }, [user, skin])
+  }, [user, skin, times])
   return null
 }
 

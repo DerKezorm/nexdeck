@@ -84,7 +84,7 @@
     "ownRule": "Una regola tua",
     "palette": "Colori dello sprite",
     "page": {
-      "title": "Skin",
+      "title": "Officina delle skin",
       "help": "Gli skin ridisegnano nexdeck oltre i suoi colori. Creane uno qui, portane uno dentro e scegli in Aspetto quale indossano tutti.",
       "builtin": "Viene con nexdeck",
       "edit": "Modifica",
@@ -98,7 +98,11 @@
         "copy": "Una copia di uno skin di qui"
       },
       "share": "Condividi",
-      "update": "Aggiorna"
+      "update": "Aggiorna",
+      "wornByAll": "La indossano tutti",
+      "wornByYou": "La indossi tu",
+      "wearForAll": "Falla indossare a tutti",
+      "nowForAll": "Ora tutti indossano {{name}}."
     },
     "pickHelp": "Fai clic su una parte del palco. Cornice, movimento, suono e decorazioni si impostano qui.",
     "picture": "Immagine",

@@ -84,7 +84,7 @@
     "ownRule": "Una regla propia",
     "palette": "Colores del sprite",
     "page": {
-      "title": "Skins",
+      "title": "Taller de skins",
       "help": "Los skins redibujan nexdeck más allá de sus colores. Crea uno aquí, trae uno y elige en Apariencia cuál llevan todos.",
       "builtin": "Viene con nexdeck",
       "edit": "Editar",
@@ -98,7 +98,11 @@
         "copy": "Una copia de un skin de aquí"
       },
       "share": "Compartir",
-      "update": "Actualizar"
+      "update": "Actualizar",
+      "wornByAll": "Lo llevan todos",
+      "wornByYou": "Lo llevas tú",
+      "wearForAll": "Que lo lleven todos",
+      "nowForAll": "Ahora todos llevan {{name}}."
     },
     "pickHelp": "Haz clic en una parte del escenario. Su marco, movimiento, sonido y adornos se ajustan aquí.",
     "picture": "Imagen",

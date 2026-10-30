@@ -168,6 +168,22 @@ def create(body: SkinText, admin: AdminUser, db: DbSession) -> dict:
     return saved
 
 
+class WearBody(BaseModel):
+    options: dict[str, str] = Field(default_factory=dict)
+
+
+@router.post("/{key}/wear", summary="Make a skin the one everybody wears")
+def wear_for_all(key: str, body: WearBody, admin: AdminUser, db: DbSession) -> dict:
+    """The skin workshop's "Wear for everybody": the look stays as it is, only its skin changes, and an account that
+    chose a skin of its own keeps it. Options left out take their defaults."""
+    try:
+        saved = appearance.save(db, {**appearance.stored(db), "skin": {"key": key, "options": body.options}})
+    except appearance.AppearanceError as failure:
+        raise error(failure.code, failure.message, status.HTTP_404_NOT_FOUND if failure.code == "no_such_skin" else status.HTTP_400_BAD_REQUEST) from failure
+    logger.info("%s made the skin %s the one everybody wears.", admin.username, key)
+    return {**saved, "colour": appearance.colour_of(saved)}
+
+
 @router.put("/{key}", summary="Change a skin")
 def change(key: str, body: SkinText, admin: AdminUser, db: DbSession) -> dict:
     try:

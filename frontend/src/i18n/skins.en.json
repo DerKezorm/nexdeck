@@ -84,7 +84,7 @@
     "ownRule": "A rule of your own",
     "palette": "Colours of the sprite",
     "page": {
-      "title": "Skins",
+      "title": "Skin workshop",
       "help": "Skins redraw nexdeck beyond its colours. Build one here, bring one in, and choose under Look which one everybody wears.",
       "builtin": "Comes with nexdeck",
       "edit": "Edit",
@@ -98,7 +98,11 @@
         "copy": "A copy of a skin here"
       },
       "share": "Share",
-      "update": "Update"
+      "update": "Update",
+      "wornByAll": "Everybody wears it",
+      "wornByYou": "You wear it",
+      "wearForAll": "Wear for everybody",
+      "nowForAll": "Everybody wears {{name}} now."
     },
     "pickHelp": "Click a part on the stage. Its frame, motion, sound and decorations are set here.",
     "picture": "Picture",

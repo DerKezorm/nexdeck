@@ -291,7 +291,7 @@
       "assistant": "Assistent",
       "inventory": "Inventar",
       "cards": "Eigene Karten",
-      "skins": "Skins"
+      "skins": "Skin-Werkstatt"
     },
     "mail": {
       "title": "Mailserver",
@@ -879,7 +879,7 @@
     "skins": {
       "title": "Skin",
       "help": "Ein Skin zeichnet mehr als die Farben neu: Rahmen, kleine Bilder, Bewegung und Töne. Seiten, die nach einem Passwort, einem Schlüssel oder einer Bestätigung fragen, behalten immer nexdecks eigene Zeichnung, in den Farben des Skins.",
-      "none": "Keiner",
+      "none": "nexdeck, ohne Skin",
       "installation": "Der der Installation",
       "off": "Abgeschaltet, er passt nicht mehr zu dieser Version",
       "yours": "Dein Skin",
@@ -893,7 +893,14 @@
       "download": "{{name}} als Datei",
       "delete": "{{name}} löschen",
       "deleteTitle": "{{name}} löschen?",
-      "deleteBody": "Wer ihn trägt, trägt wieder den Skin der Installation."
+      "deleteBody": "Wer ihn trägt, trägt wieder den Skin der Installation.",
+      "toWorkshop": "Skins baust, holst und teilst du in der Skin-Werkstatt.",
+      "toWorkshopLink": "Zur Skin-Werkstatt",
+      "origin": {
+        "own": "Eigener",
+        "shop": "Aus dem Card shop",
+        "builtin": "Kommt mit nexdeck"
+      }
     }
   },
   "menu": {

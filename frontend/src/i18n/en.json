@@ -291,7 +291,7 @@
       "assistant": "Assistant",
       "inventory": "Inventory",
       "cards": "Custom cards",
-      "skins": "Skins"
+      "skins": "Skin workshop"
     },
     "mail": {
       "title": "Mail server",
@@ -879,7 +879,7 @@
     "skins": {
       "title": "Skin",
       "help": "A skin redraws more than the colours: frames, little pictures, motion and sounds. Pages that ask for a password, a key or a confirmation always keep nexdeck's own drawing, with the skin's colours.",
-      "none": "None",
+      "none": "nexdeck, no skin",
       "installation": "The installation's",
       "off": "Switched off, it no longer fits this version",
       "yours": "Your skin",
@@ -893,7 +893,14 @@
       "download": "{{name}} as a file",
       "delete": "Delete {{name}}",
       "deleteTitle": "Delete {{name}}?",
-      "deleteBody": "Whoever wears it wears the installation's skin again."
+      "deleteBody": "Whoever wears it wears the installation's skin again.",
+      "toWorkshop": "Skins are built, brought in and shared in the skin workshop.",
+      "toWorkshopLink": "To the skin workshop",
+      "origin": {
+        "own": "Your own",
+        "shop": "From the Card shop",
+        "builtin": "Comes with nexdeck"
+      }
     }
   },
   "menu": {
