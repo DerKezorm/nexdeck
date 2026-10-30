@@ -1,101 +1,101 @@
 {
   "diagnosis": {
-    "title": "Diagnosis",
-    "back": "Back",
-    "notFound": "There is no such service, container or guest any more.",
+    "title": "Диагностика",
+    "back": "Назад",
+    "notFound": "Такого сервиса, контейнера или гостя больше нет.",
     "kind": {
-      "integration": "Connection",
-      "tile": "App tile",
-      "container": "Container",
-      "guest": "Guest"
+      "integration": "Подключение",
+      "tile": "Плитка приложения",
+      "container": "Контейнер",
+      "guest": "Гость"
     },
     "state": {
-      "now_bad": "Red since {{when}}",
-      "now_warn": "Yellow since {{when}}",
-      "nowOpen_bad": "Red",
-      "nowOpen_warn": "Yellow",
-      "past_bad": "Was red from {{from}} to {{to}}",
-      "past_warn": "Was yellow from {{from}} to {{to}}",
-      "pastOpen_bad": "Was red from {{from}}",
-      "pastOpen_warn": "Was yellow from {{from}}",
-      "ok": "Nothing wrong in the last 30 days"
+      "now_bad": "Красный с {{when}}",
+      "now_warn": "Жёлтый с {{when}}",
+      "nowOpen_bad": "Красный",
+      "nowOpen_warn": "Жёлтый",
+      "past_bad": "Был красным с {{from}} до {{to}}",
+      "past_warn": "Был жёлтым с {{from}} до {{to}}",
+      "pastOpen_bad": "Был красным с {{from}}",
+      "pastOpen_warn": "Был жёлтым с {{from}}",
+      "ok": "За последние 30 дней всё в порядке"
     },
     "length": {
-      "minutes": "{{minutes}} min",
-      "hours": "{{hours}} h {{minutes}} min",
-      "days": "{{days}} d {{hours}} h"
+      "minutes": "{{minutes}} мин",
+      "hours": "{{hours}} ч {{minutes}} мин",
+      "days": "{{days}} д {{hours}} ч"
     },
     "cause": {
-      "now": "Probably because of {{name}}",
-      "past": "It was because of {{name}}",
-      "note": "{{name}} hangs on it, so it was not told on its own.",
-      "open": "Look at it"
+      "now": "Вероятно, из-за {{name}}",
+      "past": "Причина была в {{name}}",
+      "note": "От этого зависит {{name}}, поэтому о нём отдельно не сообщалось.",
+      "open": "Посмотреть"
     },
-    "happened": "What happened",
-    "windowNow": "two hours before until now",
-    "windowPast": "two hours before until it ended",
-    "windowOk": "the last two hours",
-    "nothingHappened": "Nothing was written down in that time.",
-    "via": "hangs on: {{name}}",
-    "began": "{{time}} · it began",
-    "ended": "{{time}} · it ended",
-    "readOn": "Read on in the chronicle",
-    "checksTitle": "Check and cards",
-    "checkOk": "answers",
-    "checkUnknown": "not checked yet",
-    "checkDown": "down since {{when}}",
-    "checkOff": "switched off",
-    "noCards": "No card shows this.",
+    "happened": "Что произошло",
+    "windowNow": "от двух часов до начала и до сейчас",
+    "windowPast": "от двух часов до начала и до окончания",
+    "windowOk": "последние два часа",
+    "nothingHappened": "За это время ничего не записано.",
+    "via": "зависит от: {{name}}",
+    "began": "{{time}} · началось",
+    "ended": "{{time}} · закончилось",
+    "readOn": "Читать дальше в хронике",
+    "checksTitle": "Проверка и карточки",
+    "checkOk": "отвечает",
+    "checkUnknown": "ещё не проверено",
+    "checkDown": "недоступен с {{when}}",
+    "checkOff": "выключено",
+    "noCards": "Это не показывает ни одна карточка.",
     "log": {
-      "title": "Log",
-      "show": "Show the log",
-      "help": "Reads the last 100 lines of {{container}} on {{engine}}. Passwords, tokens and keys are masked.",
-      "from": "{{container}} on {{engine}} · {{count}} lines · read at {{time}}",
-      "again": "Read again",
-      "hide": "Hide",
-      "empty": "The log is empty.",
+      "title": "Журнал",
+      "show": "Показать журнал",
+      "help": "Читает последние 100 строк {{container}} на {{engine}}. Пароли, токены и ключи скрыты.",
+      "from": "{{container}} на {{engine}} · строк: {{count}} · прочитано в {{time}}",
+      "again": "Прочитать снова",
+      "hide": "Скрыть",
+      "empty": "Журнал пуст.",
       "why": {
-        "no_container": "No container is known for this, so there is no log to read. Logs come from containers of Docker, Portainer and a Synology.",
-        "no_logs": "{{engine}} gives no container logs.",
-        "demo": "{{engine}} is in the demo and has no real log."
+        "no_container": "Для этого не известен контейнер, поэтому журнала нет. Журналы берутся из контейнеров Docker, Portainer и Synology.",
+        "no_logs": "{{engine}} не отдаёт журналы контейнеров.",
+        "demo": "{{engine}} работает в демо-режиме, настоящего журнала нет."
       }
     },
     "ask": {
-      "title": "Ask nexdeck about it",
-      "help": "The chat gets this page to start from.",
-      "button": "Explain it",
-      "off": "Switch the assistant on under System, Assistant to ask about this page.",
-      "question_now": "Why is {{name}} in trouble?",
-      "question_past": "What happened to {{name}}?",
-      "question_ok": "Is {{name}} all right?"
+      "title": "Спросить nexdeck об этом",
+      "help": "Чат получит эту страницу как отправную точку.",
+      "button": "Объяснить",
+      "off": "Включите ассистента в разделе «Система», «Ассистент», чтобы спрашивать об этой странице.",
+      "question_now": "Почему у {{name}} проблемы?",
+      "question_past": "Что случилось с {{name}}?",
+      "question_ok": "С {{name}} всё в порядке?"
     },
     "hangs": {
-      "title": "Hangs on",
-      "nothing": "On nothing nexdeck knows.",
-      "this": "this service",
-      "carries": "Hanging on it",
-      "open": "Diagnosis",
-      "down": "down",
-      "up": "running"
+      "title": "Зависит от",
+      "nothing": "Ни от чего, что знает nexdeck.",
+      "this": "этот сервис",
+      "carries": "Зависят от него",
+      "open": "Диагностика",
+      "down": "недоступен",
+      "up": "работает"
     },
     "runbook": {
-      "title": "Runbook",
-      "empty": "No runbook yet. Write down what helps next time, or link to a guide.",
-      "write": "Write a runbook",
-      "edit": "Edit",
-      "text": "What to do",
-      "link": "Link to a longer guide (optional)",
-      "hint": "Markdown: lists with 1. or -, **bold**, `code`.",
-      "save": "Save",
-      "cancel": "Cancel",
+      "title": "Инструкция",
+      "empty": "Инструкции пока нет. Запишите, что поможет в следующий раз, или дайте ссылку на руководство.",
+      "write": "Написать инструкцию",
+      "edit": "Изменить",
+      "text": "Что делать",
+      "link": "Ссылка на подробное руководство (необязательно)",
+      "hint": "Markdown: списки с 1. или -, **жирный**, `код`.",
+      "save": "Сохранить",
+      "cancel": "Отмена",
       "by": "{{user}}, {{when}}",
-      "badLink": "A link starts with http:// or https://."
+      "badLink": "Ссылка начинается с http:// или https://."
     },
     "buttons": {
-      "title": "Buttons",
-      "none": "No buttons: nexdeck cannot restart this itself.",
-      "from": "From the card {{card}}. Each asks first and says what it would hit.",
-      "done": "{{label}}: done."
+      "title": "Кнопки",
+      "none": "Кнопок нет: nexdeck не может сам это перезапустить.",
+      "from": "С карточки {{card}}. Каждая сначала спрашивает и говорит, что затронет.",
+      "done": "{{label}}: готово."
     }
   }
 }
