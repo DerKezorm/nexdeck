@@ -158,3 +158,17 @@ async def test_an_error_inside_the_envelope_is_not_taken_for_data(ctx: Context) 
 async def test_the_connection_test_names_model_and_version(ctx: Context) -> None:
     respx.get(f"{BASE}/system/status").mock(return_value=httpx.Response(200, json=envelope({"model_name": "FortiGate", "model_number": "60F", "model": "FGT60F", "hostname": "fw-office-a"})))
     assert await get_adapter("fortigate").test(CONFIG, ctx) == "FGT60F answers, FortiOS v7.4.8."
+
+
+@respx.mock
+async def test_58_the_template_of_a_dial_up_tunnel_named_as_parent_is_not_counted_down(ctx: Context) -> None:
+    # FortiOS 7.6.8: the template has an empty type and no selector; its client names it in ``parent``.
+    respx.get(f"{BASE}/vpn/ipsec").mock(return_value=httpx.Response(200, json=envelope([
+        {"name": "vpn-parent", "type": "", "proxyid": []},
+        {"name": "vpn-parent_0", "parent": "vpn-parent", "type": "dialup", "proxyid": [{"status": "up", "p2name": "vpn-parent"}]},
+        {"name": "site-b", "type": "", "proxyid": []},
+    ])))
+    data = await get_adapter("fortigate").fetch("ipsec", CONFIG, {}, ctx)
+    assert [item["title"] for item in data.items] == ["site-b", "vpn-parent_0"]
+    # A tunnel without selectors that is nobody's parent is still down.
+    assert data.metrics == {"tunnels_down": 1.0} and data.items[0]["status"] == "bad"
