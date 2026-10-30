@@ -707,7 +707,7 @@
           "all": "Überall"
         }
       },
-      "skinReplaces": "Der für alle gewählte Skin „{{name}}“ ersetzt gerade: {{parts}}. Was hier eingestellt ist, bleibt gespeichert und gilt wieder ohne den Skin.",
+      "skinReplaces": "Der Standard-Skin „{{name}}“ ersetzt gerade: {{parts}}. Was hier eingestellt ist, bleibt gespeichert und gilt wieder ohne den Skin.",
       "replacedPart": {
         "theme": "das Farbthema",
         "accent": "die Akzentfarbe",
@@ -900,7 +900,9 @@
         "own": "Eigener",
         "shop": "Aus dem Card shop",
         "builtin": "Kommt mit nexdeck"
-      }
+      },
+      "defaultTitle": "Standard-Skin",
+      "defaultLead": "Den sehen alle, die sich im Profil keinen eigenen ausgesucht haben."
     }
   },
   "menu": {

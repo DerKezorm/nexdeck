@@ -85,7 +85,7 @@
     "palette": "Colori dello sprite",
     "page": {
       "title": "Officina delle skin",
-      "help": "Gli skin ridisegnano nexdeck oltre i suoi colori. Creane uno qui, portane uno dentro e scegli in Aspetto quale indossano tutti.",
+      "help": "Le skin ridisegnano nexdeck oltre i colori. Qui ne crei una, ne importi una e scegli quale è la predefinita per tutti.",
       "builtin": "Viene con nexdeck",
       "edit": "Modifica",
       "empty": "Uno skin vuoto",
@@ -99,10 +99,10 @@
       },
       "share": "Condividi",
       "update": "Aggiorna",
-      "wornByAll": "La indossano tutti",
-      "wornByYou": "La indossi tu",
-      "wearForAll": "Falla indossare a tutti",
-      "nowForAll": "Ora tutti indossano {{name}}."
+      "wornByAll": "Predefinita",
+      "wornByYou": "La tua skin",
+      "wearForAll": "Imposta come predefinita",
+      "nowForAll": "{{name}} è ora la skin predefinita."
     },
     "pickHelp": "Fai clic su una parte del palco. Cornice, movimento, suono e decorazioni si impostano qui.",
     "picture": "Immagine",

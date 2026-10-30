@@ -135,7 +135,7 @@ export function AppearanceSettings() {
   return (
     <>
       <BrandSettings />
-      <SettingsCard title={t('settings.skins.title')} description={t('settings.skins.help')}>
+      <SettingsCard title={t('settings.skins.defaultTitle')} description={`${t('settings.skins.defaultLead')} ${t('settings.skins.help')}`}>
         <SkinChooser
           value={skinOf(form)}
           onChange={(skin) =>

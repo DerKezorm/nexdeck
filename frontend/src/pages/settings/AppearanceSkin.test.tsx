@@ -55,9 +55,9 @@ describe('what the skin chosen for everybody replaces', () => {
     await waitFor(() => expect(screen.getAllByTestId('skin-replaces')).toHaveLength(3))
     const notes = screen.getAllByTestId('skin-replaces').map((note) => note.textContent)
     expect(notes).toEqual([
-      'The skin “Bricks” chosen for everybody takes the place of: the colour theme. What is set here stays stored and comes back without the skin.',
-      'The skin “Bricks” chosen for everybody takes the place of: the corners. What is set here stays stored and comes back without the skin.',
-      'The skin “Bricks” chosen for everybody takes the place of: the accent colour. What is set here stays stored and comes back without the skin.',
+      'The default skin “Bricks” takes the place of: the colour theme. What is set here stays stored and comes back without the skin.',
+      'The default skin “Bricks” takes the place of: the corners. What is set here stays stored and comes back without the skin.',
+      'The default skin “Bricks” takes the place of: the accent colour. What is set here stays stored and comes back without the skin.',
     ])
     expect(within(card('Type')).queryByTestId('skin-replaces')).toBeNull()
   })

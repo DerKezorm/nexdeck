@@ -85,7 +85,7 @@
     "palette": "Farben des Sprites",
     "page": {
       "title": "Skin-Werkstatt",
-      "help": "Skins zeichnen nexdeck über die Farben hinaus neu. Hier baust du einen, holst einen herein und wählst unter Darstellung, welchen alle tragen.",
+      "help": "Skins zeichnen nexdeck über die Farben hinaus neu. Hier baust du einen, holst einen herein und legst fest, welcher der Standard für alle ist.",
       "builtin": "Kommt mit nexdeck",
       "edit": "Bearbeiten",
       "empty": "Ein leerer Skin",
@@ -99,10 +99,10 @@
       },
       "share": "Teilen",
       "update": "Aktualisieren",
-      "wornByAll": "Tragen alle",
-      "wornByYou": "Trägst du",
-      "wearForAll": "Für alle tragen",
-      "nowForAll": "Jetzt tragen alle {{name}}."
+      "wornByAll": "Standard",
+      "wornByYou": "Dein Skin",
+      "wearForAll": "Als Standard setzen",
+      "nowForAll": "{{name}} ist jetzt der Standard."
     },
     "pickHelp": "Klick auf ein Teil der Bühne. Rahmen, Bewegung, Ton und Deko stellst du hier ein.",
     "picture": "Bild",

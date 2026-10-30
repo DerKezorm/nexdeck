@@ -85,7 +85,7 @@
     "palette": "Couleurs du sprite",
     "page": {
       "title": "Atelier de skins",
-      "help": "Les skins redessinent nexdeck au-delà de ses couleurs. Créez-en un ici, importez-en un et choisissez sous Apparence celui que tout le monde porte.",
+      "help": "Les skins redessinent nexdeck au-delà de ses couleurs. Ici, vous en créez un, en importez un et choisissez celui qui est utilisé par défaut pour tous.",
       "builtin": "Fourni avec nexdeck",
       "edit": "Modifier",
       "empty": "Un skin vide",
@@ -99,10 +99,10 @@
       },
       "share": "Partager",
       "update": "Mettre à jour",
-      "wornByAll": "Porté par tous",
-      "wornByYou": "Vous le portez",
-      "wearForAll": "Le faire porter à tous",
-      "nowForAll": "Tout le monde porte {{name}} maintenant."
+      "wornByAll": "Par défaut",
+      "wornByYou": "Votre skin",
+      "wearForAll": "Définir par défaut",
+      "nowForAll": "{{name}} est maintenant le skin par défaut."
     },
     "pickHelp": "Cliquez sur une partie de la scène. Son cadre, son mouvement, son son et ses décorations se règlent ici.",
     "picture": "Image",

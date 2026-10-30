@@ -707,7 +707,7 @@
           "all": "Partout"
         }
       },
-      "skinReplaces": "Le skin « {{name}} » choisi pour tous remplace pour l’instant : {{parts}}. Ce qui est réglé ici reste enregistré et revient sans le skin.",
+      "skinReplaces": "Le skin par défaut « {{name}} » remplace pour l’instant : {{parts}}. Ce qui est réglé ici reste enregistré et revient sans le skin.",
       "replacedPart": {
         "theme": "le thème de couleurs",
         "accent": "la couleur d’accent",
@@ -900,7 +900,9 @@
         "own": "Le vôtre",
         "shop": "Du Card shop",
         "builtin": "Fourni avec nexdeck"
-      }
+      },
+      "defaultTitle": "Skin par défaut",
+      "defaultLead": "Tous ceux qui n’en ont pas choisi un dans leur profil le voient."
     }
   },
   "menu": {

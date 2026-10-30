@@ -707,7 +707,7 @@
           "all": "En todo"
         }
       },
-      "skinReplaces": "El skin «{{name}}» elegido para todos sustituye ahora: {{parts}}. Lo que se ajusta aquí queda guardado y vuelve a valer sin el skin.",
+      "skinReplaces": "El skin predeterminado «{{name}}» sustituye ahora: {{parts}}. Lo que se ajusta aquí queda guardado y vuelve a valer sin el skin.",
       "replacedPart": {
         "theme": "el tema de color",
         "accent": "el color de acento",
@@ -900,7 +900,9 @@
         "own": "Propio",
         "shop": "Del Card shop",
         "builtin": "Viene con nexdeck"
-      }
+      },
+      "defaultTitle": "Skin predeterminado",
+      "defaultLead": "Lo ve todo el que no ha elegido uno propio en el perfil."
     }
   },
   "menu": {

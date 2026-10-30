@@ -707,7 +707,7 @@
           "all": "Everywhere"
         }
       },
-      "skinReplaces": "The skin “{{name}}” chosen for everybody takes the place of: {{parts}}. What is set here stays stored and comes back without the skin.",
+      "skinReplaces": "The default skin “{{name}}” takes the place of: {{parts}}. What is set here stays stored and comes back without the skin.",
       "replacedPart": {
         "theme": "the colour theme",
         "accent": "the accent colour",
@@ -900,7 +900,9 @@
         "own": "Your own",
         "shop": "From the Card shop",
         "builtin": "Comes with nexdeck"
-      }
+      },
+      "defaultTitle": "Default skin",
+      "defaultLead": "Everybody sees it who has not chosen one of their own under Profile."
     }
   },
   "menu": {

@@ -707,7 +707,7 @@
           "all": "Ovunque"
         }
       },
-      "skinReplaces": "La skin «{{name}}» scelta per tutti sostituisce ora: {{parts}}. Quello che è impostato qui resta salvato e torna a valere senza la skin.",
+      "skinReplaces": "La skin predefinita «{{name}}» sostituisce ora: {{parts}}. Quello che è impostato qui resta salvato e torna a valere senza la skin.",
       "replacedPart": {
         "theme": "il tema di colori",
         "accent": "il colore d’accento",
@@ -900,7 +900,9 @@
         "own": "Tua",
         "shop": "Dal Card shop",
         "builtin": "Inclusa in nexdeck"
-      }
+      },
+      "defaultTitle": "Skin predefinita",
+      "defaultLead": "La vede chiunque non ne abbia scelta una propria nel profilo."
     }
   },
   "menu": {

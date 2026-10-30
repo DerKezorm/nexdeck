@@ -136,7 +136,7 @@ export function SkinShelf({ onMessage }: { onMessage: (text: string, level: 'ok'
           ))}
         </ul>
       )}
-      <Field label={t('settings.skins.import')} help={t('settings.skins.importHelp')} htmlFor="skin-import">
+      <Field label={t('settings.skins.import')} htmlFor="skin-import">
         <textarea id="skin-import" className="input font-mono text-xs h-24" value={text} onChange={(event) => setText(event.target.value)} placeholder='{ "nexdeck_skin": 1, … }' spellCheck={false} />
       </Field>
       <div>
