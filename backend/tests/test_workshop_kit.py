@@ -161,7 +161,8 @@ BROKEN = [
     ("card_needs_demo", GOOD.split("demo:")[0]),
     ("card_needs_newer", GOOD.replace("version: 1.0.0", "version: 1.0.0\nmin_nexdeck: 99.0.0")),
     ("card_unknown_kind", GOOD.replace("[jsonapi]", "[nosuchservice]")),
-    ("command_refused", GOOD.replace("path: /api/queue}", 'path: "/api/queue?cmd=reboot"}')),
+    # A request that acts is refused when the card is checked, before it could be sent (B1 of the review of 1.0.2).
+    ("card_request_acts", GOOD.replace("path: /api/queue}", 'path: "/api/queue?cmd=reboot"}')),
     ("card_needs_english", GOOD.replace("{en: Queue size, de: Warteschlange}", "{de: Warteschlange}")),
     ("card_bad_path", WITH_BUTTON.replace("path: /api/queue/flush", "path: //evil.example.com/flush")),
 ]

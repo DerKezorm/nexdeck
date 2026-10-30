@@ -78,10 +78,11 @@ def test_karten8t_b3_the_editor_writes_a_line_when_its_first_question_fails(admi
 
 
 def test_karten8t_b3_the_check_of_a_proposal_says_which_of_its_questions_failed(admin: TestClient, monkeypatch: pytest.MonkeyPatch, svc: Any) -> None:
+    # A path the cards of the kind read (/api/v3/series): since B1 of the review of 1.0.2 nothing else is asked on its own.
     connection(admin, "sonarr")
-    svc.get(f"{BASE}/api/v3/wanted/missing").mock(return_value=httpx.Response(404, json={"message": "NotFound"}))
-    wrong = card(ai.EXAMPLE.replace("path: /api/v3/queue", "path: /api/v3/wanted/missing"))
+    svc.get(f"{BASE}/api/v3/series").mock(return_value=httpx.Response(404, json={"message": "NotFound"}))
+    wrong = card(ai.EXAMPLE.replace("path: /api/v3/queue", "path: /api/v3/series"))
     monkeypatch.setattr(providers, "turn", Script(wrong, wrong))
     admin.post("/api/v1/cards/ai", json={"mode": "change", "description": "Show it", "yaml": ai.EXAMPLE}, headers=CSRF)
     checks = [line for line in probes(admin) if line["detail"].endswith("(card help, check)")]
-    assert checks and all(line["level"] == "warn" and line["detail"].startswith("[http_error] /api/v3/wanted/missing") for line in checks)
+    assert checks and all(line["level"] == "warn" and line["detail"].startswith("[http_error] /api/v3/series") for line in checks)
