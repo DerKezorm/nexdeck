@@ -27,6 +27,8 @@ from .schema import SkinFile
 logger = logging.getLogger("nexdeck.skins")
 
 BUILTIN_DIR = Path(__file__).with_name("builtin")
+#: The longest skin file taken, as JSON text.
+MAX_FILE = 200_000
 #: The skin that draws with nexdeck's own style sheet (``styles/retro.css``) and the card style it stood for.
 NATIVE_1984 = "1984"
 
@@ -76,6 +78,15 @@ def starters() -> list[dict[str, Any]]:
     for starter in found:
         skin_compile.compile_skin(read(starter["text"]))
     return found
+
+
+def is_skin(text: str) -> bool:
+    """Whether a text says it is a skin file (``"nexdeck_skin": 1`` in a JSON object), checked or not."""
+    try:
+        data = json.loads(text)
+    except ValueError:
+        return False
+    return isinstance(data, dict) and data.get("nexdeck_skin") == 1
 
 
 def read(text: str) -> SkinFile:
@@ -156,7 +167,7 @@ def check_choice(db: DbSessionType, value: Any) -> dict[str, Any]:
     return {"key": key, "options": {name: options.get(name, values[0]) for name, values in known.items()}}
 
 
-def save(db: DbSessionType, text: str, user_id: int | None, *, replacing: str | None = None, origin: str = "own") -> dict[str, Any]:
+def save(db: DbSessionType, text: str, user_id: int | None, *, replacing: str | None = None, origin: str = "own", commit: bool = True) -> dict[str, Any]:
     skin, result = check(text)
     row = db.scalar(select(Skin).where(Skin.key == (replacing or skin.key)))
     if replacing is None and row is not None:
@@ -171,7 +182,10 @@ def save(db: DbSessionType, text: str, user_id: int | None, *, replacing: str | 
     else:
         row.key, row.name, row.text, row.compiled, row.engine = skin.key, skin.name, text, result, skin_compile.ENGINE
         row.updated_by, row.updated_at = user_id, utcnow()
-    db.commit()
+    if commit:
+        db.commit()
+    else:
+        db.flush()
     return _entry(skin, result, row.origin, row)
 
 

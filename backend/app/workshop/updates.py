@@ -30,6 +30,8 @@ BUTTON_ACTS = ("method", "path", "send", "body", "where", "confirm", "danger", "
 BUTTON_SHOWN = ("id", "label", *BUTTON_ACTS)
 SUFFIX = " (mine)"
 NAME_MAX = 60
+#: Where the bell leads for a recalled entry: to the page that lists it.
+PLACES = {"card": "/system/custom-cards", "integration": "/system/custom-cards", "skin": "/system/skins"}
 #: How much of the reason of a recall goes into the bell and onto the channels.
 REASON_MAX = 500
 
@@ -96,19 +98,19 @@ def announce(found: catalog.Catalog) -> None:
         if not state.enabled(db):
             return
         already = set(state.told(db))
-        fresh: list[tuple[str, str, str]] = []
+        fresh: list[tuple[str, str, str, str]] = []
         for one in updates_and_recalls(db, found)["removed"]:
             key = f"{one['ref']}@{one['at']}"
             # A card installed twice (a copy) is one entry: the bell rings once for it.
             if one["level"] == "harmful" and key not in already and all(key != other[0] for other in fresh):
                 # One line of text for the title (it becomes the subject of a mail) and a reason of a sensible length: both are the author's or a maintainer's words.
-                fresh.append((key, " ".join(plain(one["name"]).split()) or one["slug"], one["reason"][:REASON_MAX]))
+                fresh.append((key, " ".join(plain(one["name"]).split()) or one["slug"], one["reason"][:REASON_MAX], one["type"]))
         if fresh:
-            state.mark_told(db, [key for key, _name, _reason in fresh])
+            state.mark_told(db, [key for key, _name, _reason, _type in fresh])
             db.commit()
-    for _key, name, reason in fresh:
+    for _key, name, reason, kind in fresh:
         logger.warning("%s was removed from the Card shop as harmful.", name)
-        emit("card_recalled", f"{name[:80]} was removed from the Card shop as harmful", reason, level="error", link="/system/custom-cards")
+        emit("card_recalled", f"{name[:80]} was removed from the Card shop as harmful", reason, level="error", link=PLACES.get(kind, PLACES["card"]))
 
 
 # -- what an update changes --------------------------------------------------------------------------

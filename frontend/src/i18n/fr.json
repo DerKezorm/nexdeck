@@ -2876,9 +2876,11 @@
         "card": "Carte",
         "integration": "Intégration",
         "cards": "Cartes",
-        "integrations": "Intégrations"
+        "integrations": "Intégrations",
+        "skin": "Skin",
+        "skins": "Skins"
       },
-      "allTypes": "Cartes et intégrations",
+      "allTypes": "Tous les types",
       "installed": "Installée",
       "updateAvailable": "Mise à jour disponible",
       "removed": "Retirée de la boutique de cartes",
@@ -2952,7 +2954,10 @@
         "done": "Installée.",
         "dropped": "Remplacer {{name}} supprime ce qui est enregistré dans ces champs, secrets compris : {{fields}}.",
         "droppedCheck": "Je comprends que ces valeurs sont perdues",
-        "offeredStranger": "D'une autre personne que l'auteur de cette carte. Regardez-la avant de l'ajouter."
+        "offeredStranger": "D'une autre personne que l'auteur de cette carte. Regardez-la avant de l'ajouter.",
+        "skinAs": "Il devient le skin {{key}}. Choisissez-le sous Apparence ou dans votre profil.",
+        "skinDone": "Installé.",
+        "toSkins": "Vers les skins"
       },
       "errors": {
         "checksum_mismatch": "Le fichier ne correspond pas à la somme de contrôle du catalogue. Rien n'a été installé.",
@@ -3038,7 +3043,16 @@
         "buttons": "ses boutons",
         "requires": "ce dont elle a besoin"
       },
-      "filesWarning": "Une partie de cette entrée n'a pas pu être utilisée : {{message}}"
+      "filesWarning": "Une partie de cette entrée n'a pas pu être utilisée : {{message}}",
+      "skinActs": "Un skin ne change que l’apparence de nexdeck. Il ne lit rien et n’appuie sur aucun bouton. nexdeck le compile lui-même, et il n’atteint jamais la connexion ni les pages qui gardent des secrets.",
+      "skinUpdate": {
+        "title": "Mettre à jour {{name}}",
+        "lead": "De la version {{from}} à la {{to}}. Qui porte ce skin porte aussitôt la nouvelle version.",
+        "keepMine": "Garder en copie ce que j’ai changé ici",
+        "action": "Mettre à jour",
+        "done": "Mis à jour.",
+        "doneCopy": "Mis à jour. Vos modifications restent sous le skin {{key}}."
+      }
     },
     "share": {
       "button": "Partager dans le Card shop",
@@ -3051,7 +3065,8 @@
       "signedInAs": "Connecté à GitHub en tant que {{login}}",
       "kind": {
         "card": "Carte",
-        "integration": "Connexion"
+        "integration": "Connexion",
+        "skin": "Skin"
       },
       "mode": {
         "new": "Une nouvelle entrée dans le Card shop.",
@@ -3171,7 +3186,8 @@
         "edited": "Enregistrée et renvoyée dans le ticket {{number}}.",
         "recheck": "Enregistrée. Le texte n'a pas changé, le Workshop a donc été prié de revérifier le ticket {{number}}.",
         "failed": "Enregistrée, mais pas renvoyée : {{message}}"
-      }
+      },
+      "skinTile": "Un skin. Le Workshop dessine ses images sur la scène de l’éditeur, en sombre et en clair."
     }
   }
 }

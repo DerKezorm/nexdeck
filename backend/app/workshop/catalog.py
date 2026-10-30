@@ -144,12 +144,12 @@ class Entry(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
     id: Annotated[str, StringConstraints(pattern=r"^\d{1,20}/[a-z0-9][a-z0-9_-]{0,59}$")]
-    type: Literal["card", "integration"]
+    type: Literal["card", "integration", "skin"]
     slug: Annotated[str, StringConstraints(pattern=r"^[a-z0-9][a-z0-9_-]{0,59}$")]
     name: LocalText
     description: Text = ""
     author: Person
-    #: An own integration has no version of its own: the repository writes an empty one, and only a card needs one.
+    #: An own integration has no version of its own: the repository writes an empty one, and only a card or a skin needs one.
     version: Version | Literal[""]
     min_nexdeck: Version | None = None
     category: Annotated[str, BeforeValidator(_known_category)] = "other"
@@ -182,8 +182,8 @@ class Entry(BaseModel):
 
     @model_validator(mode="after")
     def _a_card_has_a_version(self) -> Entry:
-        if self.type == "card" and not self.version:
-            raise ValueError("a card has no version")
+        if self.type in ("card", "skin") and not self.version:
+            raise ValueError(f"a {self.type} has no version")
         return self
 
     @property

@@ -110,12 +110,15 @@ export function ShareDialog({ kind, slug, name, form, open, onClose }: { kind: S
     onClose()
   }
 
-  const body = { type: kind, slug, category, description, changes, license }
+  // A skin has no category of its own in the Workshop: the shop finds skins by their type.
+  const skin = kind === 'skin'
+  const chosen = skin ? 'other' : category
+  const body = { type: kind, slug, category: chosen, description, changes, license }
   const update = data?.mode === 'update'
   const signedIn = data?.signed_in === true && github.data?.signed_in !== false
   const dailyReached = data?.daily?.reached === true
   const blocking = (data?.problems.length ?? 0) > 0
-  const ready = !!data && !blocking && signedIn && !dailyReached && description.trim() !== '' && category !== '' && license && (!update || changes.trim() !== '')
+  const ready = !!data && !blocking && signedIn && !dailyReached && description.trim() !== '' && chosen !== '' && license && (!update || changes.trim() !== '')
 
   const share = async () => {
     if (sending.current || !ready) return
@@ -264,6 +267,11 @@ export function ShareDialog({ kind, slug, name, form, open, onClose }: { kind: S
               <Suspense fallback={<p className="text-sm text-muted">{t('cards.exchange.previewLoading')}</p>}>
                 <ImportPreview yaml={text.data.yaml} form={form} name={data.name} icon="" />
               </Suspense>
+            ) : skin ? (
+              <div className="rounded-xl border border-line p-3 grid gap-1" data-testid="share-skin">
+                <span className="text-sm font-medium">{data.name}</span>
+                <span className="text-[12px] text-muted">{t('cards.share.skinTile')}</span>
+              </div>
             ) : kind === 'integration' ? (
               <div className="rounded-xl border border-line p-3 grid gap-1" data-testid="share-tile">
                 <span className="text-sm font-medium">{data.name}</span>
@@ -294,7 +302,7 @@ export function ShareDialog({ kind, slug, name, form, open, onClose }: { kind: S
             <span className="text-[12px] text-muted">{t('cards.share.descriptionHelp')}</span>
           </div>
 
-          <div className="grid gap-1">
+          <div className="grid gap-1" hidden={skin}>
             <label htmlFor="share-category" className="text-sm font-medium">
               {t('cards.share.category')}
             </label>

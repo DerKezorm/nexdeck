@@ -25,7 +25,7 @@ router = APIRouter(prefix="/api/v1/skins", tags=["system"])
 logger = logging.getLogger("nexdeck.skins")
 
 #: A skin file with its sprites stays far below this; the cap is against a payload, not a look.
-MAX_FILE = 200_000
+MAX_FILE = store.MAX_FILE
 
 
 class SkinText(BaseModel):

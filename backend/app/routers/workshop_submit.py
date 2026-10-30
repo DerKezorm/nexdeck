@@ -63,7 +63,7 @@ def sign_out_of_github(user: AdminUser, db: DbSession) -> Response:
 class ShareBody(BaseModel):
     """What the dialog of "Share in the Card shop" sends: which card or connection, and what the administrator wrote."""
 
-    type: Literal["card", "integration"]
+    type: Literal["card", "integration", "skin"]
     slug: str = Field(pattern=r"^[a-z0-9][a-z0-9_-]{0,59}$")
     category: str = Field(default="", max_length=20)
     description: str = Field(default="", max_length=submit.MAX_TEXT * 2)

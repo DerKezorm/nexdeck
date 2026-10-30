@@ -89,8 +89,8 @@ def entry_view(entry: catalog.Entry, ctx: Context, facts: derived.Facts | None =
         "removed": entry.removed.model_dump() if entry.removed else None,
         "starter": entry.starter,
         "needs_newer": load.needs_newer(entry.min_nexdeck),
-        # An own connection has nothing to read through, so it is always something to install.
-        "fits": entry.type == "integration" or bool(connections),
+        # An own connection and a skin have nothing to read through, so they are always something to install.
+        "fits": entry.type in ("integration", "skin") or bool(connections),
         "connections": connections,
         "installed": None if not have else {
             "slug": have[0].slug, "version": have[0].version, "update": installed.update_available(entry, have[0]),

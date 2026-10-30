@@ -4,7 +4,7 @@
  */
 import { ApiError } from '../api/client'
 
-export type ShareKind = 'card' | 'integration'
+export type ShareKind = 'card' | 'integration' | 'skin'
 
 /** The categories of the Workshop, in the order the form lists them. */
 export const SHARE_CATEGORIES = ['media', 'downloads', 'network', 'server', 'smart_home', 'other'] as const

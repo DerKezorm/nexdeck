@@ -1,4 +1,4 @@
-"""What this installation has from the shop: the cards and own connections that carry a ``shop_ref``."""
+"""What this installation has from the shop: the cards, own connections and skins that carry a ``shop_ref``."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from ..models import CardRecord, OwnIntegration
+from ..models import CardRecord, OwnIntegration, Skin
 from . import catalog
 
 
@@ -19,9 +19,9 @@ def normalised_hash(text: str) -> str:
 
 @dataclass(frozen=True)
 class Installed:
-    """One card or own connection that came from an entry of the shop."""
+    """One card, own connection or skin that came from an entry of the shop."""
 
-    type: str  # card | integration
+    type: str  # card | integration | skin
     slug: str  # the short name here
     ref: str  # the entry it came from
     version: str
@@ -41,6 +41,8 @@ def listing(db: Session) -> dict[str, list[Installed]]:
         found.setdefault(row.shop_ref, []).append(Installed("card", row.slug, row.shop_ref, row.shop_version, row.yaml_source, row.shop_hash))
     for piece in db.scalars(select(OwnIntegration).where(OwnIntegration.shop_ref != "").order_by(OwnIntegration.id)):
         found.setdefault(piece.shop_ref, []).append(Installed("integration", piece.short, piece.shop_ref, piece.shop_version, piece.yaml_source, piece.shop_hash))
+    for skin in db.scalars(select(Skin).where(Skin.origin == "shop", Skin.shop_ref != "").order_by(Skin.id)):
+        found.setdefault(skin.shop_ref, []).append(Installed("skin", skin.key, skin.shop_ref, skin.shop_version, skin.text, skin.shop_hash))
     return found
 
 
@@ -59,5 +61,5 @@ def newer(new: str, old: str) -> bool:
 
 
 def update_available(entry: catalog.Entry, one: Installed) -> bool:
-    """A newer version of a card is in the catalog and the entry is not taken out of the shop (KARTEN-15 AC-1)."""
-    return one.type == "card" and entry.removed is None and newer(entry.version, one.version)
+    """A newer version of a card or a skin is in the catalog and the entry is not taken out of the shop (KARTEN-15 AC-1)."""
+    return one.type in ("card", "skin") and entry.removed is None and newer(entry.version, one.version)

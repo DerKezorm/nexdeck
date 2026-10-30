@@ -94,7 +94,7 @@ export function ShopTile({ entry, onOpen }: { entry: ShopEntry; onOpen?: (entry:
               {entry.thumbs}
             </span>
           )}
-          <ClassChip entry={entry} />
+          {entry.type !== 'skin' && <ClassChip entry={entry} />}
           <span className="chip !py-0 text-[11px]">{t(`cards.shop.type.${entry.type}`)}</span>
           <ShopBadges entry={entry} />
         </div>

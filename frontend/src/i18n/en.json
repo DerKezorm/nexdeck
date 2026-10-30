@@ -2876,9 +2876,11 @@
         "card": "Card",
         "integration": "Integration",
         "cards": "Cards",
-        "integrations": "Integrations"
+        "integrations": "Integrations",
+        "skin": "Skin",
+        "skins": "Skins"
       },
-      "allTypes": "Cards and integrations",
+      "allTypes": "Every type",
       "installed": "Installed",
       "updateAvailable": "Update available",
       "removed": "Removed from the Card shop",
@@ -2952,7 +2954,10 @@
         "done": "Installed.",
         "dropped": "Replacing {{name}} throws away what is stored in these fields, secrets included: {{fields}}.",
         "droppedCheck": "I understand that these values are lost",
-        "offeredStranger": "By someone other than the author of this card. Look at it before you take it along."
+        "offeredStranger": "By someone other than the author of this card. Look at it before you take it along.",
+        "skinAs": "It becomes the skin {{key}}. Choose it under Look or in your profile.",
+        "skinDone": "Installed.",
+        "toSkins": "To the skins"
       },
       "errors": {
         "checksum_mismatch": "The file does not match the checksum of the catalog. Nothing was installed.",
@@ -3038,7 +3043,16 @@
         "buttons": "its buttons",
         "requires": "what it needs"
       },
-      "filesWarning": "Part of this entry could not be used: {{message}}"
+      "filesWarning": "Part of this entry could not be used: {{message}}",
+      "skinActs": "A skin only changes how nexdeck looks. It reads nothing and presses nothing. nexdeck compiles it itself, and it never reaches the sign-in or the pages that hold secrets.",
+      "skinUpdate": {
+        "title": "Update {{name}}",
+        "lead": "From version {{from}} to {{to}}. Whoever wears this skin wears the new version at once.",
+        "keepMine": "Keep what I changed here as a copy",
+        "action": "Update",
+        "done": "Updated.",
+        "doneCopy": "Updated. Your changes are kept as the skin {{key}}."
+      }
     },
     "share": {
       "button": "Share in the Card shop",
@@ -3051,7 +3065,8 @@
       "signedInAs": "Signed in to GitHub as {{login}}",
       "kind": {
         "card": "Card",
-        "integration": "Connection"
+        "integration": "Connection",
+        "skin": "Skin"
       },
       "mode": {
         "new": "A new entry in the Card shop.",
@@ -3171,7 +3186,8 @@
         "edited": "Saved and sent again into issue {{number}}.",
         "recheck": "Saved. The text did not change, so the Workshop was asked to check issue {{number}} again.",
         "failed": "Saved, but not sent again: {{message}}"
-      }
+      },
+      "skinTile": "A skin. The Workshop draws its pictures on the stage of the editor, dark and light."
     }
   }
 }

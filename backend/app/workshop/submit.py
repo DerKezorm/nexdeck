@@ -30,9 +30,10 @@ from ..adapters.rawread import refuse_a_command
 from ..cards import credentials, load, schema
 from ..cards import integration as integration_loader
 from ..cards import integration_store as integrations
-from ..models import CardRecord, User
+from ..models import CardRecord, Skin, User
 from ..services.integrations import every_secret
-from . import catalog, github_login, installed, real_values, state
+from ..skins import store as skin_store
+from . import catalog, github_login, installed, kinds, real_values, state
 from .github_login import GithubError, login_needed
 
 logger = logging.getLogger("nexdeck.workshop")
@@ -46,7 +47,7 @@ CATEGORIES = {
     "smart_home": "Smart home",
     "other": "Other",
 }
-TYPES = {"card": "Card", "integration": "Connection"}
+TYPES = kinds.TYPES
 LABELS = {
     "type": "Type",
     "category": "Category",
@@ -143,7 +144,7 @@ def build_body(
 ) -> str:
     """The body of the issue the way the form of the Workshop writes it, and the version of this nexdeck at the end."""
     fence = fence_of(definition)
-    fenced = f"{fence}yaml\n" + definition.rstrip("\n") + f"\n{fence}"
+    fenced = f"{fence}{'json' if type == 'skin' else 'yaml'}\n" + definition.rstrip("\n") + f"\n{fence}"
     box = f"- [{'x' if licensed else ' '}] {LICENSE_SENTENCE}"
     parts = [
         (LABELS["type"], TYPES[type]),
@@ -246,7 +247,13 @@ class Subject:
 
 
 def subject_of(db: Session, kind: str, slug: str) -> Subject:
-    """The saved card or connection with this short name; ``no_such_card`` when there is none."""
+    """The saved card, connection or skin with this short name; ``no_such_card`` when there is none."""
+    if kind == "skin":
+        skin = db.scalar(select(Skin).where(Skin.key == slug))
+        if skin is None:
+            raise SubmitError("no_such_card", "There is no such skin.", 404)
+        one = installed.Installed("skin", skin.key, skin.shop_ref, skin.shop_version, skin.text, skin.shop_hash)
+        return Subject("skin", skin.key, skin.text, skin.origin, skin.shop_ref, one.locally_changed)
     if kind == "card":
         row = db.scalar(select(CardRecord).where(CardRecord.slug == slug, CardRecord.kind == "card"))
         if row is None:
@@ -278,6 +285,8 @@ def read_definition(one: Subject, known: frozenset[str] = frozenset()) -> list[d
     ``known`` are the credentials of the connections of this installation (``integrations.every_secret``).
     """
     problems: list[dict[str, str]] = []
+    if one.type == "skin":
+        return _read_skin(one)
     if len(one.text) > schema.MAX_DEFINITION:
         return [problem("too_long", f"The definition is {len(one.text)} characters long, the limit is {schema.MAX_DEFINITION}.")]
     try:
@@ -305,6 +314,18 @@ def read_definition(one: Subject, known: frozenset[str] = frozenset()) -> list[d
     except load.CardInvalid as failure:
         problems += [problem(p.code, p.message, p.path) for p in failure.problems]
     return problems
+
+
+def _read_skin(one: Subject) -> list[dict[str, str]]:
+    """A skin is checked as the skins page checks it: read, then compiled. It has no demo data and reads nothing."""
+    if len(one.text) > skin_store.MAX_FILE:
+        return [problem("too_long", f"The skin is {len(one.text)} characters long, the limit is {skin_store.MAX_FILE}.")]
+    try:
+        skin, _compiled = skin_store.check(one.text)
+    except skin_store.SkinError as failure:
+        return [problem(failure.code, str(found.get("message")), str(found.get("path") or "")) for found in failure.problems] or [problem(failure.code, str(failure))]
+    one.name, one.version, one.description, one.category = skin.name, skin.version, skin.description, "other"
+    return []
 
 
 def category_guess(text: str) -> str:
@@ -594,7 +615,7 @@ async def check(db: Session, user: User, kind: str, slug: str) -> dict[str, Any]
         if past.entry.removed is not None and past.entry.removed.level != "withdrawn":
             out["removed"] = {"level": past.entry.removed.level, "reason": past.entry.removed.reason}
             problems.append(problem("entry_removed", "A maintainer took this entry out of the Card shop. Ask a maintainer to bring it back before sharing an update."))
-        elif one.type == "card" and one.version and not installed.newer(one.version, past.entry.version):
+        elif one.type in ("card", "skin") and one.version and not installed.newer(one.version, past.entry.version):
             problems.append(problem("version_not_higher", f"The version must be higher than the {past.entry.version} that is in the Card shop. Raise it in the editor."))
     if not update:
         used = past.new_today if past.open is None else past.new_today - 1
@@ -644,7 +665,7 @@ async def submit(db: Session, user: User, kind: str, slug: str, form: Form) -> d
         if past.entry is not None:
             if past.entry.removed is not None and past.entry.removed.level != "withdrawn":
                 problems.append(problem("entry_removed", "A maintainer took this entry out of the Card shop. Ask a maintainer to bring it back before sharing an update."))
-            elif kind == "card" and one.version and not installed.newer(one.version, past.entry.version):
+            elif kind in ("card", "skin") and one.version and not installed.newer(one.version, past.entry.version):
                 problems.append(problem("version_not_higher", f"The version must be higher than the {past.entry.version} that is in the Card shop. Raise it in the editor."))
         problems += read_form(form, update=update)
         if not problems:
@@ -686,7 +707,9 @@ async def resend(db: Session, user: User, number: int) -> dict[str, Any]:
     if issue.get("state") != "open" or slug is None or (issue.get("user") or {}).get("id") != _number(ctx.access.github_id):
         raise SubmitError("not_resendable", "This is not an open submission of yours.", 409)
     fields = parse_body(str(issue.get("body") or ""))
-    kind = "integration" if fields.get("type", "").lower().startswith("conn") else "card"
+    kind = kinds.from_form(fields.get("type", ""))
+    if kind is None:
+        raise SubmitError("not_resendable", "This is not an open submission of yours.", 409)
     key = (user.id, kind, slug)
     if key in _busy:
         raise SubmitError("already_sending", "This submission is on its way. Wait a moment.", 409)
@@ -777,8 +800,9 @@ async def submissions(db: Session, user: User) -> dict[str, Any]:
     latest: dict[tuple[str, str], dict[str, Any]] = {}
     for one in issues:
         fields = parse_body(str(one.get("body") or ""))
-        kind = "integration" if fields.get("type", "").lower().startswith("conn") else "card"
-        latest.setdefault((kind, str(slug_of(one))), one)
+        kind = kinds.from_form(fields.get("type", ""))
+        if kind is not None:
+            latest.setdefault((kind, str(slug_of(one))), one)
     known = None
     if state.enabled(db):
         try:
@@ -786,7 +810,7 @@ async def submissions(db: Session, user: User) -> dict[str, Any]:
         except catalog.CatalogError:
             known = None
     local_cards = set(db.scalars(select(CardRecord.slug).where(CardRecord.kind == "card")))
-    local_connections = set(integrations.shorts(db))
+    local = {"card": local_cards, "integration": set(integrations.shorts(db)), "skin": set(db.scalars(select(Skin.key)))}
     items = []
     for (kind, slug), one in latest.items():
         marker = last_marker(await ctx.comments(one))
@@ -807,6 +831,6 @@ async def submissions(db: Session, user: User) -> dict[str, Any]:
             "reasons": reasons,
             "removed": removed,
             "entry": {"id": entry.id, "version": entry.version, "thumbs": entry.thumbs, "discussion": entry.discussion} if entry is not None else None,
-            "local": slug in (local_cards if kind == "card" else local_connections),
+            "local": slug in local[kind],
         })
     return {"signed_in": True, "login": signed["login"], "items": items, "catalog_known": known is not None}

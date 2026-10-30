@@ -18,6 +18,7 @@ from ..cards import integration as integration_loader
 from ..cards import integration_store as integrations
 from ..models import CardRecord
 from . import catalog, derived, files, state
+from . import skins as shop_skins
 from .installed import normalised_hash
 
 SOURCE = "the Card shop"
@@ -33,6 +34,8 @@ def gate(entry: catalog.Entry) -> None:
 
 def check_text(entry: catalog.Entry, text: str) -> catalog.CatalogError | None:
     """What is wrong with the definition of an entry by the checks of this nexdeck, as an installation would find it; none when nothing is."""
+    if entry.type == "skin":
+        return shop_skins.check_text(text)
     try:
         if entry.type == "card":
             load.load_definition(text)
@@ -79,6 +82,9 @@ def free_short(db: Session, entry: catalog.Entry) -> str:
     Free means no card, board or own connection here has it and, for a connection, no built-in kind is called so.
     """
     from ..adapters import get_adapter
+
+    if entry.type == "skin":
+        return shop_skins.free_key(db, entry.slug)
 
     def taken(short: str) -> bool:
         if entry.type == "card":

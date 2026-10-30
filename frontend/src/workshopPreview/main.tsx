@@ -7,8 +7,10 @@ import '../styles/app.css'
 import '../i18n'
 import { OverflowContext } from '../components/BuilderCard'
 import { WidgetCard } from '../components/WidgetCard'
-import { useBoardCardStyle, type CardStyle } from '../lib/appearance'
+import { applyAppearance, useBoardCardStyle, type Appearance, type CardStyle } from '../lib/appearance'
+import { wear, type CompiledSkin } from '../lib/skin/wear'
 import type { WidgetData, WidgetView } from '../lib/types'
+import { StageScene } from '../pages/skins/SkinStage'
 
 /** What the workshop's action hands the page: the data of a card, worked out from its demo answers, and how to draw it. */
 export interface Spec {
@@ -22,6 +24,21 @@ export interface Spec {
   /** The name of a service logo or a Lucide icon for the header. */
   icon?: string
 }
+
+/**
+ * A skin: the style sheet the kit compiled from the file, the way nexdeck compiles it, worn on the stage of the skin
+ * editor with its demo board. Each option at its default.
+ */
+export interface SkinSpec {
+  skin: CompiledSkin
+  name: string
+  theme: 'light' | 'dark'
+}
+
+/** The look a skin is laid on: nexdeck's own, as a fresh installation has it. */
+const PLAIN: Appearance = { preset: 'cyan', accent: '', css: '', colour: '#22d3ee', card_style: 'glass', radius: 16, gap: 12, refraction: true, font: 'inter' }
+/** The part of the stage the picture shows: the top bar and the first cards, wide enough for three columns. */
+const SKIN_PICTURE = { width: 1100, height: 720 }
 
 /** The sizes a card of each form is made at, as the editor's preview has them. */
 const FORM_SIZES: Record<Spec['form'], [number, number]> = {
@@ -63,18 +80,33 @@ function Stage({ spec }: { spec: Spec }) {
   )
 }
 
+function SkinStage() {
+  return (
+    <div id="stage" style={{ ...SKIN_PICTURE, overflow: 'hidden', position: 'relative', background: 'var(--nd-bg)', color: 'var(--nd-text)' }} data-ready="true">
+      <StageScene dialog={false} />
+    </div>
+  )
+}
+
 const root = createRoot(document.getElementById('root')!)
 
-/** Draws one card. The promise settles once the picture can be taken. */
-function show(spec: Spec): Promise<void> {
+/** Draws one card, or a skin on the stage. The promise settles once the picture can be taken. */
+function show(spec: Spec | SkinSpec): Promise<void> {
+  const skin = 'skin' in spec
+  // A skin brings its colours and its sheet; a card is drawn in nexdeck's own look, as it always was.
+  if (skin) applyAppearance(wear(PLAIN, { key: spec.skin.key, options: {} }, spec.skin))
   document.documentElement.dataset.theme = spec.theme
   document.documentElement.style.background = 'var(--nd-bg)'
   root.render(
     <StrictMode>
       <QueryClientProvider client={queryClient}>
-        <MemoryRouter>
-          <Stage spec={spec} />
-        </MemoryRouter>
+        {skin ? (
+          <SkinStage />
+        ) : (
+          <MemoryRouter>
+            <Stage spec={spec} />
+          </MemoryRouter>
+        )}
       </QueryClientProvider>
     </StrictMode>,
   )

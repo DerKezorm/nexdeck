@@ -54,6 +54,7 @@ export function ShopList({ catalog, onOpen }: { catalog: ShopCatalog; state: Sho
     { value: 'all', label: t('cards.shop.allTypes') },
     { value: 'card', label: t('cards.shop.type.cards') },
     { value: 'integration', label: t('cards.shop.type.integrations') },
+    { value: 'skin', label: t('cards.shop.type.skins') },
   ]
   const sorts = SHOP_SORTS.map((one) => ({ value: one, label: t(`cards.shop.sort.${one}`) }))
 

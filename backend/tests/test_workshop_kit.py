@@ -202,3 +202,39 @@ def test_karten13_texts_of_the_submission_are_scanned_for_secrets(made: Path, tm
     note.write_text("Shows how many items wait.", encoding="utf-8")
     code, result = _run(made, tmp_path, GOOD, "--scan", f"description={note}")
     assert code == 0
+
+
+# -- skins (skins, phase D) ---------------------------------------------------------------------------------------------
+
+SKIN = (Path(__file__).resolve().parent.parent / "app" / "skins" / "examples" / "console.json").read_text(encoding="utf-8")
+
+
+def test_a_skin_is_checked_and_compiled_by_the_kit_as_nexdeck_compiles_it(made: Path, tmp_path: Path) -> None:
+    from app.skins import compile as skin_compile
+    from app.skins import store as skin_store
+
+    code, result = _run(made, tmp_path, SKIN, "--type", "skin")
+    assert code == 0 and result["ok"] and result["type"] == "skin" and result["class"] == "read", result
+    assert (result["slug"], result["version"], result["requires"], result["reads"]) == ("console", "1.0", [], [])
+    assert result["compiled"] == skin_compile.compile_skin(skin_store.read(SKIN)).as_json(), "the pictures wear what nexdeck would"
+    assert (made / "schema" / "skin.schema.json").is_file()
+
+
+@pytest.mark.parametrize(
+    ("change", "code"),
+    [
+        ({"css": "[data-part=chip] { color: red !important }"}, "bad_css"),
+        ({"native": "retro"}, "bad_css"),
+        ({"key": "1984"}, "taken"),
+        ({"tokens": {"radius": 99}}, "bad_skin"),
+    ],
+    ids=["important", "native", "shipped-name", "radius"],
+)
+def test_a_skin_nexdeck_would_not_wear_is_refused_by_the_kit(made: Path, tmp_path: Path, change: dict[str, Any], code: str) -> None:
+    status, result = _run(made, tmp_path, json.dumps({**json.loads(SKIN), **change}), "--type", "skin")
+    assert status == 1 and code in _codes(result), result
+
+
+def test_a_skin_handed_in_as_a_card_and_a_card_as_a_skin_are_refused(made: Path, tmp_path: Path) -> None:
+    assert _codes(_run(made, tmp_path, SKIN, "--type", "card")[1]) == ["type_mismatch"]
+    assert _codes(_run(made, tmp_path, GOOD, "--type", "skin")[1]) == ["type_mismatch"]

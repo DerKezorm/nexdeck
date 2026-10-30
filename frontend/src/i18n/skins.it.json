@@ -96,7 +96,9 @@
         "example": "Un esempio",
         "look": "Un look",
         "copy": "Una copia di uno skin di qui"
-      }
+      },
+      "share": "Condividi",
+      "update": "Aggiorna"
     },
     "pickHelp": "Fai clic su una parte del palco. Cornice, movimento, suono e decorazioni si impostano qui.",
     "picture": "Immagine",

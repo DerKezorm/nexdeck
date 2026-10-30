@@ -21,6 +21,7 @@ from app.adapters import forget_all_custom
 from app.cards import exchange, load
 from app.cards import integration as integration_loader
 from app.services.collector import collector
+from app.skins import store as skin_store
 from app.workshop import catalog, files
 
 from .cards_sample import VALUE_CARD, changed
@@ -38,7 +39,11 @@ def card_text(slug: str = "queue-size", text: str = VALUE_CARD, version: str = "
 
 def entry(text: str, author: str = AUTHOR, **more: Any) -> dict[str, Any]:
     """The catalog entry of a card text, with the checksum of exactly that text."""
-    if exchange._INTEGRATION.search(text):  # noqa: SLF001
+    folder = "definition.yaml"
+    if skin_store.is_skin(text):
+        data = json.loads(text)
+        short, version, minimum, requires, buttons, kind, folder = data["key"], data.get("version", "1.0"), None, [], False, "skin", "skin.json"
+    elif exchange._INTEGRATION.search(text):  # noqa: SLF001
         short, version, minimum, requires, buttons, kind = integration_loader.load_integration(text, saved=[]).definition.short, "1.0.0", None, [], False, "integration"
     else:
         data = load.load_definition(text).definition
@@ -50,7 +55,7 @@ def entry(text: str, author: str = AUTHOR, **more: Any) -> dict[str, Any]:
         "class": "buttons" if buttons else "read", "reads": [], "buttons": [],
         "sha256": hashlib.sha256(text.encode("utf-8")).hexdigest(),
         "files": {
-            "definition": f"entries/{author}/{short}/definition.yaml", "readme": f"entries/{author}/{short}/README.md",
+            "definition": f"entries/{author}/{short}/{folder}", "readme": f"entries/{author}/{short}/README.md",
             "changelog": f"entries/{author}/{short}/CHANGELOG.md", "light": f"entries/{author}/{short}/preview-light.png",
             "dark": f"entries/{author}/{short}/preview-dark.png",
         },

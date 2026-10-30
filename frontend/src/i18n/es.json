@@ -2876,9 +2876,11 @@
         "card": "Tarjeta",
         "integration": "Integración",
         "cards": "Tarjetas",
-        "integrations": "Integraciones"
+        "integrations": "Integraciones",
+        "skin": "Skin",
+        "skins": "Skins"
       },
-      "allTypes": "Tarjetas e integraciones",
+      "allTypes": "Todos los tipos",
       "installed": "Instalada",
       "updateAvailable": "Actualización disponible",
       "removed": "Retirada de la tienda de tarjetas",
@@ -2952,7 +2954,10 @@
         "done": "Instalada.",
         "dropped": "Al reemplazar {{name}} se pierde lo guardado en estos campos, secretos incluidos: {{fields}}.",
         "droppedCheck": "Entiendo que estos valores se pierden",
-        "offeredStranger": "De otra persona distinta del autor de esta tarjeta. Revísala antes de añadirla."
+        "offeredStranger": "De otra persona distinta del autor de esta tarjeta. Revísala antes de añadirla.",
+        "skinAs": "Se convierte en el skin {{key}}. Elígelo en Aspecto o en tu perfil.",
+        "skinDone": "Instalado.",
+        "toSkins": "A los skins"
       },
       "errors": {
         "checksum_mismatch": "El archivo no coincide con la suma de verificación del catálogo. No se instaló nada.",
@@ -3038,7 +3043,16 @@
         "buttons": "sus botones",
         "requires": "lo que necesita"
       },
-      "filesWarning": "Una parte de esta entrada no se pudo usar: {{message}}"
+      "filesWarning": "Una parte de esta entrada no se pudo usar: {{message}}",
+      "skinActs": "Un skin solo cambia el aspecto de nexdeck. No lee nada ni pulsa botones. nexdeck lo compila por sí mismo, y nunca llega al inicio de sesión ni a las páginas que guardan secretos.",
+      "skinUpdate": {
+        "title": "Actualizar {{name}}",
+        "lead": "De la versión {{from}} a la {{to}}. Quien lleva este skin lleva la nueva versión al instante.",
+        "keepMine": "Guardar como copia lo que cambié aquí",
+        "action": "Actualizar",
+        "done": "Actualizado.",
+        "doneCopy": "Actualizado. Tus cambios se guardan como el skin {{key}}."
+      }
     },
     "share": {
       "button": "Compartir en el Card shop",
@@ -3051,7 +3065,8 @@
       "signedInAs": "Sesión iniciada en GitHub como {{login}}",
       "kind": {
         "card": "Tarjeta",
-        "integration": "Conexión"
+        "integration": "Conexión",
+        "skin": "Skin"
       },
       "mode": {
         "new": "Una entrada nueva en el Card shop.",
@@ -3171,7 +3186,8 @@
         "edited": "Guardada y enviada de nuevo a la incidencia {{number}}.",
         "recheck": "Guardada. El texto no cambió, así que se pidió al Workshop que revise otra vez la incidencia {{number}}.",
         "failed": "Guardada, pero no reenviada: {{message}}"
-      }
+      },
+      "skinTile": "Un skin. El Workshop dibuja sus imágenes en el escenario del editor, en oscuro y en claro."
     }
   }
 }

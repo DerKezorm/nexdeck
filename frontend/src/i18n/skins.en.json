@@ -96,7 +96,9 @@
         "example": "An example",
         "look": "A look",
         "copy": "A copy of a skin here"
-      }
+      },
+      "share": "Share",
+      "update": "Update"
     },
     "pickHelp": "Click a part on the stage. Its frame, motion, sound and decorations are set here.",
     "picture": "Picture",

@@ -13,6 +13,7 @@ from typing import Any
 
 from ..cards import exchange, load
 from ..cards import integration as integration_loader
+from ..skins import store as skin_store
 from . import catalog
 
 #: The parts of an entry the shop shows, which the catalog also claims.
@@ -21,7 +22,7 @@ CLAIMS = ("class", "reads", "buttons", "requires")
 
 @dataclass(frozen=True)
 class Facts:
-    type: str  # card | integration
+    type: str  # card | integration | skin
     requires: list[str]
     class_: str
     reads: list[dict[str, str]]
@@ -29,8 +30,8 @@ class Facts:
 
 
 def kind_of(text: str) -> str | None:
-    """Whether the text is a card or an own connection, by its first line that says so."""
-    return exchange.kind_of(text)
+    """Whether the text is a card, an own connection (by its first line that says so) or a skin (a JSON file that says so)."""
+    return "skin" if skin_store.is_skin(text) else exchange.kind_of(text)
 
 
 def read(text: str) -> Facts:
@@ -45,6 +46,13 @@ def read(text: str) -> Facts:
             [{"kind": kinds[0], "path": request.path} for request in definition.requests] if kinds else [],
             [{"label": one.get("label"), "method": one.get("method"), "path": one.get("path")} for one in loaded.data.get("buttons", [])],
         )
+    if found == "skin":
+        # A skin reads nothing and presses nothing: what it is allowed to do is the same for every skin.
+        try:
+            skin_store.read(text)
+        except skin_store.SkinError as failure:
+            raise load.CardInvalid([load.Problem(failure.code, failure.message, "", 1)]) from failure
+        return Facts("skin", [], "read", [])
     if found == "integration":
         piece = integration_loader.load_integration(text, saved=[]).definition
         return Facts("integration", [], "login" if piece.auth.type == "session" else "read", [{"kind": f"custom:{piece.short}", "path": one.path} for one in piece.reads])
@@ -88,7 +96,7 @@ def wrong_type(entry: catalog.Entry, text: str) -> catalog.CatalogError | None:
     found = kind_of(text)
     if found == entry.type:
         return None
-    names = {"card": "a card", "integration": "an own connection"}
+    names = {"card": "a card", "integration": "an own connection", "skin": "a skin"}
     return catalog.CatalogError(
-        "type_mismatch", f"The catalog calls this entry {names[entry.type]}, but its file is {names.get(found or '', 'neither a card nor an own connection')}. It was not used.", 409,
+        "type_mismatch", f"The catalog calls this entry {names[entry.type]}, but its file is {names.get(found or '', 'neither a card, an own connection nor a skin')}. It was not used.", 409,
     )

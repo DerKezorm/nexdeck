@@ -32,6 +32,13 @@ export function ShopActs({ entry }: { entry: ShopEntry | undefined }) {
       </p>
     )
   }
+  if (entry.type === 'skin') {
+    return (
+      <p className="text-sm" data-testid="shop-skin-acts">
+        {t('cards.shop.skinActs')}
+      </p>
+    )
+  }
   const labelOf = (kind: string) => entry.requires.find((need) => need.kind === kind)?.label ?? kind
   return (
     <>

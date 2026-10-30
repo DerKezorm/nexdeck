@@ -1,18 +1,23 @@
 /**
  * System, Skins: the skins of this installation, a new one from a starting
  * point (nothing, a copy, one of the looks, the console example), and the way
- * into the editor. Which skin everybody wears is chosen under Look.
+ * into the editor. A skin is shared in the Card shop from here, and one that
+ * came from there takes its update here. Which skin everybody wears is chosen
+ * under Look.
  */
 import { useQuery } from '@tanstack/react-query'
-import { Pencil, Plus } from 'lucide-react'
+import { Pencil, Plus, RefreshCw, Share2 } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 
 import { get } from '../../api/client'
 import { Dialog, Spinner, Toast } from '../../components/ui'
+import { SHOP_UPDATES_KEY, type ShopUpdates } from '../../lib/cardShop'
 import { useSkinTexts } from '../../lib/skin/texts'
 import { SettingsCard } from '../settings/SettingsCard'
+import { ShareDialog } from '../settings/share/ShareDialog'
+import { SkinUpdateDialog } from '../settings/shop/SkinUpdateDialog'
 import { SkinShelf, useSkins } from '../settings/SkinChooser'
 import type { Starter } from './SkinEditorPage'
 
@@ -23,6 +28,10 @@ export function SkinsPage() {
   const skins = useSkins()
   const [choosing, setChoosing] = useState(false)
   const [toast, setToast] = useState<{ text: string; level: 'ok' | 'error' } | null>(null)
+  const [sharing, setSharing] = useState<{ key: string; name: string } | null>(null)
+  const [updating, setUpdating] = useState('')
+  const updates = useQuery({ queryKey: SHOP_UPDATES_KEY, queryFn: () => get<ShopUpdates>('/workshop/updates') })
+  const waiting = new Set((updates.data?.updates ?? []).filter((one) => one.type === 'skin').map((one) => one.slug))
   const starters = useQuery({ queryKey: ['skin-starters'], queryFn: () => get<{ starters: Starter[] }>('/skins/starters'), enabled: choosing })
   if (!ready || skins.isLoading) return <Spinner />
   const all = skins.data?.skins ?? []
@@ -38,10 +47,20 @@ export function SkinsPage() {
                 <span className="block truncate font-medium">{skin.name}</span>
                 <span className="block truncate text-xs text-faint">{skin.origin === 'builtin' ? t('skinEditor.page.builtin') : skin.description || skin.key}</span>
               </span>
+              {waiting.has(skin.key) && (
+                <button type="button" className="btn btn-accent" onClick={() => setUpdating(skin.key)}>
+                  <RefreshCw size={14} /> {t('skinEditor.page.update')}
+                </button>
+              )}
               {skin.origin !== 'builtin' && (
-                <Link className="btn btn-flat" to={`/system/skins/${encodeURIComponent(skin.key)}/edit`}>
-                  <Pencil size={14} /> {t('skinEditor.page.edit')}
-                </Link>
+                <>
+                  <Link className="btn btn-flat" to={`/system/skins/${encodeURIComponent(skin.key)}/edit`}>
+                    <Pencil size={14} /> {t('skinEditor.page.edit')}
+                  </Link>
+                  <button type="button" className="btn btn-flat" onClick={() => setSharing({ key: skin.key, name: skin.name })} aria-label={t('cards.share.buttonNamed', { name: skin.name })}>
+                    <Share2 size={14} /> {t('skinEditor.page.share')}
+                  </button>
+                </>
               )}
             </li>
           ))}
@@ -88,6 +107,8 @@ export function SkinsPage() {
           </div>
         )}
       </Dialog>
+      {sharing && <ShareDialog kind="skin" slug={sharing.key} name={sharing.name} open onClose={() => setSharing(null)} />}
+      <SkinUpdateDialog skin={updating} open={updating !== ''} onClose={() => setUpdating('')} />
       {toast && (
         <Toast level={toast.level} onClose={() => setToast(null)}>
           {toast.text}

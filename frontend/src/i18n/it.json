@@ -2876,9 +2876,11 @@
         "card": "Scheda",
         "integration": "Integrazione",
         "cards": "Schede",
-        "integrations": "Integrazioni"
+        "integrations": "Integrazioni",
+        "skin": "Skin",
+        "skins": "Skin"
       },
-      "allTypes": "Schede e integrazioni",
+      "allTypes": "Tutti i tipi",
       "installed": "Installata",
       "updateAvailable": "Aggiornamento disponibile",
       "removed": "Rimossa dal negozio di schede",
@@ -2952,7 +2954,10 @@
         "done": "Installata.",
         "dropped": "Sostituire {{name}} elimina quanto è salvato in questi campi, segreti compresi: {{fields}}.",
         "droppedCheck": "Capisco che questi valori vanno persi",
-        "offeredStranger": "Di una persona diversa dall'autore di questa scheda. Guardala prima di aggiungerla."
+        "offeredStranger": "Di una persona diversa dall'autore di questa scheda. Guardala prima di aggiungerla.",
+        "skinAs": "Diventa la skin {{key}}. Sceglila in Aspetto o nel tuo profilo.",
+        "skinDone": "Installata.",
+        "toSkins": "Alle skin"
       },
       "errors": {
         "checksum_mismatch": "Il file non corrisponde alla somma di controllo del catalogo. Non è stato installato nulla.",
@@ -3038,7 +3043,16 @@
         "buttons": "i suoi pulsanti",
         "requires": "di cosa ha bisogno"
       },
-      "filesWarning": "Una parte di questa voce non è stata utilizzabile: {{message}}"
+      "filesWarning": "Una parte di questa voce non è stata utilizzabile: {{message}}",
+      "skinActs": "Una skin cambia solo l’aspetto di nexdeck. Non legge nulla e non preme pulsanti. nexdeck la compila da sé, e non arriva mai all’accesso né alle pagine che custodiscono segreti.",
+      "skinUpdate": {
+        "title": "Aggiorna {{name}}",
+        "lead": "Dalla versione {{from}} alla {{to}}. Chi indossa questa skin indossa subito la nuova versione.",
+        "keepMine": "Tieni come copia ciò che ho cambiato qui",
+        "action": "Aggiorna",
+        "done": "Aggiornata.",
+        "doneCopy": "Aggiornata. Le tue modifiche restano come skin {{key}}."
+      }
     },
     "share": {
       "button": "Condividi nel Card shop",
@@ -3051,7 +3065,8 @@
       "signedInAs": "Accesso a GitHub come {{login}}",
       "kind": {
         "card": "Scheda",
-        "integration": "Connessione"
+        "integration": "Connessione",
+        "skin": "Skin"
       },
       "mode": {
         "new": "Una nuova voce nel Card shop.",
@@ -3171,7 +3186,8 @@
         "edited": "Salvata e inviata di nuovo nell'issue {{number}}.",
         "recheck": "Salvata. Il testo non è cambiato, quindi è stato chiesto al Workshop di ricontrollare l'issue {{number}}.",
         "failed": "Salvata, ma non reinviata: {{message}}"
-      }
+      },
+      "skinTile": "Una skin. Il Workshop disegna le sue immagini sul palco dell’editor, scuro e chiaro."
     }
   }
 }

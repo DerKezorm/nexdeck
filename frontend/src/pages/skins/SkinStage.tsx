@@ -54,9 +54,6 @@ function mark(attribute: string, elements: Element[]): void {
 
 export function SkinStage() {
   const [state, setState] = useState<StageState | null>(null)
-  const [tab, setTab] = useState(0)
-  const [on, setOn] = useState(true)
-  const [choice, setChoice] = useState('one')
 
   useEffect(() => {
     void setLanguage(storedLanguage())
@@ -122,6 +119,17 @@ export function SkinStage() {
     }
   }, [state?.inspect, state?.parts])
 
+  return <StageScene dialog={state?.dialog === true} />
+}
+
+/**
+ * What the stage shows: a board of demo cards under the top bar, a settings page in small and, when asked, a dialog.
+ * The editor's stage and the Workshop's preview pictures of a skin (workshopPreview) draw the same.
+ */
+export function StageScene({ dialog }: { dialog: boolean }) {
+  const [tab, setTab] = useState(0)
+  const [on, setOn] = useState(true)
+  const [choice, setChoice] = useState('one')
   const noop = () => undefined
   return (
     <Router location="/" navigator={STAY}>
@@ -196,7 +204,7 @@ export function SkinStage() {
             <input type="range" defaultValue={40} aria-label="Volume" />
           </div>
         </main>
-        <Dialog open={state?.dialog === true} onClose={noop} title="A dialog" footer={<button type="button" className="btn btn-accent">Done</button>}>
+        <Dialog open={dialog} onClose={noop} title="A dialog" footer={<button type="button" className="btn btn-accent">Done</button>}>
           <p className="text-sm">How a dialog looks in this skin: its frame, its head and its buttons.</p>
         </Dialog>
       </div>

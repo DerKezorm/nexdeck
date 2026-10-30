@@ -96,7 +96,9 @@
         "example": "Un exemple",
         "look": "Un look",
         "copy": "Une copie d’un skin d’ici"
-      }
+      },
+      "share": "Partager",
+      "update": "Mettre à jour"
     },
     "pickHelp": "Cliquez sur une partie de la scène. Son cadre, son mouvement, son son et ses décorations se règlent ici.",
     "picture": "Image",
