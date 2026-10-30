@@ -16,6 +16,10 @@ const loaders: Partial<Record<string, () => Promise<{ default: unknown }>>> = {
   es: () => import('../../i18n/editor.es.json'),
   fr: () => import('../../i18n/editor.fr.json'),
   it: () => import('../../i18n/editor.it.json'),
+  nl: () => import('../../i18n/editor.nl.json'),
+  pl: () => import('../../i18n/editor.pl.json'),
+  pt: () => import('../../i18n/editor.pt.json'),
+  ru: () => import('../../i18n/editor.ru.json'),
 }
 
 /** Whether the editor's words are there in the language on screen. */

@@ -24,13 +24,35 @@ import { registerTexts, type TextBundle } from './texts'
  * (`vendor/nexoidc/oidc.<code>.json`, never edited here), and from `oidc.<code>.json` beside this file for the
  * other languages. They are merged into each language as it loads, `{{app}}` filled in with nexdeck.
  */
-export const LANGUAGES: Record<string, string> = { en: 'English', de: 'Deutsch', es: 'Español', fr: 'Français', it: 'Italiano' }
+export const LANGUAGES: Record<string, string> = {
+  en: 'English',
+  de: 'Deutsch',
+  es: 'Español',
+  fr: 'Français',
+  it: 'Italiano',
+  nl: 'Nederlands',
+  pl: 'Polski',
+  pt: 'Português (Brasil)',
+  ru: 'Русский',
+}
+
+/** Languages translated by machine and not yet read through by a speaker: their name says so wherever one is chosen. */
+export const BETA: ReadonlySet<string> = new Set(['nl', 'pl', 'pt', 'ru'])
+
+/** The name of a language as the pickers show it, with Beta after the ones not yet read through. */
+export function languageLabel(code: string): string {
+  return BETA.has(code) ? `${LANGUAGES[code]} (Beta)` : (LANGUAGES[code] ?? code)
+}
 
 const loaders: Record<string, () => Promise<{ default: Record<string, unknown> }>> = {
   de: () => import('./de.json'),
   es: () => import('./es.json'),
   fr: () => import('./fr.json'),
   it: () => import('./it.json'),
+  nl: () => import('./nl.json'),
+  pl: () => import('./pl.json'),
+  pt: () => import('./pt.json'),
+  ru: () => import('./ru.json'),
 }
 
 /** The sign-in words of each language besides English (see above). */
@@ -39,6 +61,10 @@ const oidcLoaders: Record<string, () => Promise<{ default: unknown }>> = {
   es: () => import('./oidc.es.json'),
   fr: () => import('./oidc.fr.json'),
   it: () => import('./oidc.it.json'),
+  nl: () => import('./oidc.nl.json'),
+  pl: () => import('./oidc.pl.json'),
+  pt: () => import('./oidc.pt.json'),
+  ru: () => import('./oidc.ru.json'),
 }
 
 /** A language's own words with the sign-in words merged in (nexdeck has many accounts, not one). */
@@ -51,6 +77,10 @@ const textLoaders: Record<string, () => Promise<{ default: unknown }>> = {
   es: () => import('./texts.es.json'),
   fr: () => import('./texts.fr.json'),
   it: () => import('./texts.it.json'),
+  nl: () => import('./texts.nl.json'),
+  pl: () => import('./texts.pl.json'),
+  pt: () => import('./texts.pt.json'),
+  ru: () => import('./texts.ru.json'),
 }
 
 void i18next.use(initReactI18next).init({

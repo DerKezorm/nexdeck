@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 
 import type { User } from '../api/types'
-import { accountPair, guestPair, LANGUAGES, setLanguage } from '../i18n'
+import { accountPair, guestPair, languageLabel, setLanguage } from '../i18n'
 import { useShownTheme } from '../lib/themeMode'
 import { applyTheme, useAuth } from '../stores/auth'
 import { usePicture } from '../lib/boardPicture'
@@ -117,8 +117,8 @@ export function LanguagePill({ signedIn }: { signedIn: boolean }) {
           className={`${SEGMENT} px-2 py-1 text-[11px] font-semibold uppercase ${i18n.language === code ? ACTIVE : IDLE}`}
           onClick={() => void choose(code)}
           aria-pressed={i18n.language === code}
-          aria-label={LANGUAGES[code]}
-          title={LANGUAGES[code]}
+          aria-label={languageLabel(code)}
+          title={languageLabel(code)}
         >
           {code}
         </button>

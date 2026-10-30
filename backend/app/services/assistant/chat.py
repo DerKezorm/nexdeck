@@ -33,7 +33,7 @@ MAX_ROUNDS = 8
 MAX_HISTORY = 60
 KEEP_DAYS = 30
 
-LANGUAGES = {"de": "German", "en": "English", "es": "Spanish", "fr": "French", "it": "Italian"}
+LANGUAGES = {"de": "German", "en": "English", "es": "Spanish", "fr": "French", "it": "Italian", "nl": "Dutch", "pl": "Polish", "pt": "Brazilian Portuguese", "ru": "Russian"}
 
 SYSTEM = """You are the assistant inside nexdeck, a self-hosted dashboard for a homelab. An administrator asks you about their services, servers and network.
 

@@ -39,7 +39,7 @@ MODES = ("new", "change", "translate")
 #: Seconds the provider has for one answer; a test sets it short.
 TIMEOUT_SECONDS = 150.0
 #: The languages a translation fills in.
-LANGUAGES = ("en", "de", "es", "fr", "it")
+LANGUAGES = ("en", "de", "es", "fr", "it", "nl", "pl", "pt", "ru")
 #: Lines of the shape of an answer; the rest is counted.
 MAX_SHAPE_LINES = 400
 #: Fields of one object that are named; the rest is counted.

@@ -3,6 +3,10 @@ import i18next from 'i18next'
 import { patterns as spanish } from './patterns.es'
 import { patterns as french } from './patterns.fr'
 import { patterns as italian } from './patterns.it'
+import { patterns as dutch } from './patterns.nl'
+import { patterns as polish } from './patterns.pl'
+import { patterns as portuguese } from './patterns.pt'
+import { patterns as russian } from './patterns.ru'
 
 /**
  * Texts that arrive from the server in English and are translated by their
@@ -200,6 +204,10 @@ export const PATTERNS: Record<string, Pattern[]> = {
   es: spanish,
   fr: french,
   it: italian,
+  nl: dutch,
+  pl: polish,
+  pt: portuguese,
+  ru: russian,
 }
 
 function language(): string {

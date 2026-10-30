@@ -20,6 +20,10 @@ const loaders: Record<string, () => Promise<{ default: unknown }>> = {
   es: () => import('../i18n/mcp.es.json'),
   fr: () => import('../i18n/mcp.fr.json'),
   it: () => import('../i18n/mcp.it.json'),
+  nl: () => import('../i18n/mcp.nl.json'),
+  pl: () => import('../i18n/mcp.pl.json'),
+  pt: () => import('../i18n/mcp.pt.json'),
+  ru: () => import('../i18n/mcp.ru.json'),
 }
 
 /** Puts the words of ``language`` in place. A language that cannot be fetched stays English rather than blank. */

@@ -8,7 +8,7 @@ import { Avatar } from '../../components/Avatar'
 import { TwoFactorCard } from '../../components/TwoFactorCard'
 import { ThemePlanField } from '../../components/ThemePlanField'
 import { Confirm, Field, PasswordInput, Select, Switch, Toast } from '../../components/ui'
-import { accountPair, LANGUAGES } from '../../i18n'
+import { accountPair, languageLabel, LANGUAGES } from '../../i18n'
 import { useAuth } from '../../stores/auth'
 import { oidcErrorKey } from '../../vendor/nexoidc/oidc'
 import { SettingsCard } from './SettingsCard'
@@ -48,7 +48,7 @@ export function ProfileSettings() {
   if (!user) return null
   const mismatch = confirm.length > 0 && confirm !== next
   const pair = accountPair(user.language_pair)
-  const languageOptions = Object.entries(LANGUAGES).map(([value, label]) => ({ value, label }))
+  const languageOptions = Object.keys(LANGUAGES).map((value) => ({ value, label: languageLabel(value) }))
   /** One button changed; taking the other button's language swaps the two. */
   const choosePair = (index: 0 | 1, code: string) => {
     const other = pair[1 - index]

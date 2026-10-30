@@ -13,6 +13,10 @@ const loaders: Record<string, () => Promise<{ default: unknown }>> = {
   es: () => import('../../i18n/skins.es.json'),
   fr: () => import('../../i18n/skins.fr.json'),
   it: () => import('../../i18n/skins.it.json'),
+  nl: () => import('../../i18n/skins.nl.json'),
+  pl: () => import('../../i18n/skins.pl.json'),
+  pt: () => import('../../i18n/skins.pt.json'),
+  ru: () => import('../../i18n/skins.ru.json'),
 }
 
 /** Whether the words are there in the language on screen; English first, so a missing language still reads. */

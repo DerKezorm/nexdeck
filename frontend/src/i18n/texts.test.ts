@@ -10,10 +10,14 @@ import de from './texts.de.json'
 import es from './texts.es.json'
 import fr from './texts.fr.json'
 import it_ from './texts.it.json'
+import nl from './texts.nl.json'
+import pl from './texts.pl.json'
+import pt from './texts.pt.json'
+import ru from './texts.ru.json'
 import { PATTERNS, registerTexts, translateText, type TextBundle } from './texts'
 
 /** Every language besides English and German, each with its table of server texts. */
-const OTHERS: Record<string, TextBundle> = { es, fr, it: it_ } as Record<string, TextBundle>
+const OTHERS: Record<string, TextBundle> = { es, fr, it: it_, nl, pl, pt, ru } as Record<string, TextBundle>
 
 describe('server texts', () => {
   beforeAll(() => {
@@ -261,6 +265,9 @@ describe('server texts', () => {
           expect(translated.trim(), `${section}: ${english}`).not.toBe('')
           expect(translated, `${section}: ${english}`).not.toContain('—')
         }
+        // A table left in English passes everything above; today's languages keep 7 % at most as they are.
+        const unchanged = Object.entries(table[section]).filter(([english, translated]) => english === translated).length
+        expect(unchanged / Object.keys(table[section]).length, `${section}: mostly English in ${code}`).toBeLessThan(0.15)
       }
     })
 
