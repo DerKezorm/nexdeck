@@ -30,5 +30,28 @@ def is_credential_name(name: str) -> bool:
     return any(word in CREDENTIAL_WORDS for word in found) or "".join(found) in CREDENTIAL_WORDS
 
 
+#: Words of a name that say who asks, not what proves it: a login name is no secret.
+ONLY_WHO = frozenset({"user", "username", "login"})
+#: Parts of a name that make its value grant access wherever they stand, also inside one word (``xapikey``, ``db_passwd``).
+ACCESS_PARTS = (
+    "apikey", "api_key", "token", "secret", "password", "passwd", "authorization", "cookie", "session", "private_key",
+    "client_secret", "access_key",
+)  # fmt: skip
+
+
+def is_access_name(name: str) -> bool:
+    """Whether the value under this name grants access: what demo data and the values sent to a provider must not carry.
+
+    A credential by its words in every spelling (``X-Api-Key``, ``privateKey``, ``accessKey``, ``passphrase``, ``pwd``,
+    ``auth``), not by a word that only says who asks (``userName``, ``login``), or a name with one of :data:`ACCESS_PARTS` in it.
+    ⚠️ One rule for nexdeck's demo data, the card help and the Workshop's check: each had a list of its own, and
+    ``X-Api-Key`` or ``privateKey`` went past the list of the demo data (found in a real run on 1.0.1).
+    """
+    found = words_of(name)
+    proving = CREDENTIAL_WORDS - ONLY_WHO
+    lowered = name.lower()
+    return any(word in proving for word in found) or "".join(found) in proving or any(part in lowered for part in ACCESS_PARTS)
+
+
 #: A parameter of an address, with the name captured: ``?name=`` or ``&name=``.
 QUERY_PARAMETER = re.compile(r"([?&])([A-Za-z0-9_.\-%]+)(=)([^&\s\"']*)")

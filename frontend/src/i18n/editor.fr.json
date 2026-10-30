@@ -58,6 +58,7 @@
         "withButtons": "Avec boutons",
         "readOnly": "Lecture seule",
         "none": "Aucune",
+        "asked": "Pour vérifier la carte, nexdeck a interrogé la connexion {{name}} ({{kind}}), la première du type que nomme la carte. De sa réponse, seuls des noms et des types de champs sont partis vers l'IA, aucune valeur.",
         "forms": {
           "value": "Une valeur",
           "stats": "Statistiques",

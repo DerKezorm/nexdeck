@@ -74,6 +74,14 @@ _HEX = re.compile(r"^(?:[0-9a-f]{16,}|(?=[0-9a-f]*\d)(?=[0-9a-f]*[a-f])[0-9a-f]{
 #: A key or token in base 64 or 62: long, with capitals, small letters and several digits, so that a field name is not taken for one.
 _BASE64 = re.compile(r"^(?=.*[A-Z])(?=.*[a-z])(?=.*\d.*\d)[A-Za-z0-9+/_=-]{20,}$")
 _NUMBER = re.compile(r"^\d{5,}$")
+#: A key that names a machine, so an answer keyed by it gives the names of the network away: a word with a number written
+#: with a leading zero (``nas01``), a word for a machine with a number (``node2``, ``pve1``), or a name with hyphens that
+#: ends in a number (``pve-node2``). ⚠️ Not every name with a number: ``tool0``, ``cpu0``, ``load15``, ``sha256``, ``Item1``
+#: are field names of real answers, and the paths of a card run through them.
+_MACHINE = re.compile(
+    r"^(?:[a-z]+_?0\d+|(?:nas|pve|node|srv|server|host|vm|lxc|ct|pi|rpi|nuc|worker|docker)_?\d+|[a-z][a-z0-9]*(?:-[a-z0-9]+)*-[a-z]*\d+)$",
+    re.IGNORECASE,
+)
 
 #: A number in this range of seconds, or of milliseconds, can be a moment in time (2000 to 2100).
 _EPOCH = (946_684_800, 4_102_444_800)
@@ -128,8 +136,18 @@ def _hex(kind: str, value: str, length: int) -> str:
     return _digest(kind, value).hex()[:length]
 
 
+def machine_key(name: str) -> bool:
+    """Whether a key is the name of a machine (``nas01``, ``pve-node2``): data, not a field name (found in a real run on 1.0.1)."""
+    return bool(_MACHINE.match(name))
+
+
 def _is_moment(text: str) -> bool:
     return bool(_DATE.match(text) or _TIME.match(text) or _HTTP_DATE.match(text))
+
+
+def is_moment(text: str) -> bool:
+    """Whether a text is a date, a time of day or a time stamp (``12:30:45`` reads like an IPv6 address otherwise)."""
+    return _is_moment(text)
 
 
 def _digits(token: str, stream: bytes) -> str:
@@ -295,6 +313,8 @@ def _stand_in(kind: str, text: str, nth: int) -> str:
         return f"2001:db8::{_digest('ip6', salt.lower())[0]:x}" if nth == 0 else f"2001:db8::{_digest('ip6', salt.lower())[:2].hex().lstrip('0') or '0'}"
     if kind == "host":
         return f"host-{_hex('host', salt.lower(), 5)}.example"
+    if kind == "machine":
+        return f"host{10 + _digest('machine', salt.lower())[0] % 90}"
     if kind == "uuid":
         raw = _stream("uuid", salt.lower(), 16).hex()
         made = f"{raw[:8]}-{raw[8:12]}-{raw[12:16]}-{raw[16:20]}-{raw[20:32]}"
@@ -347,12 +367,12 @@ def disguise_text(text: str, shift: timedelta | None = None) -> str:
 
 
 def disguise_key(name: str, taken: set[str] | frozenset[str]) -> str:
-    """The name of a key: unchanged, unless it is data itself (a hash, an address, a host, a mail address, a UUID, a long number).
+    """The name of a key: unchanged, unless it is data itself (a hash, an address, a host, a machine, a mail address, a UUID, a long number).
 
     ``taken`` are the names the object has or has got already; a stand-in is never one of them, so two keys never become one.
     """
     stripped = name.strip()
-    kind = data_kind(stripped) or ("number" if _NUMBER.match(stripped) else None)
+    kind = data_kind(stripped) or ("number" if _NUMBER.match(stripped) else "machine" if machine_key(stripped) else None)
     return name if kind is None else _stand_for(kind, stripped, taken)
 
 

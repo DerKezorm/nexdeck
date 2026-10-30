@@ -210,13 +210,15 @@ class FortigateAdapter(Adapter):
         payload = await self._get(config, ctx, "/vpn/ipsec")
         items = []
         down = 0
-        for tunnel in payload.get("results") or []:
-            if not isinstance(tunnel, dict):
-                continue
+        tunnels = [one for one in payload.get("results") or [] if isinstance(one, dict)]
+        # FortiOS 7.6 names the template of a dial-up tunnel in each client's
+        # ``parent`` and leaves the template's own ``type`` empty (#58).
+        parents = {str(one["parent"]) for one in tunnels if one.get("parent")}
+        for tunnel in tunnels:
             selectors = [one for one in tunnel.get("proxyid") or [] if isinstance(one, dict)]
             # The template of a dial-up tunnel stands in the list without a
             # selector of its own; its clients are the tunnels that count.
-            if not selectors and str(tunnel.get("type") or "") == "dialup":
+            if not selectors and (str(tunnel.get("type") or "") == "dialup" or str(tunnel.get("name") or "") in parents):
                 continue
             up_count = sum(1 for one in selectors if str(one.get("status") or "").lower() == "up")
             whole = up_count == len(selectors) and up_count > 0

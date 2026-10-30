@@ -65,6 +65,9 @@ class Row:
     #: The picture address is one value the answer named (a path), not something put together from a template: only
     #: then may it lead to a host other than the connection's (korrektur J1, F3).
     image_named: bool = False
+    #: The link is one value the answer named, as it stands; a link from a template may only lead underneath the
+    #: connection or to an address written out whole (B10 of the second review).
+    link_named: bool = False
     #: The buttons on this row that can be offered, by id, each with the values of this row it takes (KARTEN-8 AC-2).
     buttons: dict[str, dict[str, Any]] = field(default_factory=dict)
 
@@ -541,12 +544,14 @@ def _value(run: _Run, val: Val, row: Any = None, inside_row: bool = False) -> Sh
 
 
 def fixed_place(link: Any) -> bool:
-    """A link a card puts together leads where its own text says (S2, the rule of the pictures, korrektur J1 F3).
+    """A link a card puts together leads where its own text says, and carries a value only to the connection (S2, B10).
 
-    ⚠️ ``{template: "{url}"}`` or ``https://{host}/`` would let the answers, or a value the card reads, choose the host a
-    viewer is sent to with that value in the address. A template is a path that starts with a single ``/``, or ``http``
-    or ``https`` with the host written out: no placeholder before the first ``/`` after the host. A formula can say
-    anything and is no link; a value of the answer, as it stands, is one.
+    The rule of the pictures (``images.reference(named=False)``, korrektur J1 F3): a template is a path that starts with a
+    single ``/`` and leads underneath the connection, on its host, placeholders and all; or an address with ``http`` or
+    ``https`` written out whole, without a placeholder anywhere (a link to the documentation). ⚠️ With the host written out
+    and a placeholder in the path or the query, ``https://stats.example.com/q?k={internalHost}`` carried any value the
+    card reads to a host of the card's author, at the click of any viewer (found in a real run on 1.0.1). A formula can say
+    anything and is no link; a value of the answer, as it stands, is one and may lead anywhere.
     """
     if link is None or link.path is not None or (link.formula is None and link.template is None):
         return True
@@ -556,8 +561,11 @@ def fixed_place(link: Any) -> bool:
     if text.startswith("/") and not text.startswith("//"):
         return True
     scheme, separated, rest = text.partition("://")
-    host = rest.split("/", 1)[0]
-    return bool(separated) and scheme.lower() in ("http", "https") and bool(host) and not any(char in host for char in "{}@\\")
+    host = rest.split("/", 1)[0].split("?", 1)[0].split("#", 1)[0]
+    return (
+        bool(separated) and scheme.lower() in ("http", "https") and bool(host) and not any(char in host for char in "@\\")
+        and not any(char in text for char in "{}")
+    )
 
 
 def _link(text: str | None) -> str | None:
@@ -588,6 +596,7 @@ def _row(run: _Run, item: Any, source: Any) -> Row:
         value=value,
         status=_status(run, rules, own, source, True),
         link=_link(link.text if link and link.value is not None and fixed_place(getattr(item, "link", None)) else None),
+        link_named=getattr(getattr(item, "link", None), "path", None) is not None,
         image=_link(image.text if image and image.value is not None else None),
         image_named=getattr(getattr(item, "image", None), "path", None) is not None,
     )

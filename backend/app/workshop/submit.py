@@ -78,7 +78,9 @@ DESCRIPTION_SENTENCE = "Add a description of a few sentences, in English."
 NEW_TITLE = "Submit: "
 UPDATE_TITLE = "Submit update: "
 BOT = "github-actions[bot]"
-MARKER = re.compile(r"<!-- workshop:(accepted|rejected|deferred):([0-9a-f]{64}) -->")
+#: Pages of a hundred comments read back from the last one, looking for the answer of the action.
+MAX_COMMENT_PAGES = 30
+MARKER =re.compile(r"<!-- workshop:(accepted|rejected|deferred):([0-9a-f]{64}) -->")
 _HEADING = re.compile(r"^### (.+?)[ \t]*$")
 _OPEN = re.compile(r"^(`{3,}|~{3,})(.*)$")
 _EDGE = ("#", "`", "~")
@@ -430,13 +432,24 @@ class Context:
         return [one for one in found if isinstance(one, dict) and "pull_request" not in one and (one.get("user") or {}).get("id") == _number(self.access.github_id)]
 
     async def comments(self, issue: dict[str, Any]) -> list[dict[str, Any]]:
-        """The comments of an issue, the last page of them (the answer of the action is among the last)."""
+        """The comments of an issue from the last page back to the one with the last answer of the action (:func:`last_marker`).
+
+        ⚠️ Not only the last page: in the public repository anybody may comment, and a hundred comments after the answer of
+        the action pushed it onto a page nexdeck did not read (found in a real run on 1.0.1). At most
+        :data:`MAX_COMMENT_PAGES` pages are read.
+        """
         count = int(issue.get("comments") or 0)
         if count == 0:
             return []
-        page = max(1, -(-count // 100))
-        found = await self.api("GET", f"/{issue['number']}/comments", params={"per_page": 100, "page": page})
-        return [one for one in found if isinstance(one, dict)]
+        last = max(1, -(-count // 100))
+        found: list[dict[str, Any]] = []
+        for page in range(last, max(0, last - MAX_COMMENT_PAGES), -1):
+            part = await self.api("GET", f"/{issue['number']}/comments", params={"per_page": 100, "page": page})
+            part = [one for one in part or [] if isinstance(one, dict)]
+            found = part + found
+            if last_marker(part) is not None:
+                break
+        return found
 
 
 def _asks_to_wait(response: Any) -> bool:

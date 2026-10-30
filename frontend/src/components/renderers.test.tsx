@@ -66,6 +66,19 @@ describe('renderers', () => {
     expect(times[0].closest('div')).toHaveTextContent('Choir')
   })
 
+  it('#57: a row that writes its number out shows the words, and the number stays for the bars', () => {
+    const view = { ...DEMO_VIEWS[0], id: 12, renderer: 'list' } as WidgetView
+    const items = [
+      { title: 'alice@example.com', value: 2147483648, display: '2.0 GB' },
+      { title: 'example.net', value: 1, display: '1 / 5' },
+    ]
+    const { container } = render(<>{renderWidget({ widget: view, data: { status: 'ok', items } as unknown as WidgetData })}</>)
+    expect(container).toHaveTextContent('2.0 GB')
+    expect(container).toHaveTextContent('1 / 5')
+    expect(container).not.toHaveTextContent('2,147,483,648')
+    expect(container).not.toHaveTextContent('2147483648')
+  })
+
   it('draws the availability bars of a status row and how long ago a notice came', () => {
     const view = { ...DEMO_VIEWS[0], id: 11, renderer: 'list' } as WidgetView
     const now = Date.now() / 1000

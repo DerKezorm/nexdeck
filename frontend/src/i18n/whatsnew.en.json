@@ -1878,6 +1878,20 @@
         "The hint under a failure of a custom card is in your language, and the selection in the YAML editors is readable in the dark.",
         "The look's own CSS is checked the way a browser reads it, so no hidden address in it fetches from elsewhere."
       ]
+    },
+    "1.0.2": {
+      "lead": "Two fixes from your reports, and the card help keeps closer to what you agreed to send.",
+      "sections": [
+        {
+          "title": "mailcow and FortiGate",
+          "body": "The mailcow domains card shows the mailboxes against the limit (1 / 5), the mailboxes card the space in words. The FortiGate IPsec card no longer counts the template of a dial-up tunnel as down."
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "The card help sends sample values only for the request you agreed to; what nexdeck reads to check a proposal goes only as its shape.",
+        "A link from a card template stays at the service, and shared demo data are checked for credentials under every spelling."
+      ]
     }
   }
 }

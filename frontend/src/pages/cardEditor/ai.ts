@@ -23,6 +23,8 @@ export interface AiSummary {
   form: string
   buttons: boolean
   methods?: string[]
+  /** The connection nexdeck asked to check the card when it was not the chosen one; only the shape of its answer went out. */
+  asked?: { name: string; kind: string } | null
 }
 
 export interface AiAnswer {

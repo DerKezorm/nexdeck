@@ -181,7 +181,11 @@ def check_css(css: str) -> str:
         if pattern.search(text):
             raise AppearanceError(why, "css_refused")
     # The patterns read text; a browser reads tokens, with escapes decoded (css_scan).
-    if why := css_scan.what_fetches(text):
+    try:
+        why = css_scan.what_fetches(text)
+    except css_scan.TooDeep:
+        raise AppearanceError(f"The style sheet nests blocks or brackets more than {css_scan.MAX_DEPTH} deep.", "css_too_deep") from None
+    if why:
         raise AppearanceError(why, "css_refused")
     return text
 

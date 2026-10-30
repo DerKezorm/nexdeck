@@ -75,27 +75,37 @@ export function DraftPreview({ yaml }: { yaml: string }) {
   )
 }
 
-/** What a draft uses (KARTEN-17 AC-10): the connection, the path, the form, buttons or not. */
+/**
+ * What a draft uses (KARTEN-17 AC-10): the connection, the path, the form, buttons or not. When nexdeck checked the card
+ * through a connection other than the chosen one (the card names another kind), a sentence says which one it was.
+ */
 export function DraftSummary({ summary }: { summary: AiSummary }) {
   const { t } = useTranslation()
   return (
-    <dl className="grid gap-1 text-[13px] min-w-0" data-testid="card-ai-summary">
-      <div className="flex flex-wrap gap-x-2">
-        <dt className="text-muted">{t('editor.ai.summary.connection')}</dt>
-        <dd className="break-words">{summary.connection_kind ?? t('editor.ai.summary.none')}</dd>
-      </div>
-      <div className="flex flex-wrap gap-x-2">
-        <dt className="text-muted">{t('editor.ai.summary.path')}</dt>
-        <dd className="font-mono break-all">{summary.path ?? t('editor.ai.summary.none')}</dd>
-      </div>
-      <div className="flex flex-wrap gap-x-2">
-        <dt className="text-muted">{t('editor.ai.summary.form')}</dt>
-        <dd>{t(`editor.ai.summary.forms.${summary.form}`, { defaultValue: summary.form })}</dd>
-      </div>
-      <div className="flex flex-wrap gap-x-2">
-        <dt className="text-muted">{t('editor.ai.summary.buttons')}</dt>
-        <dd>{summary.buttons ? `${t('editor.ai.summary.withButtons')}${summary.methods?.length ? ` (${summary.methods.join(', ')})` : ''}` : t('editor.ai.summary.readOnly')}</dd>
-      </div>
-    </dl>
+    <div className="grid gap-1 min-w-0">
+      <dl className="grid gap-1 text-[13px] min-w-0" data-testid="card-ai-summary">
+        <div className="flex flex-wrap gap-x-2">
+          <dt className="text-muted">{t('editor.ai.summary.connection')}</dt>
+          <dd className="break-words">{summary.connection_kind ?? t('editor.ai.summary.none')}</dd>
+        </div>
+        <div className="flex flex-wrap gap-x-2">
+          <dt className="text-muted">{t('editor.ai.summary.path')}</dt>
+          <dd className="font-mono break-all">{summary.path ?? t('editor.ai.summary.none')}</dd>
+        </div>
+        <div className="flex flex-wrap gap-x-2">
+          <dt className="text-muted">{t('editor.ai.summary.form')}</dt>
+          <dd>{t(`editor.ai.summary.forms.${summary.form}`, { defaultValue: summary.form })}</dd>
+        </div>
+        <div className="flex flex-wrap gap-x-2">
+          <dt className="text-muted">{t('editor.ai.summary.buttons')}</dt>
+          <dd>{summary.buttons ? `${t('editor.ai.summary.withButtons')}${summary.methods?.length ? ` (${summary.methods.join(', ')})` : ''}` : t('editor.ai.summary.readOnly')}</dd>
+        </div>
+      </dl>
+      {summary.asked && (
+        <p className="text-[12px] text-muted break-words" data-testid="card-ai-asked">
+          {t('editor.ai.summary.asked', { name: summary.asked.name, kind: summary.asked.kind })}
+        </p>
+      )}
+    </div>
   )
 }

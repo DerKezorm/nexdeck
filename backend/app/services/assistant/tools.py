@@ -474,6 +474,24 @@ def _readable(kind: str) -> bool:
 
 
 NO_OWN_CARDS = "cannot be read by a card of its own. Say so, and name the way out: a connection of the kind JSON API, or an own connection that describes the service."
+#: What the provider is told when the service could not be read for a draft: the code and nexdeck's own sentence for it.
+#: ⚠️ Never the message of the failure: it names the connection ("The connection Garage Rack is in demo mode") or an address
+#: (found in a real run on 1.0.1).
+UNREAD = {
+    "demo_mode": "The connection is in demo mode, so nexdeck does not ask the real service. Demo mode is switched off under System > Integrations.",
+    "unreachable": "The service did not answer. Ask the person to check that it runs and that nexdeck can reach it.",
+    "http_error": "The service answered this path with an error. Try another path of its kind.",
+    "not_json": "The service does not answer this path with JSON. Try another path of its kind.",
+    "redirected": "The service sends this path somewhere else. Try another path of its kind.",
+    "answer_too_large": "The answer of the service at this path is too large for a card. Try a path that asks for less.",
+    "command_refused": "nexdeck does not ask this path: it reads like one that makes the service do something.",
+    "bad_path": "The path starts with a single / and names no host.",
+}
+UNREAD_OTHERWISE = "The service could not be read. Tell the person the code; the editor's probe shows the whole message."
+
+
+def _unread(code: str) -> dict[str, str]:
+    return {"error": UNREAD.get(code, UNREAD_OTHERWISE), "code": code}
 
 
 def _listed(rows: list[Any]) -> list[dict[str, Any]]:
@@ -488,7 +506,7 @@ async def draft_card(bench: Bench, given: dict[str, Any]) -> str:
     from ...adapters.custom import plain
     from ...cards import ai, card_reads, credentials, demo, load, schema
     from ...models import Conversation, ConversationDraft, Integration
-    from ...routers.card_ai import _verifier
+    from ...routers.card_ai import _verifier, note_asked
     from ...routers.cards import _ask, _connection
     from . import chat, settings
 
@@ -533,13 +551,18 @@ async def draft_card(bench: Bench, given: dict[str, Any]) -> str:
         if held is not None:
             held.grants = [one for one in held.grants or [] if one != grant]
     config, key = settings.stored(bench.db), settings.key_of(bench.db)
-    integration_id, conversation_id, user_id = chosen.id, bench.conversation_id, bench.user.id
-    verify = _verifier(integration_id, user_id, bench.user.username)
+    integration_id, conversation_id, user_id, username = chosen.id, bench.conversation_id, bench.user.id, bench.user.username
+    verify = _verifier(integration_id, user_id, username)
     bench.db.commit()
 
     async def work() -> tuple[Any, Any]:
         adapter, connection, ctx = await _connection(integration_id)
-        answer = await _ask(adapter, connection, ctx, request)
+        try:
+            answer = await _ask(adapter, connection, ctx, request)
+        except AdapterError as failure:
+            note_asked(user_id, username, integration_id, [(path, failure.code)], "card help, chat")
+            raise
+        note_asked(user_id, username, integration_id, [(path, None)], "card help, chat")
         return answer, await ai.generate(ai.Ask(mode="new", description=description, connection_kind=adapter.kind, path=path, answer=answer, include_values=values), config, key, verify)
 
     # One request per administrator, like the editor's, and the one that ends when the provider is taken away (KARTEN-17 AC-8, EC-6).
@@ -548,7 +571,7 @@ async def draft_card(bench: Bench, given: dict[str, Any]) -> str:
     except ai.Busy:
         return _json({"error": "A card is being written for this person already. Say so and try again in a moment."})
     except AdapterError as failure:
-        return _json({"error": f"The service could not be read: {failure.message}"})
+        return _json(_unread(failure.code))
     except ai.AiError as failure:
         return _json({"error": failure.message})
     if not finished:

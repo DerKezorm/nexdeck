@@ -13,9 +13,10 @@ import asyncio
 import math
 from collections.abc import Iterator
 from typing import Any
-from urllib.parse import quote
+from urllib.parse import quote, urlsplit
 
 from ..cards import blocks, buttons, images, pipeline, source, store
+from ..cards.schema import stays_underneath
 from ..db import db_session
 from .base import (
     Action,
@@ -185,6 +186,23 @@ def _action(button: buttons.Button, values: dict[str, Any]) -> Action:
     )
 
 
+def _link_address(link: str, base: str, *, named: bool) -> str | None:
+    """Where the link of a row leads: an address as it is, a path of a template underneath the connection.
+
+    ⚠️ http and https only. The service's data names the link, and a relative address would lead into nexdeck itself; a
+    path a template put together goes underneath the address of the connection (B10 of the second review), never one with
+    a name and a password in it.
+    """
+    if link.lower().startswith(("http://", "https://")):
+        return link
+    if named or not link.startswith("/") or link.startswith("//") or not stays_underneath(link.split("?", 1)[0].split("#", 1)[0]):
+        return None
+    split = urlsplit(base)
+    if split.scheme.lower() not in ("http", "https") or not split.hostname or split.username or split.password:
+        return None
+    return base.rstrip("/") + link
+
+
 def _row_item(row: pipeline.Row, base: str, *, pictures: bool, on_rows: tuple[buttons.Button, ...] = ()) -> dict[str, Any]:
     item: dict[str, Any] = {
         "title": row.title.text,
@@ -192,9 +210,8 @@ def _row_item(row: pipeline.Row, base: str, *, pictures: bool, on_rows: tuple[bu
         "value": row.value.text if row.value is not None and row.value.value is not None else "",
         "status": row.status or "ok",
     }
-    # ⚠️ http and https only. The service's data names the link, and a relative address would lead into nexdeck itself.
-    if row.link and row.link.lower().startswith(("http://", "https://")):
-        item["url"] = row.link
+    if row.link and (address := _link_address(row.link, base, named=row.link_named)):
+        item["url"] = address
     if pictures and row.image:
         art = images.reference(row.image, base, named=row.image_named)
         if art:

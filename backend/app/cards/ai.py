@@ -4,11 +4,12 @@
 the schema of a card (shortened), the forms and blocks, the administrator's own words, the kind of connection, the paths
 nexdeck's own cards read from that kind (from the code, not from this installation), the chosen path, and the **shape** of the service's answer: for every node its path, its type and, for a list, its length.
 No values. A key that is data itself (a hash, a host name, a number) becomes ``<key>``. Values of the answer go only
-with the administrator's tick for this one request, cut like the examples of a card (10 entries, 200 characters).
+with the administrator's tick for this one request, cut like the examples of a card (10 entries, 200 characters); the
+answer of any other path or connection that nexdeck asks to check a proposal goes as its shape alone (:func:`_shapes`).
 Never: the address or the name of the connection, a credential, a host name or an address of the network: even with the tick
-the values of fields named like a credential and anything that reads as a key are replaced by ``***``, addresses of the network
-by ``192.0.2.1``, host names and the host of an address by ``example.com``, mail addresses by ``user@example.com``
-(:func:`sendable`).
+the values of fields named like a credential (in every spelling) and anything that reads as a key are replaced by ``***``,
+addresses of the network by ``192.0.2.1``, host names and the host of an address by ``example.com``, mail addresses by
+``user@example.com``, MAC addresses by ``00:00:5e:00:53:01``, also where they stand inside a text (:func:`sendable`).
 
 The provider is the one of the assistant (``providers.turn``); a card has none of its own. Its answer is checked like a
 saved card (``load.load_definition``: schema, secrets, paths, limits). A card that fails is sent back once with its
@@ -56,8 +57,16 @@ _NAME = re.compile(r"^[A-Za-z_][A-Za-z0-9_]{0,40}$")
 _ADDRESS = re.compile(r"\b(https?)://[^\s/?#\"'<>]*([^\s?#\"'<>]*)(?:[?#][^\s\"'<>]*)?", re.IGNORECASE)
 _MAIL = re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+")
 _IPV4 = re.compile(r"(?<![\w.])(?:\d{1,3}\.){3}\d{1,3}(?![\w])")
+#: A word of a text, between spaces, quotes and brackets: a host, an address, a MAC or a key inside a sentence is one.
+_WORD = re.compile(r"[^\s\"'<>()\[\]{},;]+")
 #: What stands in the place of a credential that would have gone with the tick.
 MASK = "***"
+#: What stands with the tick for a value, or a word of a text, of each kind :func:`demo.data_kind` knows (but an address,
+#: whose path stays): never the value itself.
+_STAND_INS = {
+    "ipv4": "192.0.2.1", "ipv6": "192.0.2.1", "host": "example.com", "mail": "user@example.com", "mac": "00:00:5e:00:53:01",
+    "uuid": MASK, "hex": MASK, "base64": MASK,
+}  # fmt: skip
 _FENCE = re.compile(r"```(?:ya?ml)?[ \t]*\r?\n(.*?)```", re.DOTALL)
 _LANG = re.compile(r"^[a-z]{2,3}(-[A-Za-z0-9]{2,8})?$")
 #: Words with which a provider says that the account is at its limit or empty.
@@ -186,12 +195,27 @@ def _type(value: Any) -> str:
 
 
 def _is_a_name(key: str) -> bool:
-    """A field name that reads as one; a hash, a host name, a token or a person as a key is data and stays out."""
-    return bool(_NAME.match(key)) and demo.data_kind(key) is None and next(credentials.find(key), None) is None
+    """A field name that reads as one; a hash, a host name, the name of a machine (``nas01``), a token as a key is data and stays out."""
+    return bool(_NAME.match(key)) and demo.data_kind(key) is None and not demo.machine_key(key) and next(credentials.find(key), None) is None
 
 
 def _credential_field(key: str) -> bool:
-    return credential_names.is_credential_name(key) or credentials.bad_name(key)
+    """A name whose value is masked with the tick, in every spelling (``X-Api-Key``, ``auth.token``, ``Api Key``)."""
+    return credential_names.is_credential_name(key) or credential_names.is_access_name(key) or credentials.bad_name(key)
+
+
+def _words(text: str) -> str:
+    """A text with every word that is data (a host, an IPv6 address, a MAC, a key of 16 characters or more) stood in for."""
+
+    def one(found: re.Match[str]) -> str:
+        word = found.group(0)
+        core = word.rstrip(".:!?")
+        if not core or demo.is_moment(core):
+            return word
+        stand_in = _STAND_INS.get(demo.data_kind(core) or "")
+        return word if stand_in is None else stand_in + word[len(core):]
+
+    return _WORD.sub(one, text)
 
 
 def sendable(value: Any, *, secret: bool = False) -> Any:
@@ -207,15 +231,12 @@ def sendable(value: Any, *, secret: bool = False) -> Any:
         return value
     if next(credentials.find(value), None) is not None:
         return MASK
-    kind = demo.data_kind(value)
-    if kind in ("ipv4", "ipv6"):
-        return "192.0.2.1"
-    if kind == "host":
-        return "example.com"
-    if kind == "mail":
-        return "user@example.com"
+    if demo.is_moment(value.strip()):
+        return value
+    if (stand_in := _STAND_INS.get(demo.data_kind(value.strip()) or "")) is not None:
+        return stand_in
     text = _ADDRESS.sub(lambda found: f"{found.group(1).lower()}://example.com{found.group(2)}", value)
-    return _IPV4.sub("192.0.2.1", _MAIL.sub("user@example.com", text))
+    return _words(_IPV4.sub("192.0.2.1", _MAIL.sub("user@example.com", text)))
 
 
 def _stand_ins(node: dict[Any, Any]) -> dict[Any, bool]:
@@ -259,7 +280,8 @@ def shape(answer: Any, *, values: bool = False) -> str:
                 else:
                     stand_ins += 1
                     if stand_ins <= (VALUE_ENTRIES if values else 1):  # the first of them shows what the others are
-                        walk(f"{path}.<key{stand_ins}>" if path else f"<key{stand_ins}>", one, depth + 1, secret)
+                        # ⚠️ The name stays out, but it still says what the value is: X-Api-Key is a credential.
+                        walk(f"{path}.<key{stand_ins}>" if path else f"<key{stand_ins}>", one, depth + 1, secret or _credential_field(name))
             if len(node) > MAX_SHAPE_FIELDS:
                 lines.append(f"{path or '@'}: {len(node) - MAX_SHAPE_FIELDS} more fields not shown")
 
@@ -280,7 +302,7 @@ def clean(node: Any, *, secret: bool = False) -> Any:
                 out[name] = clean(one, secret=secret or _credential_field(name))
             else:
                 stand_ins += 1
-                out[f"<key{stand_ins}>"] = clean(one, secret=secret)
+                out[f"<key{stand_ins}>"] = clean(one, secret=secret or _credential_field(name))
         return out
     if isinstance(node, list):
         return [clean(one, secret=secret) for one in node[:VALUE_ENTRIES]]
@@ -588,17 +610,18 @@ def summarize(loaded: Any) -> dict[str, Any]:
     """What the card that came back uses, for the editor to show beside the preview (KARTEN-17 AC-10).
 
     ⚠️ From the card, not from the request: the provider may have changed the connection, the paths or the buttons.
-    ``connection_kind`` and ``path`` name all of them, one after the other.
+    ``connection_kind`` and ``path`` name all of them, one after the other. ``asked`` (filled in by :func:`generate`) names the
+    connection nexdeck asked to check the card when it was not the one chosen.
     """
     definition = loaded.definition if loaded is not None else None
     if definition is None:
-        return {"connection_kind": None, "path": None, "form": None, "buttons": False, "requires": [], "paths": [], "methods": []}
+        return {"connection_kind": None, "path": None, "form": None, "buttons": False, "requires": [], "paths": [], "methods": [], "asked": None}
     requires = list(definition.requires)
     paths = [request.path for request in definition.requests]
     methods = sorted({button.method for button in definition.buttons})
     return {
         "connection_kind": ", ".join(requires) or None, "path": ", ".join(paths) or None, "form": definition.form, "buttons": bool(definition.buttons),
-        "requires": requires, "paths": paths, "methods": methods,
+        "requires": requires, "paths": paths, "methods": methods, "asked": None,
     }
 
 
@@ -612,6 +635,8 @@ class Checked:
 
     problems: list[Problem]
     answers: dict[str, Any] = field(default_factory=dict)
+    #: ``{"name", "kind"}`` of the connection asked when it is not the one chosen (the card names another kind), else ``None``.
+    asked: dict[str, str] | None = None
 
 
 #: Asks the service every request of a card that passed the check.
@@ -620,10 +645,13 @@ Verify = Callable[[Any], Awaitable[Checked]]
 TURNS = 3
 
 
-def _shapes(ask: Ask, unseen: dict[str, Any]) -> str:
-    """The shapes of answers the provider has not seen, the way :func:`outbound` sends a shape (values only with the tick)."""
-    parts = [f"At {path} the service answered, as paths and types{' and values' if ask.include_values else ' (no values)'}:\n{shape(answer, values=ask.include_values)}"
-             for path, answer in unseen.items()]
+def _shapes(unseen: dict[str, Any]) -> str:
+    """The shapes of answers the provider has not seen, the way :func:`outbound` sends a shape, and **never with values**.
+
+    ⚠️ Whatever the tick or the permission in the chat says: they are for the one request the administrator was asked about.
+    These are paths the provider chose itself, maybe of another connection (found in a real run on 1.0.1).
+    """
+    parts = [f"At {path} the service answered, as paths and types (no values):\n{shape(answer)}" for path, answer in unseen.items()]
     return ("nexdeck asked the service. " + "\n\n".join(parts) + "\n\nEvery path into an answer (select, value, title, total, …) must exist in these "
             "shapes; fix the ones that do not. Hand in the whole card, unchanged if it is right.")
 
@@ -650,6 +678,7 @@ async def generate(ask: Ask, config: dict[str, Any], key: str, verify: Verify | 
     # The paths whose answer the provider has seen; the problems go back once, the shapes once.
     seen = {ask.path} if ask.answer is not MISSING and ask.path else set()
     told, shown = False, False
+    asked: dict[str, str] | None = None
     for _turn_number in range(TURNS):
         turn = await _turn(config, key, out.system, transcript, out.tools)
         text, last_text = candidate(turn), turn.text
@@ -657,27 +686,27 @@ async def generate(ask: Ask, config: dict[str, Any], key: str, verify: Verify | 
         unseen: dict[str, Any] = {}
         if loaded is not None and verify is not None and ask.mode != "translate":
             checked = await verify(loaded.definition)
-            problems = checked.problems
+            problems, asked = checked.problems, checked.asked
             unseen = {request.path: checked.answers[request.id] for request in loaded.definition.requests
                       if request.id in checked.answers and request.path not in seen}
         if loaded is not None and not problems and (shown or not unseen):
             card = text
             if ask.mode != "new":
                 card = restore_demo(ask, text)
-            return Outcome(True, card, last_text, [], summarize(loaded), sent, loaded.definition)
+            return Outcome(True, card, last_text, [], {**summarize(loaded), "asked": asked}, sent, loaded.definition)
         if problems and told:
             break
         if problems:
             feedback, told = _feedback(problems, loaded), True
         else:
-            feedback, shown = _shapes(ask, unseen), True
+            feedback, shown = _shapes(unseen), True
             seen |= set(unseen)
         transcript.append({"role": "assistant", "text": turn.text, "calls": turn.calls, "provider": config["provider"], "raw": turn.raw})
         if turn.calls:
             transcript.append({"role": "tool", "results": [{"id": call["id"], "content": feedback, "is_error": bool(problems)} for call in turn.calls]})
         else:
             transcript.append({"role": "user", "text": feedback})
-    return Outcome(False, text, last_text, [problem.as_dict() for problem in problems], summarize(None), sent)
+    return Outcome(False, text, last_text, [problem.as_dict() for problem in problems], {**summarize(None), "asked": asked}, sent)
 
 
 # -- one request at a time per administrator -----------------------------------------------------------

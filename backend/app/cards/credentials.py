@@ -19,6 +19,8 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 from typing import Any
 
+from ..credential_names import is_access_name
+
 #: Field names compared after removing - _ and spaces.
 _BAD_NAMES = frozenset(
     {
@@ -140,19 +142,14 @@ def find(data: Any, path: tuple[str | int, ...] = (), *, demo: bool = False) -> 
             yield Found(path, "card_secret_value", what)
 
 
-#: Parts of a key in demo answers that say its value grants access (S3), upper or lower case, wherever they stand.
-ACCESS_KEYS = (
-    "apikey", "api_key", "token", "secret", "password", "passwd", "authorization", "cookie", "session", "private_key",
-    "client_secret", "access_key",
-)  # fmt: skip
 #: What stands in demo answers where a credential was: the mark of a hidden value, dots, ``xxx…``, ``<…>``.
 HIDDEN = "[hidden]"
 _DOTS = re.compile(r"[.…•*]+")
 
 
 def access_key(key: str) -> bool:
-    lowered = key.lower()
-    return any(part in lowered for part in ACCESS_KEYS)
+    """A key in demo answers whose value grants access (S3): the one rule of :func:`..credential_names.is_access_name`."""
+    return is_access_name(key)
 
 
 def placeholder(text: str) -> bool:
@@ -167,7 +164,7 @@ def placeholder(text: str) -> bool:
 def demo_secrets(demo: Any, known: frozenset[str] | set[str] = frozenset()) -> list[tuple[str, str]]:
     """``(place, key)`` of every value in demo answers that is a credential, never the value itself (S3).
 
-    ⚠️ A value under a key that sounds like access (:data:`ACCESS_KEYS`) that is not empty, null or a placeholder, and any
+    ⚠️ A value under a key that sounds like access (:func:`access_key`) that is not empty, null or a placeholder, and any
     value that is a credential of a connection of this installation (``known``), whatever its key. Demo answers are
     copied from a probe, and a service names its own key in some of them: shared, they would stand in a public issue.
     """

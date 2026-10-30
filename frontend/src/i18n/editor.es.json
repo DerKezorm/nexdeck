@@ -58,6 +58,7 @@
         "withButtons": "Con botones",
         "readOnly": "Solo lectura",
         "none": "Ninguna",
+        "asked": "Para comprobar la tarjeta, nexdeck consultó la conexión {{name}} ({{kind}}), la primera del tipo que nombra la tarjeta. De su respuesta solo llegaron a la IA nombres y tipos de campos, ningún valor.",
         "forms": {
           "value": "Un valor",
           "stats": "Estadísticas",
