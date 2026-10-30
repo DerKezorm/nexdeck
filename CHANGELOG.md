@@ -3,6 +3,20 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## 1.0.2 (2026-10-30)
+
+### Fixed
+
+- **mailcow: the right side of the domain and mailbox cards** (#57). A domain shows its mailboxes against the limit (1 / 5), and a mailbox the space it uses in words (10.5 GB) instead of the bytes themselves.
+- **FortiGate: a dial-up tunnel no longer counts as down** (#58). FortiOS 7.6 lists the template of a dial-up tunnel with an empty type and no selector, and names it in its clients as their parent; that template is left out like the dial-up templates before, so the card shows the connected clients and counts only real tunnels.
+
+### Security
+
+- **The card help sends values only for what you agreed to.** Sample values go to the provider for the one request the tick or the permission in the chat names. The answers nexdeck reads to check a proposal, of another path or of another connection, go only as their shape, and the proposal says when nexdeck asked a connection other than the one chosen. Every question the card help puts to a service is in the chronicle, and a chat draft that cannot read a service tells the provider only a code, never the name of the connection.
+- **Fewer things slip through the filters.** With the tick, values under a credential name in any spelling (X-Api-Key, privateKey, accessKey, pwd), MAC addresses, host names in text and key-like strings are held back; keys that name a machine (nas01, pve-node2) count as data. Demo data that are shared are checked by the same list of credential names, in nexdeck and in the Workshop.
+- **A link from a template stays at the service.** It leads underneath the address of the connection, or to an address written out whole without blanks in it; a card that leads elsewhere with values in the link is refused when it is checked.
+- **A deeply nested style sheet of the look is refused** with a message instead of an error of the server.
+
 ## 1.0.1 (2026-10-29)
 
 ### Fixed

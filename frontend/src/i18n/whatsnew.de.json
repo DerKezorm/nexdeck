@@ -1878,6 +1878,20 @@
         "Der Hinweis unter einem Fehler einer eigenen Karte steht in deiner Sprache, und die Markierung in den YAML-Editoren ist im Dunkeln lesbar.",
         "Das eigene CSS eines Looks wird so geprüft, wie ein Browser es liest, damit keine versteckte Adresse darin etwas von woanders lädt."
       ]
+    },
+    "1.0.2": {
+      "lead": "Zwei Korrekturen aus euren Meldungen, und die KI-Hilfe hält sich enger an das, was du zu senden erlaubt hast.",
+      "sections": [
+        {
+          "title": "mailcow und FortiGate",
+          "body": "Die mailcow-Karte der Domains zeigt die Postfächer gegen das Limit (1 / 5), die Karte der Postfächer den Platz in Worten. Die FortiGate-Karte der IPsec-Tunnel zählt die Vorlage eines Dial-up-Tunnels nicht mehr als ausgefallen."
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Die KI-Hilfe schickt Beispielwerte nur für die Anfrage, der du zugestimmt hast; was nexdeck zum Prüfen eines Vorschlags liest, geht nur als Aufbau mit.",
+        "Ein Link aus einer Kartenvorlage bleibt beim Dienst, und geteilte Demo-Daten werden auf Zugangswerte in jeder Schreibweise geprüft."
+      ]
     }
   }
 }
