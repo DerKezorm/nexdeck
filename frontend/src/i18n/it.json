@@ -706,6 +706,15 @@
           "titles": "Per i titoli",
           "all": "Ovunque"
         }
+      },
+      "skinReplaces": "La skin «{{name}}» scelta per tutti sostituisce ora: {{parts}}. Quello che è impostato qui resta salvato e torna a valere senza la skin.",
+      "replacedPart": {
+        "theme": "il tema di colori",
+        "accent": "il colore d’accento",
+        "card_style": "lo stile delle schede",
+        "radius": "gli angoli",
+        "gap": "la spaziatura",
+        "font": "il carattere"
       }
     },
     "journal": {

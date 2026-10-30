@@ -8,13 +8,28 @@ import { Field, Spinner, Switch, Toast } from '../../components/ui'
 import { accentVariables, applyAppearance, CARD_STYLES, type Appearance, type CardStyle } from '../../lib/appearance'
 import { canRefract } from '../../lib/refraction'
 import { RETRO_CHOICES, retroOf, type RetroChoices } from '../../lib/retro'
-import { NATIVE_1984 } from '../../lib/skin/wear'
+import { compiledSkin, NATIVE_1984, replaces, type Replaced } from '../../lib/skin/wear'
 import { BrandSettings } from './BrandSettings'
 import { SettingsCard } from './SettingsCard'
-import { SkinChooser, SkinShelf } from './SkinChooser'
+import { SkinChooser, SkinShelf, useSkins } from './SkinChooser'
 import { FontPicker } from './FontPicker'
 import { LookShare } from './LookShare'
 import { ThemeChooser } from './ThemeChooser'
+
+/**
+ * What the skin chosen for everybody puts in place of the settings of one card of this page, said above them: those
+ * settings stay stored and come back when the skin goes.
+ */
+function SkinReplaces({ name, replaced, parts }: { name: string; replaced: Replaced[]; parts: Replaced[] }) {
+  const { t } = useTranslation()
+  const shown = parts.filter((part) => replaced.includes(part))
+  if (shown.length === 0) return null
+  return (
+    <p className="text-sm text-warn rounded-xl border border-warn/40 px-3 py-2 mb-3" role="note" data-testid="skin-replaces">
+      {t('settings.appearance.skinReplaces', { name, parts: shown.map((part) => t(`settings.appearance.replacedPart.${part}`)).join(', ') })}
+    </p>
+  )
+}
 
 const EMPTY: Appearance = { preset: 'cyan', accent: '', css: '', colour: '#22d3ee', presets: {}, card_style: 'glass', radius: 16, gap: 12, refraction: true, font: 'inter' }
 
@@ -63,6 +78,12 @@ export function AppearanceSettings() {
   const saved = useQuery({ queryKey: ['appearance'], queryFn: () => get<Appearance>('/settings/appearance') })
   const [form, setForm] = useState<Appearance>(EMPTY)
   const [toast, setToast] = useState<{ text: string; level: 'ok' | 'error' } | null>(null)
+  // The skin chosen for everybody, saved or not yet: what it replaces of the settings below is said beside them.
+  const skinKey = form.card_style === 'window' || form.skin?.key === NATIVE_1984 ? '' : (form.skin?.key ?? '')
+  const worn = useQuery({ queryKey: ['skin-compiled', skinKey], queryFn: () => compiledSkin(skinKey), enabled: skinKey !== '' })
+  const skins = useSkins()
+  const replaced = skinKey ? replaces(worn.data ?? null) : []
+  const skinName = (skins.data?.skins ?? []).find((skin) => skin.key === skinKey)?.name ?? skinKey
 
   useEffect(() => {
     if (saved.data) setForm(saved.data)
@@ -113,6 +134,7 @@ export function AppearanceSettings() {
     <>
       <BrandSettings />
       <SettingsCard title={t('settings.appearance.themeTitle')} description={t('settings.appearance.themeHelp')}>
+        <SkinReplaces name={skinName} replaced={replaced} parts={['theme']} />
         <ThemeChooser
           value={form.theme ?? null}
           themes={form.themes ?? {}}
@@ -135,6 +157,7 @@ export function AppearanceSettings() {
         </div>
       </SettingsCard>
       <SettingsCard title={t('settings.appearance.cardsTitle')} description={t('settings.appearance.cardsHelp')}>
+        <SkinReplaces name={skinName} replaced={replaced} parts={['card_style', 'radius', 'gap']} />
         <ul className="grid gap-2 grid-cols-3 sm:grid-cols-7" aria-label={t('settings.appearance.cardsTitle')}>
           {(form.card_styles ?? CARD_STYLES).filter((style) => style in SAMPLE).map((style) => {
             const chosen = (form.card_style ?? 'glass') === style
@@ -193,6 +216,7 @@ export function AppearanceSettings() {
         </button>
       </SettingsCard>
       <SettingsCard title={t('settings.appearance.fontTitle')} description={form.card_style === 'window' ? `${t('settings.appearance.fontHelp')} ${t('settings.appearance.retro.fontNote')}` : t('settings.appearance.fontHelp')}>
+        <SkinReplaces name={skinName} replaced={replaced} parts={['font']} />
         <FontPicker value={form.font ?? 'inter'} onChange={(font) => setForm((current) => ({ ...current, font }))} />
         <button className="btn btn-accent mt-4" onClick={store}>
           {t('common.save')}
@@ -200,6 +224,7 @@ export function AppearanceSettings() {
       </SettingsCard>
       <LookShare form={form} onChange={setForm} onSave={store} />
       <SettingsCard title={t('settings.appearance.title')} description={t('settings.appearance.help')}>
+        <SkinReplaces name={skinName} replaced={replaced} parts={['accent']} />
         <Field label={t('settings.appearance.accent')} help={t('settings.appearance.accentHelp')}>
           <div className="flex flex-wrap gap-2">
             {presets.map(([name, colour]) => {

@@ -87,6 +87,23 @@ export function wear(look: Appearance, choice: SkinChoice, compiled: CompiledSki
   }
 }
 
+/** A setting of the look a skin can take the place of. */
+export type Replaced = 'theme' | 'accent' | 'card_style' | 'radius' | 'gap' | 'font'
+
+/**
+ * The settings of the look a skin takes the place of, by the rule `wear` lays it on with: its palettes replace the
+ * colour theme and with it the accent (unless it names one of its own), and each of its other tokens the setting of
+ * the same name. The page of the look says so beside each of them; the operator's style sheet is never replaced.
+ */
+export function replaces(compiled: CompiledSkin | null): Replaced[] {
+  if (!compiled) return []
+  const tokens = compiled.tokens
+  const palette = Boolean(tokens.dark || tokens.light)
+  const found: Replaced[] = palette ? ['theme', 'accent'] : tokens.accent != null ? ['accent'] : []
+  for (const name of ['card_style', 'radius', 'gap', 'font'] as const) if (tokens[name] != null) found.push(name)
+  return found
+}
+
 /** Put the skin of this account on: the one thing the pages call. */
 export async function lookWithSkin(look: Appearance, account?: SkinChoice | null): Promise<{ look: Appearance; compiled: CompiledSkin | null; choice: SkinChoice }> {
   const choice = chosenSkin(account, look.skin)

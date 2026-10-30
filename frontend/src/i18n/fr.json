@@ -706,6 +706,15 @@
           "titles": "Pour les titres",
           "all": "Partout"
         }
+      },
+      "skinReplaces": "Le skin « {{name}} » choisi pour tous remplace pour l’instant : {{parts}}. Ce qui est réglé ici reste enregistré et revient sans le skin.",
+      "replacedPart": {
+        "theme": "le thème de couleurs",
+        "accent": "la couleur d’accent",
+        "card_style": "le style des cartes",
+        "radius": "les coins",
+        "gap": "l’espacement",
+        "font": "la police"
       }
     },
     "journal": {

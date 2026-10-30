@@ -706,6 +706,15 @@
           "titles": "Für Titel",
           "all": "Überall"
         }
+      },
+      "skinReplaces": "Der für alle gewählte Skin „{{name}}“ ersetzt gerade: {{parts}}. Was hier eingestellt ist, bleibt gespeichert und gilt wieder ohne den Skin.",
+      "replacedPart": {
+        "theme": "das Farbthema",
+        "accent": "die Akzentfarbe",
+        "card_style": "den Kartenstil",
+        "radius": "die Ecken",
+        "gap": "den Abstand",
+        "font": "die Schrift"
       }
     },
     "journal": {
