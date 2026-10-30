@@ -1892,6 +1892,29 @@
         "The card help sends sample values only for the request you agreed to; what nexdeck reads to check a proposal goes only as its shape.",
         "A link from a card template stays at the service, and shared demo data are checked for credentials under every spelling."
       ]
+    },
+    "1.1.0": {
+      "lead": "nexdeck can wear skins now: more than colours, built by clicking, made by the assistant from a sentence, or installed from the Card shop.",
+      "sections": [
+        {
+          "title": "Skins",
+          "body": "A skin brings little pixel pictures, frames, a tiled desk, symbols of its own for a status, motions, short sounds and a style sheet that names the parts of nexdeck. Choose the one everybody wears under System, Look; every account can wear its own under Profile. Pages that ask for a password or a confirmation always keep nexdeck's own drawing."
+        },
+        {
+          "title": "The skin workshop",
+          "body": "Under System, Skin workshop you build a skin on a stage of real cards: start from nothing, a copy, one of the looks or a game console, click a part to give it a frame, a motion or a sound, and draw sprites pixel by pixel. With the assistant set up, its tab AI makes or changes a skin from a sentence and then looks at the stage, dark and light, to improve what reads badly."
+        },
+        {
+          "title": "Skins in the Card shop",
+          "body": "Skins sit in the Card shop beside cards and connections, with pictures of the stage. Installed with one click, compiled by your nexdeck itself, and offered their updates; your own skins can be shared from the workshop."
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "1984 is a skin: it looks exactly as before and is chosen among the skins, with its four choices.",
+        "System, Look starts with the skin everybody wears and says above each setting what the skin replaces; the list of looks became starting points for skins.",
+        "A model of the OpenAI form (Ollama, LM Studio) can be marked as one that understands pictures."
+      ]
     }
   }
 }

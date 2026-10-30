@@ -1892,6 +1892,29 @@
         "Die KI-Hilfe schickt Beispielwerte nur für die Anfrage, der du zugestimmt hast; was nexdeck zum Prüfen eines Vorschlags liest, geht nur als Aufbau mit.",
         "Ein Link aus einer Kartenvorlage bleibt beim Dienst, und geteilte Demo-Daten werden auf Zugangswerte in jeder Schreibweise geprüft."
       ]
+    },
+    "1.1.0": {
+      "lead": "nexdeck kann jetzt Skins tragen: mehr als Farben, per Klick gebaut, vom Assistenten aus einem Satz gemacht oder aus dem Card shop installiert.",
+      "sections": [
+        {
+          "title": "Skins",
+          "body": "Ein Skin bringt kleine Pixelbilder, Rahmen, einen gekachelten Desk, eigene Symbole für den Status, Bewegungen, kurze Töne und ein Stylesheet mit, das nexdecks Teile beim Namen nennt. Unter System, Aussehen wählst du den Skin für alle, im Profil trägt jedes Konto auf Wunsch seinen eigenen. Seiten, die nach einem Passwort oder einer Bestätigung fragen, behalten immer nexdecks eigene Zeichnung."
+        },
+        {
+          "title": "Die Skin-Werkstatt",
+          "body": "Unter System, Skin-Werkstatt baust du einen Skin auf einer Bühne mit echten Karten: von null, als Kopie, aus einem der Looks oder aus einer Spielkonsole. Ein Klick auf ein Teil gibt ihm Rahmen, Bewegung oder Ton, Sprites malst du Pixel für Pixel. Ist der Assistent eingerichtet, macht oder ändert sein Reiter KI einen Skin aus einem Satz und schaut sich danach die Bühne an, dunkel und hell, um nachzubessern, was sich schlecht liest."
+        },
+        {
+          "title": "Skins im Card shop",
+          "body": "Skins stehen im Card shop neben Karten und Anbindungen, mit Bildern der Bühne. Mit einem Klick installiert, von deinem nexdeck selbst übersetzt, und neue Versionen werden angeboten; eigene Skins teilst du aus der Werkstatt."
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "1984 ist ein Skin: Er sieht genau aus wie vorher und wird mit seinen vier Wahlen bei den Skins gewählt.",
+        "System, Aussehen beginnt mit dem Skin für alle und sagt über jeder Einstellung, was der Skin ersetzt; aus der Liste der Looks wurden Startpunkte für Skins.",
+        "Ein Modell der OpenAI-Form (Ollama, LM Studio) lässt sich als eines markieren, das Bilder versteht."
+      ]
     }
   }
 }
