@@ -103,13 +103,15 @@ def request(path: str = "/api/v3/queue", **more: Any) -> Request:
 @respx.mock
 async def test_karten2_ac1_a_custom_card_asks_with_the_credentials_of_its_connection(kind: str) -> None:
     config, expected = RAW[kind]
-    route = respx.get(f"{BASE}/api/v3/queue").mock(return_value=httpx.Response(200, json=RECORDED))
-    answer = await source.fetch_source(get_adapter(kind), {**config, "url": BASE + "/"}, ctx(), request())
+    # Watchtower reads only its status and metrics: every other GET of its API acts (``/v1/update``).
+    path = "/v1/metrics" if kind == "watchtower" else "/api/v3/queue"
+    route = respx.get(f"{BASE}{path}").mock(return_value=httpx.Response(200, json=RECORDED))
+    answer = await source.fetch_source(get_adapter(kind), {**config, "url": BASE + "/"}, ctx(), request(path))
     assert answer == RECORDED
     sent = route.calls.last.request
     for name, value in expected.items():
         assert sent.headers[name] == value, f"{kind}: {name}"
-    assert str(sent.url) == f"{BASE}/api/v3/queue"
+    assert str(sent.url) == f"{BASE}{path}"
 
 
 def test_karten2_ac12_every_adapter_can_be_read_by_a_card_or_stands_in_the_list_with_its_reason() -> None:
