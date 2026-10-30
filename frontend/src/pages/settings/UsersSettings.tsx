@@ -119,7 +119,7 @@ export function UsersSettings() {
                   )}
                 </div>
               )}
-              <Select className="!w-32 !h-8" value={user.role} onChange={(role) => void patch(`/users/${user.id}`, { role }).then(() => users.refetch()).catch(fail)} options={roles} />
+              <Select className="!w-auto !h-8" value={user.role} onChange={(role) => void patch(`/users/${user.id}`, { role }).then(() => users.refetch()).catch(fail)} options={roles} />
               {user.id !== me?.id && (
                 <>
                   <button

@@ -1,13 +1,5 @@
 import i18next from 'i18next'
 
-import { patterns as spanish } from './patterns.es'
-import { patterns as french } from './patterns.fr'
-import { patterns as italian } from './patterns.it'
-import { patterns as dutch } from './patterns.nl'
-import { patterns as polish } from './patterns.pl'
-import { patterns as portuguese } from './patterns.pt'
-import { patterns as russian } from './patterns.ru'
-
 /**
  * Texts that arrive from the server in English and are translated by their
  * English wording: adapter field labels and help, widget names and
@@ -22,8 +14,10 @@ export type TextBundle = Record<TextSection, Record<string, string>>
 
 const bundles: Record<string, TextBundle> = {}
 
-export function registerTexts(language: string, bundle: TextBundle): void {
+/** A language's table and, for every language but German, its patterns: both arrive when the language is chosen. */
+export function registerTexts(language: string, bundle: TextBundle, patterns?: Pattern[]): void {
   bundles[language] = bundle
+  if (patterns) PATTERNS[language] = patterns
 }
 
 /** One phrase with a number inside, and what it becomes: the number stays, the words change. */
@@ -32,7 +26,8 @@ export type Pattern = [RegExp, string]
 /**
  * Phrases with numbers or sizes inside. German stands here and is the list
  * every other language follows, pattern for pattern and in the same order;
- * each of them keeps its own list in patterns.<code>.ts.
+ * each of them keeps its own list in patterns.<code>.ts, fetched with its
+ * table (registerTexts), so the first load carries none of them.
  */
 export const PATTERNS: Record<string, Pattern[]> = {
   de: [
@@ -201,13 +196,6 @@ export const PATTERNS: Record<string, Pattern[]> = {
     [/^(\d+) of (\d+) MB$/, '$1 von $2 MB'],
     [/^The answer of the service could not be read \((\w+)\)\.$/, 'Die Antwort des Dienstes ließ sich nicht lesen ($1).'],
   ],
-  es: spanish,
-  fr: french,
-  it: italian,
-  nl: dutch,
-  pl: polish,
-  pt: portuguese,
-  ru: russian,
 }
 
 function language(): string {

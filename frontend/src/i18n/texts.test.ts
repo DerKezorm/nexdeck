@@ -3,6 +3,7 @@
  * through, German comes from the table or from a pattern, and anything the
  * table does not know stays as it came.
  */
+/// <reference types="vite/client" />
 import i18next from 'i18next'
 
 import { LANGUAGES } from './index'
@@ -14,15 +15,18 @@ import nl from './texts.nl.json'
 import pl from './texts.pl.json'
 import pt from './texts.pt.json'
 import ru from './texts.ru.json'
-import { PATTERNS, registerTexts, translateText, type TextBundle } from './texts'
+import { PATTERNS, registerTexts, translateText, type Pattern, type TextBundle } from './texts'
 
 /** Every language besides English and German, each with its table of server texts. */
 const OTHERS: Record<string, TextBundle> = { es, fr, it: it_, nl, pl, pt, ru } as Record<string, TextBundle>
 
+/** Their patterns, which the app fetches with the table (index.ts). */
+const PATTERN_FILES = import.meta.glob<Pattern[]>('./patterns.*.ts', { eager: true, import: 'patterns' })
+
 describe('server texts', () => {
   beforeAll(() => {
     registerTexts('de', de as TextBundle)
-    for (const [code, bundle] of Object.entries(OTHERS)) registerTexts(code, bundle)
+    for (const [code, bundle] of Object.entries(OTHERS)) registerTexts(code, bundle, PATTERN_FILES[`./patterns.${code}.ts`])
   })
   afterEach(async () => {
     await i18next.changeLanguage('en')
@@ -243,7 +247,7 @@ describe('server texts', () => {
       ['3 d overdue', '3 d'],
       ['This address answers, but not as nexdiary.', 'nexdiary'],
     ]
-    for (const code of ['de', 'es', 'fr', 'it']) {
+    for (const code of ['de', ...Object.keys(OTHERS)]) {
       await i18next.changeLanguage(code)
       for (const [english, kept] of refusals) {
         const translated = translateText('labels', english)

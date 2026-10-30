@@ -156,24 +156,27 @@ export function ProfileSettings() {
           <SkinChooser forAccount value={user.skin ?? {}} onChange={(skin) => void update({ skin })} />
         </div>
         <div className="grid sm:grid-cols-3 gap-3">
-          <Field label={t('settings.profile.barLanguages')} htmlFor="p-pair-1" help={t('settings.profile.barLanguagesHelp')}>
-            <div id="p-pair" className="flex gap-2">
-              <select id="p-pair-1" className="input" aria-label={t('settings.profile.barFirst')} aria-describedby="p-pair-1-help" value={pair[0]} onChange={(e) => choosePair(0, e.target.value)}>
-                {languageOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              <select id="p-pair-2" className="input" aria-label={t('settings.profile.barSecond')} aria-describedby="p-pair-1-help" value={pair[1]} onChange={(e) => choosePair(1, e.target.value)}>
-                {languageOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </Field>
+          {/* Two columns wide: a name like "Português (Brasil) (Beta)" did not fit in one; on a phone the two stand one above the other. */}
+          <div className="sm:col-span-2">
+            <Field label={t('settings.profile.barLanguages')} htmlFor="p-pair-1" help={t('settings.profile.barLanguagesHelp')}>
+              <div id="p-pair" className="flex flex-col sm:flex-row gap-2">
+                <select id="p-pair-1" className="input" aria-label={t('settings.profile.barFirst')} aria-describedby="p-pair-1-help" value={pair[0]} onChange={(e) => choosePair(0, e.target.value)}>
+                  {languageOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                <select id="p-pair-2" className="input" aria-label={t('settings.profile.barSecond')} aria-describedby="p-pair-1-help" value={pair[1]} onChange={(e) => choosePair(1, e.target.value)}>
+                  {languageOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </Field>
+          </div>
         </div>
       </SettingsCard>
 

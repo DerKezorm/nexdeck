@@ -12,6 +12,11 @@ project uses semantic versioning.
 ### Changed
 
 - **TrueNAS System draws the history of its memory.** In the rows view the Memory row shows a line of the last readings, as Docker load does, instead of an empty bar. CPU stays a bar coloured at 75 and 90 per cent.
+- **A smaller first load.** The phrases with numbers of each language arrive with that language instead of all of them with the page, about 13 kB less to load.
+
+### Fixed
+
+- The two languages of the top bar under Profile and the role of a user under Users had no room for longer names, such as "Português (Brasil) (Beta)" or "Администратор".
 
 ## 1.1.1 (2026-10-30)
 
