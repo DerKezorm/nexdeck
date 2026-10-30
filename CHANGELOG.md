@@ -5,6 +5,10 @@ project uses semantic versioning.
 
 ## Unreleased
 
+### Added
+
+- **Dutch, Polish, Brazilian Portuguese and Russian** (beta). The whole interface, the card editor, the skins, the assistant and what the services report, in four more languages; each is marked Beta wherever a language is chosen until a speaker has read it through. Polish and Russian count in all their plural forms.
+
 ### Changed
 
 - **TrueNAS System draws the history of its memory.** In the rows view the Memory row shows a line of the last readings, as Docker load does, instead of an empty bar. CPU stays a bar coloured at 75 and 90 per cent.
