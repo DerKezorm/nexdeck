@@ -436,10 +436,11 @@ def _twin(db: DbSession, widget: Widget, page_id: int) -> Widget:
 
 
 def _may_copy(db: DbSession, widget: Widget, user: User) -> bool:
-    """Whether this person could make this card anew: its connection and its options, as for a new card."""
+    """Whether this person could make this card anew: its connection, its options and its custom card, as for a new card."""
     try:
         _validate_kind(db, widget.kind, widget.integration_id, user)
         _validate_options(db, widget.kind, widget.options, user)
+        refuse_unshared_card(db, widget.kind, widget.options, user)
     except HTTPException:
         return False
     return True
@@ -477,6 +478,9 @@ def copy_widgets(body: WidgetCopy, user: CurrentUser, db: DbSession) -> dict:
         # Refused as a whole, with the reason: these are the cards that were asked for.
         _validate_kind(db, widget.kind, widget.integration_id, user)
         _validate_options(db, widget.kind, widget.options, user)
+        # ⚠️ A copy is a card placed anew: a custom card nobody released for users stays an administrator's to place
+        # (KARTEN-11 AC-3; H2 of a review of 1.0.2).
+        refuse_unshared_card(db, widget.kind, widget.options, user)
         sources.append((widget, page))
 
     to_columns = grid.columns(to_board.settings)
