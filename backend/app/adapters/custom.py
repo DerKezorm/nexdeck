@@ -203,17 +203,40 @@ def _link_address(link: str, base: str, *, named: bool) -> str | None:
     return base.rstrip("/") + link
 
 
-def _row_item(row: pipeline.Row, base: str, *, pictures: bool, on_rows: tuple[buttons.Button, ...] = ()) -> dict[str, Any]:
+#: What a card says when it leaves out a picture whose path its own text made and a read of the kind may not ask (B2 of a
+#: review of 1.0.2). The browser translates it like every sentence of nexdeck's own.
+PICTURE_REFUSED = "A picture of this card is not shown: its path asks the service to do something, and a card only reads."
+
+
+class _Pictures:
+    """Signs the pictures of one card for the connection it reads through, and remembers whether one was refused."""
+
+    def __init__(self, base: str, adapter: Any) -> None:
+        self.base, self.adapter, self.refused = base, adapter, False
+
+    def art(self, link: str | None, named: bool) -> str:
+        try:
+            return images.reference(link, self.base, named=named, adapter=self.adapter)
+        except AdapterError:
+            self.refused = True
+            return ""
+
+    def tell(self, meta: dict[str, Any]) -> None:
+        if self.refused:
+            meta["notice"] = PICTURE_REFUSED
+
+
+def _row_item(row: pipeline.Row, signer: _Pictures, *, pictures: bool, on_rows: tuple[buttons.Button, ...] = ()) -> dict[str, Any]:
     item: dict[str, Any] = {
         "title": row.title.text,
         "subtitle": row.subtitle.text if row.subtitle is not None and row.subtitle.value is not None else "",
         "value": row.value.text if row.value is not None and row.value.value is not None else "",
         "status": row.status or "ok",
     }
-    if row.link and (address := _link_address(row.link, base, named=row.link_named)):
+    if row.link and (address := _link_address(row.link, signer.base, named=row.link_named)):
         item["url"] = address
     if pictures and row.image:
-        art = images.reference(row.image, base, named=row.image_named)
+        art = signer.art(row.image, row.image_named)
         if art:
             item["art"] = art
     cells = _cells(row, ("title", "subtitle", "value"))
@@ -303,9 +326,9 @@ def _texts(nodes: list[dict[str, Any]]) -> Iterator[str]:
 class _Blocks:
     """The worked out blocks of a card as the browser draws them (``meta.blocks``), with the actions they offer."""
 
-    def __init__(self, definition: Any, base: str, pictures: bool, widget_id: int | None) -> None:
+    def __init__(self, definition: Any, signer: _Pictures, pictures: bool, widget_id: int | None) -> None:
         self.buttons = {one.id: one for one in definition.buttons}
-        self.base, self.pictures, self.widget_id = base, pictures, widget_id
+        self.signer, self.pictures, self.widget_id = signer, pictures, widget_id
         #: The buttons on the card that a block draws; and the rows of the lists, as items with the buttons on them.
         self.on_card: dict[str, Action] = {}
         self.items: list[dict[str, Any]] = []
@@ -313,7 +336,7 @@ class _Blocks:
     def picture(self, node: dict[str, Any]) -> str | None:
         if not self.pictures or not node["link"]:
             return None
-        art = images.reference(node["link"], self.base, named=node["named"])
+        art = self.signer.art(node["link"], node["named"])
         if not art:
             return None
         # Where the browser asks for it: the image route of this card, which adds the connection's own credentials.
@@ -375,10 +398,11 @@ class _Blocks:
         return {"blocks": drawn, **({"actions": offered} if offered else {})}
 
 
-def _present_blocks(definition: Any, result: pipeline.Result, *, base: str, pictures: bool, widget_id: int | None) -> WidgetData:
+def _present_blocks(definition: Any, result: pipeline.Result, *, signer: _Pictures, pictures: bool, widget_id: int | None) -> WidgetData:
     """A card of blocks: the tree to draw, the main value for the tile, the history of its sparklines (KARTEN-7)."""
-    drawn = _Blocks(definition, base, pictures, widget_id)
+    drawn = _Blocks(definition, signer, pictures, widget_id)
     meta: dict[str, Any] = {"custom": True, "blocks": drawn.draw(result.tree)}
+    signer.tell(meta)
     metrics: dict[str, float] = dict(_metrics_of(result.tree))
     primary = None
     if result.value is not None:
@@ -390,15 +414,17 @@ def _present_blocks(definition: Any, result: pipeline.Result, *, base: str, pict
 
 
 def present(
-    definition: Any, result: pipeline.Result, *, base: str = "", pictures: bool = True, widget_id: int | None = None
+    definition: Any, result: pipeline.Result, *, base: str = "", adapter: Any = None, pictures: bool = True, widget_id: int | None = None
 ) -> WidgetData:
     """What the renderers read, made from the finished values of the pipeline (KARTEN-6), with the buttons (KARTEN-8).
 
     ``widget_id`` is the card the pictures of a card of blocks are asked of; without it (a preview) they keep the
-    address ``proxy:…`` for whoever knows where to ask.
+    address ``proxy:…`` for whoever knows where to ask. ``adapter`` is the kind of the connection at ``base``: a picture
+    path the card's text made has to pass the check of a read of that kind (``images.reference``).
     """
+    signer = _Pictures(base, adapter)
     if definition.form == "builder":
-        return _present_blocks(definition, result, base=base, pictures=pictures, widget_id=widget_id)
+        return _present_blocks(definition, result, signer=signer, pictures=pictures, widget_id=widget_id)
     meta: dict[str, Any] = {"custom": True}
     every = tuple(getattr(definition, "buttons", None) or ())
     actions = [_action(one, result.buttons[one.id]) for one in every if one.where == "card" and one.id in result.buttons]
@@ -418,7 +444,8 @@ def present(
         return WidgetData(status=status, primary=cells[0] if cells else None, secondary=cells[1:], metrics=metrics, meta=meta, actions=actions)
     meta["empty"] = getattr(definition, "empty", None)
     on_rows = tuple(one for one in every if one.where == "row")
-    items = [_row_item(row, base, pictures=pictures, on_rows=on_rows) for row in result.rows]
+    items = [_row_item(row, signer, pictures=pictures, on_rows=on_rows) for row in result.rows]
+    signer.tell(meta)
     return WidgetData(status=_worst(result.status), items=items, meta=meta, actions=actions)
 
 
@@ -456,7 +483,7 @@ class CustomAdapter(Adapter):
         # ⚠️ In a thread of its own: a path or a filter over a large answer cannot be interrupted, and on the event loop it
         # would hold every other card and request still while it runs (KARTEN-5 AC-11, found in the review, 25.10.2026).
         result = await asyncio.to_thread(pipeline.run, definition, answers)
-        return present(definition, result, base=real.raw_base(real_config), widget_id=ctx.widget_id)
+        return present(definition, result, base=real.raw_base(real_config), adapter=real, widget_id=ctx.widget_id)
 
     async def action(
         self, widget_kind: str, action_id: str, params: dict[str, Any], config: dict[str, Any], options: dict[str, Any], ctx: Context

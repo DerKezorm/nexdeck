@@ -173,7 +173,8 @@
       "card_integration_github": "Escribe el proyecto como owner/name o como https://github.com/owner/name.",
       "card_integration_logo": "El logo es el nombre de un logo de la colección o una imagen subida a nexdeck. No se permite una imagen de la web.",
       "import_unknown_document": "Esto no es ni una tarjeta (nexdeck-card: 1) ni una integración (nexdeck: integration).",
-      "import_twice": "Este nombre corto aparece dos veces en el archivo."
+      "import_twice": "Este nombre corto aparece dos veces en el archivo.",
+      "card_picture_acts": "Una imagen solo lee. Esta ruta hace que el servicio haga algo, y nexdeck no la pide con las credenciales de la conexión."
     },
     "cardTerms": {
       "text": "texto",
@@ -2910,7 +2911,8 @@
         "description": "Descripción",
         "changes": "Qué cambió",
         "reads": "Qué lee",
-        "buttons": "Botones"
+        "buttons": "Botones",
+        "pictures": "Imágenes que pide"
       },
       "noChanges": "El autor no escribió una lista de cambios.",
       "noReads": "No lee nada de un servicio.",
@@ -3001,14 +3003,19 @@
           "github_rejected": "GitHub rechazó la solicitud.",
           "github_rate_limited": "GitHub dice: demasiadas solicitudes. Inténtalo de nuevo en unos minutos.",
           "catalog_invalid": "El catálogo está dañado.",
-          "type_mismatch": "El archivo no es lo que dice el catálogo (tarjeta o integración). No se cambió nada."
+          "type_mismatch": "El archivo no es lo que dice el catálogo (tarjeta o integración). No se cambió nada.",
+          "pictures_not_confirmed": "Confirma primero cada ruta de imagen nueva o cambiada."
         },
         "flag": {
           "confirm": "pregunta antes",
           "danger": "marcado como peligroso",
           "asks": "pide: {{names}}",
           "answer": "muestra la respuesta"
-        }
+        },
+        "picturesNew": "Nueva ruta de imagen:",
+        "picturesGone": "Ruta de imagen eliminada:",
+        "confirmPictures": "Confirma cada ruta de imagen nueva o cambiada",
+        "confirmPicturesHelp": "Una imagen se pide con las credenciales de la conexión cada vez que alguien mira el tablero. Actualizar ahora sigue bloqueado hasta que marques todas."
       },
       "unchecked": "No se pudo comprobar qué lee ni qué botones tiene, así que no se muestra nada de ello.",
       "claimsDiffer": "El catálogo describe esta entrada de otro modo que su archivo ({{parts}}). Lo que ves aquí está leído del archivo.",
@@ -3018,7 +3025,8 @@
         "buttons": "sus botones",
         "requires": "lo que necesita"
       },
-      "filesWarning": "Una parte de esta entrada no se pudo usar: {{message}}"
+      "filesWarning": "Una parte de esta entrada no se pudo usar: {{message}}",
+      "picturesHelp": "Se piden con las credenciales de la conexión cada vez que se muestra la tarjeta."
     },
     "share": {
       "button": "Compartir en el Card shop",

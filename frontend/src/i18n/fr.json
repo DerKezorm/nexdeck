@@ -173,7 +173,8 @@
       "card_integration_github": "Écrivez le projet sous la forme owner/name ou https://github.com/owner/name.",
       "card_integration_logo": "Le logo est le nom d'un logo de la collection ou une image envoyée à nexdeck. Une image du web n'est pas permise.",
       "import_unknown_document": "Ce n'est ni une carte (nexdeck-card: 1) ni une intégration (nexdeck: integration).",
-      "import_twice": "Ce nom court figure deux fois dans le fichier."
+      "import_twice": "Ce nom court figure deux fois dans le fichier.",
+      "card_picture_acts": "Une image ne fait que lire. Ce chemin fait agir le service, et nexdeck ne le demande pas avec les identifiants de la connexion."
     },
     "cardTerms": {
       "text": "du texte",
@@ -2910,7 +2911,8 @@
         "description": "Description",
         "changes": "Ce qui a changé",
         "reads": "Ce qui est lu",
-        "buttons": "Boutons"
+        "buttons": "Boutons",
+        "pictures": "Images récupérées"
       },
       "noChanges": "L'auteur n'a pas écrit de liste des changements.",
       "noReads": "Elle ne lit rien d'un service.",
@@ -3001,14 +3003,19 @@
           "github_rejected": "GitHub a refusé la requête.",
           "github_rate_limited": "GitHub indique : trop de requêtes. Réessayez dans quelques minutes.",
           "catalog_invalid": "Le catalogue est défectueux.",
-          "type_mismatch": "Le fichier n'est pas ce que dit le catalogue (carte ou intégration). Rien n'a été modifié."
+          "type_mismatch": "Le fichier n'est pas ce que dit le catalogue (carte ou intégration). Rien n'a été modifié.",
+          "pictures_not_confirmed": "Confirmez d'abord chaque chemin d'image nouveau ou modifié."
         },
         "flag": {
           "confirm": "demande d'abord",
           "danger": "marqué comme dangereux",
           "asks": "demande : {{names}}",
           "answer": "affiche la réponse"
-        }
+        },
+        "picturesNew": "Nouveau chemin d'image :",
+        "picturesGone": "Chemin d'image supprimé :",
+        "confirmPictures": "Confirmez chaque chemin d'image nouveau ou modifié",
+        "confirmPicturesHelp": "Une image est récupérée avec les identifiants de la connexion chaque fois que quelqu'un regarde le tableau. La mise à jour reste bloquée tant que vous n'avez pas coché chacun d'eux."
       },
       "unchecked": "Ce qu'elle lit et ses boutons n'ont pas pu être vérifiés, rien n'en est donc affiché.",
       "claimsDiffer": "Le catalogue décrit cette entrée autrement que son fichier ({{parts}}). Ce que vous voyez ici est lu dans le fichier.",
@@ -3018,7 +3025,8 @@
         "buttons": "ses boutons",
         "requires": "ce dont elle a besoin"
       },
-      "filesWarning": "Une partie de cette entrée n'a pas pu être utilisée : {{message}}"
+      "filesWarning": "Une partie de cette entrée n'a pas pu être utilisée : {{message}}",
+      "picturesHelp": "Récupérées avec les identifiants de la connexion chaque fois que la carte est affichée."
     },
     "share": {
       "button": "Partager dans le Card shop",

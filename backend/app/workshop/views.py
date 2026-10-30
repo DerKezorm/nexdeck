@@ -61,11 +61,12 @@ def entry_view(entry: catalog.Entry, ctx: Context, facts: derived.Facts | None =
     base = f"{BASE}/entries/{entry.id}/image"
     have = ctx.from_shop.get(entry.id, [])
     if facts is not None:
-        shown: dict[str, Any] = {"class": facts.class_, "reads": facts.reads, "buttons": facts.buttons}
+        shown: dict[str, Any] = {"class": facts.class_, "reads": facts.reads, "buttons": facts.buttons, "pictures": facts.pictures}
     elif unreadable:
-        shown = {"class": "unknown", "reads": [], "buttons": []}
+        shown = {"class": "unknown", "reads": [], "buttons": [], "pictures": []}
     else:
-        shown = {"class": entry.class_, "reads": [one.model_dump() for one in entry.reads], "buttons": [one.model_dump() for one in entry.buttons]}
+        # The catalog names no pictures: the list shows none, the detail and the check before installing read them from the file.
+        shown = {"class": entry.class_, "reads": [one.model_dump() for one in entry.reads], "buttons": [one.model_dump() for one in entry.buttons], "pictures": []}
     return {
         "id": entry.id,
         "author_id": entry.author_id,

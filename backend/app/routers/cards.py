@@ -370,7 +370,7 @@ async def preview(body: PreviewBody, user: AdminUser) -> dict[str, Any]:
     # Live data was asked for, and demo mode answers instead: the editor says so beside its switch.
     forced = not body.demo and body.integration_id is not None and _demo_mode(body.integration_id) is not None
     demo = body.demo or body.integration_id is None or forced
-    base = ""
+    base, adapter = "", None
     try:
         if demo:
             answers = pipeline.demo_answers(definition)
@@ -387,7 +387,7 @@ async def preview(body: PreviewBody, user: AdminUser) -> dict[str, Any]:
         result = await asyncio.to_thread(pipeline.run, definition, answers)
     except AdapterError as failure:
         raise _failed(failure) from failure
-    data = present(definition, result, base=base, pictures=not demo)
+    data = present(definition, result, base=base, adapter=adapter, pictures=not demo)
     data = shape_for_display(data, CUSTOM, definition.form, {})
     out = _with_preview_pictures(data.model_dump(), None if demo else body.integration_id)
     if forced:

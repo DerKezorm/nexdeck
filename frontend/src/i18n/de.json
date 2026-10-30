@@ -173,7 +173,8 @@
       "card_integration_github": "Schreibe das Projekt als owner/name oder als https://github.com/owner/name.",
       "card_integration_logo": "Das Logo ist der Name eines Logos aus der Sammlung oder ein nach nexdeck hochgeladenes Bild. Ein Bild aus dem Netz ist nicht erlaubt.",
       "import_unknown_document": "Das ist weder eine Karte (nexdeck-card: 1) noch eine Anbindung (nexdeck: integration).",
-      "import_twice": "Dieser Kurzname steht zweimal in der Datei."
+      "import_twice": "Dieser Kurzname steht zweimal in der Datei.",
+      "card_picture_acts": "Ein Bild liest nur. Dieser Pfad lässt den Dienst etwas tun, und nexdeck holt ihn nicht mit dem Zugang der Verbindung."
     },
     "cardTerms": {
       "text": "Text",
@@ -2910,7 +2911,8 @@
         "description": "Beschreibung",
         "changes": "Änderungen",
         "reads": "Was gelesen wird",
-        "buttons": "Knöpfe"
+        "buttons": "Knöpfe",
+        "pictures": "Bilder, die geholt werden"
       },
       "noChanges": "Der Autor hat keine Änderungsliste geschrieben.",
       "noReads": "Es wird nichts aus einem Dienst gelesen.",
@@ -3001,14 +3003,19 @@
           "github_rejected": "GitHub hat die Anfrage abgelehnt.",
           "github_rate_limited": "GitHub meldet: zu viele Anfragen. Versuche es in ein paar Minuten noch einmal.",
           "catalog_invalid": "Der Katalog ist kaputt.",
-          "type_mismatch": "Die Datei ist nicht das, was der Katalog behauptet (Karte oder Anbindung). Nichts wurde geändert."
+          "type_mismatch": "Die Datei ist nicht das, was der Katalog behauptet (Karte oder Anbindung). Nichts wurde geändert.",
+          "pictures_not_confirmed": "Bestätige zuerst jeden neuen oder geänderten Bildpfad."
         },
         "flag": {
           "confirm": "fragt vorher",
           "danger": "als gefährlich markiert",
           "asks": "fragt nach: {{names}}",
           "answer": "zeigt die Antwort"
-        }
+        },
+        "picturesNew": "Neuer Bildpfad:",
+        "picturesGone": "Bildpfad entfällt:",
+        "confirmPictures": "Jeden neuen oder geänderten Bildpfad bestätigen",
+        "confirmPicturesHelp": "Ein Bild wird mit dem Zugang der Verbindung geholt, sobald jemand das Board ansieht. Aktualisieren bleibt gesperrt, bis du jedes angehakt hast."
       },
       "unchecked": "Was sie liest und welche Knöpfe sie hat, ließ sich nicht prüfen und wird deshalb nicht gezeigt.",
       "claimsDiffer": "Der Katalog beschreibt diesen Eintrag anders als seine Datei ({{parts}}). Was hier steht, ist aus der Datei gelesen.",
@@ -3018,7 +3025,8 @@
         "buttons": "ihre Knöpfe",
         "requires": "was sie braucht"
       },
-      "filesWarning": "Ein Teil dieses Eintrags ließ sich nicht verwenden: {{message}}"
+      "filesWarning": "Ein Teil dieses Eintrags ließ sich nicht verwenden: {{message}}",
+      "picturesHelp": "Werden mit dem Zugang der Verbindung geholt, sobald die Karte zu sehen ist."
     },
     "share": {
       "button": "Im Card shop teilen",

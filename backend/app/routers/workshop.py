@@ -389,6 +389,7 @@ async def read_update(slug: str, user: AdminUser, db: DbSession) -> dict[str, An
         "locally_changed": one.locally_changed,
         "permissions": change,
         "buttons_to_confirm": updates.to_confirm(change),
+        "pictures_to_confirm": updates.pictures_to_confirm(change),
         "connection_changed": updates.connection_changed(change),
         "placed_on": len(card_routes._placed(db).get(row.slug, {})),  # noqa: SLF001
     }
@@ -398,6 +399,8 @@ class AcceptBody(BaseModel):
     """The buttons the administrator confirmed, whether to keep his own changes as a copy, and the version he looked at."""
 
     confirmed_buttons: list[str] = Field(default_factory=list, max_length=20)
+    #: The picture paths of the new version the administrator confirmed (B2 of a review of 1.0.2).
+    confirmed_pictures: list[str] = Field(default_factory=list, max_length=40)
     keep_mine: bool = True
     expected_version: str | None = Field(default=None, max_length=20)
 
@@ -415,7 +418,9 @@ async def accept_update(slug: str, body: AcceptBody, user: AdminUser, db: DbSess
         text = await files.definition(repo, entry)
         with store.saving:
             try:
-                result = updates.apply(db, row, entry, text, body.confirmed_buttons, body.keep_mine, body.expected_version, user_id=user.id)
+                result = updates.apply(
+                    db, row, entry, text, body.confirmed_buttons, body.keep_mine, body.expected_version, user_id=user.id, confirmed_pictures=body.confirmed_pictures,
+                )
                 db.commit()
             except BaseException:
                 db.rollback()

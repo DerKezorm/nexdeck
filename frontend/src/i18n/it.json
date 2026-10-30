@@ -173,7 +173,8 @@
       "card_integration_github": "Scrivi il progetto come owner/name oppure come https://github.com/owner/name.",
       "card_integration_logo": "Il logo è il nome di un logo della raccolta o un'immagine caricata su nexdeck. Un'immagine dal web non è ammessa.",
       "import_unknown_document": "Non è né una scheda (nexdeck-card: 1) né un'integrazione (nexdeck: integration).",
-      "import_twice": "Questo nome breve compare due volte nel file."
+      "import_twice": "Questo nome breve compare due volte nel file.",
+      "card_picture_acts": "Un'immagine legge soltanto. Questo percorso fa agire il servizio, e nexdeck non lo richiede con le credenziali della connessione."
     },
     "cardTerms": {
       "text": "testo",
@@ -2910,7 +2911,8 @@
         "description": "Descrizione",
         "changes": "Cosa è cambiato",
         "reads": "Cosa legge",
-        "buttons": "Pulsanti"
+        "buttons": "Pulsanti",
+        "pictures": "Immagini che richiede"
       },
       "noChanges": "L'autore non ha scritto un elenco delle modifiche.",
       "noReads": "Non legge nulla da un servizio.",
@@ -3001,14 +3003,19 @@
           "github_rejected": "GitHub ha rifiutato la richiesta.",
           "github_rate_limited": "GitHub dice: troppe richieste. Riprova tra qualche minuto.",
           "catalog_invalid": "Il catalogo è danneggiato.",
-          "type_mismatch": "Il file non è quello che dice il catalogo (scheda o integrazione). Non è stato cambiato nulla."
+          "type_mismatch": "Il file non è quello che dice il catalogo (scheda o integrazione). Non è stato cambiato nulla.",
+          "pictures_not_confirmed": "Conferma prima ogni percorso immagine nuovo o modificato."
         },
         "flag": {
           "confirm": "chiede prima",
           "danger": "segnato come pericoloso",
           "asks": "chiede: {{names}}",
           "answer": "mostra la risposta"
-        }
+        },
+        "picturesNew": "Nuovo percorso immagine:",
+        "picturesGone": "Percorso immagine rimosso:",
+        "confirmPictures": "Conferma ogni percorso immagine nuovo o modificato",
+        "confirmPicturesHelp": "Un'immagine viene richiesta con le credenziali della connessione ogni volta che qualcuno guarda la bacheca. Aggiorna ora resta bloccato finché non le spunti tutte."
       },
       "unchecked": "Non è stato possibile verificare cosa legge e quali pulsanti ha, quindi non viene mostrato nulla.",
       "claimsDiffer": "Il catalogo descrive questa voce in modo diverso dal suo file ({{parts}}). Quello che vedi qui è letto dal file.",
@@ -3018,7 +3025,8 @@
         "buttons": "i suoi pulsanti",
         "requires": "di cosa ha bisogno"
       },
-      "filesWarning": "Una parte di questa voce non è stata utilizzabile: {{message}}"
+      "filesWarning": "Una parte di questa voce non è stata utilizzabile: {{message}}",
+      "picturesHelp": "Vengono richieste con le credenziali della connessione ogni volta che la scheda è mostrata."
     },
     "share": {
       "button": "Condividi nel Card shop",

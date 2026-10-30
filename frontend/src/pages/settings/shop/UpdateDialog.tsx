@@ -45,7 +45,7 @@ function ButtonLine({ button }: { button: ShopButtonText }) {
 function failureText(t: (key: string, options?: Record<string, unknown>) => string, failure: unknown, version: string): string {
   if (!(failure instanceof ApiError)) return t('errors.network')
   const own = [
-    'update_changed', 'buttons_not_confirmed', 'needs_newer_nexdeck', 'entry_removed', 'checksum_mismatch', 'not_installed_from_shop', 'no_update', 'github_unreachable',
+    'update_changed', 'buttons_not_confirmed', 'pictures_not_confirmed', 'needs_newer_nexdeck', 'entry_removed', 'checksum_mismatch', 'not_installed_from_shop', 'no_update', 'github_unreachable',
     'update_invalid', 'too_many_cards', 'copy_failed', 'github_rejected', 'github_rate_limited', 'catalog_invalid', 'type_mismatch',
   ]
   if (own.includes(failure.code)) return t(`cards.shop.update.errors.${failure.code}`, { defaultValue: failure.message, version })
@@ -61,6 +61,7 @@ export function UpdateDialog({ slug, name: known, open, onClose }: { slug: strin
   const { t, i18n } = useTranslation()
   const queryClient = useQueryClient()
   const [confirmed, setConfirmed] = useState<Record<string, boolean>>({})
+  const [confirmedPictures, setConfirmedPictures] = useState<Record<string, boolean>>({})
   const [keepMine, setKeepMine] = useState(true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -78,16 +79,19 @@ export function UpdateDialog({ slug, name: known, open, onClose }: { slug: strin
 
   const data = update.data
   const toConfirm = data?.buttons_to_confirm ?? []
-  const allConfirmed = toConfirm.every((id) => confirmed[id])
+  const picturesToConfirm = data?.pictures_to_confirm ?? []
+  const allConfirmed = toConfirm.every((id) => confirmed[id]) && picturesToConfirm.every((path) => confirmedPictures[path])
   const blocked = data?.needs_newer === true
   const name = (data ? pickText(data.name, i18n.language) : '') || known || slug
   const buttons = data?.permissions.buttons
   const requests = data?.permissions.requests
   const requires = data?.permissions.requires
-  const nothingNew = !!data && !buttons?.added.length && !buttons?.changed.length && !buttons?.removed.length && !requests?.added.length && !requests?.changed.length && !requests?.removed.length && !requires?.added.length && !requires?.removed.length
+  const pictures = data?.permissions.pictures
+  const nothingNew = !!data && !pictures?.added.length && !pictures?.removed.length && !buttons?.added.length && !buttons?.changed.length && !buttons?.removed.length && !requests?.added.length && !requests?.changed.length && !requests?.removed.length && !requires?.added.length && !requires?.removed.length
 
   const close = () => {
     setConfirmed({})
+    setConfirmedPictures({})
     setKeepMine(true)
     setError('')
     setResult(null)
@@ -101,6 +105,7 @@ export function UpdateDialog({ slug, name: known, open, onClose }: { slug: strin
     try {
       const answer = await post<Accepted>(`/workshop/updates/${encodeURIComponent(slug)}/accept`, {
         confirmed_buttons: toConfirm.filter((id) => confirmed[id]),
+        ...(picturesToConfirm.length > 0 ? { confirmed_pictures: picturesToConfirm.filter((path) => confirmedPictures[path]) } : {}),
         keep_mine: keepMine,
         expected_version: data.new_version,
       })
@@ -234,6 +239,16 @@ export function UpdateDialog({ slug, name: known, open, onClose }: { slug: strin
                   {t('cards.shop.update.buttonGone')} <ButtonLine button={one} />
                 </li>
               ))}
+              {pictures?.added.map((path) => (
+                <li key={`pa-${path}`}>
+                  {t('cards.shop.update.picturesNew')} <span className="font-mono text-[12px] text-muted break-words">{path}</span>
+                </li>
+              ))}
+              {pictures?.removed.map((path) => (
+                <li key={`pr-${path}`}>
+                  {t('cards.shop.update.picturesGone')} <span className="font-mono text-[12px] text-muted break-words">{path}</span>
+                </li>
+              ))}
             </ul>
           </section>
 
@@ -250,6 +265,19 @@ export function UpdateDialog({ slug, name: known, open, onClose }: { slug: strin
                   </label>
                 )
               })}
+            </fieldset>
+          )}
+
+          {picturesToConfirm.length > 0 && (
+            <fieldset className="rounded-xl border border-bad/50 p-3" data-testid="update-confirm-pictures">
+              <legend className="text-[12px] text-bad px-1">{t('cards.shop.update.confirmPictures')}</legend>
+              <p className="text-[12px] text-muted mb-2">{t('cards.shop.update.confirmPicturesHelp')}</p>
+              {picturesToConfirm.map((path) => (
+                <label key={path} className="flex items-start gap-2 text-sm py-0.5">
+                  <input type="checkbox" className="accent-accent mt-1" checked={confirmedPictures[path] === true} onChange={(event) => setConfirmedPictures((current) => ({ ...current, [path]: event.target.checked }))} />
+                  <span className="min-w-0 font-mono text-[12px] break-words">{path}</span>
+                </label>
+              ))}
             </fieldset>
           )}
 

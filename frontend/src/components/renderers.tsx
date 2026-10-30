@@ -877,6 +877,15 @@ export function wordedSubtitle(item: Record<string, unknown>, t: (key: string, o
   return tLabel(text)
 }
 
+/**
+ * One sentence about the card as a whole, above its rows: why a list has no buttons, or why a picture of a custom card is
+ * not shown. Without it the buttons or pictures are simply missing and nobody can tell whether that is a fault.
+ */
+export function CardNotice({ data }: { data: RenderProps['data'] }) {
+  if (!data?.meta?.notice) return null
+  return <div className="mx-3 mb-1.5 text-[11px] text-muted border-l-2 border-[var(--nd-warn,theme(colors.amber.400))] pl-2" data-testid="card-notice">{tLabel(String(data.meta.notice))}</div>
+}
+
 export function ListCard({ widget, data, onAction, canAct, series }: RenderProps) {
   const { t, i18n } = useTranslation()
   const disguise = useDisguise()
@@ -896,12 +905,7 @@ export function ListCard({ widget, data, onAction, canAct, series }: RenderProps
           {data.primary.label ? <span className="text-[11px] text-muted uppercase tracking-wide">{L(data.primary.label)}</span> : null}
         </div>
       ) : null}
-      {data?.meta?.notice ? (
-        // One sentence about the card as a whole, above its rows: why a list
-        // has no buttons, for instance. Without it the buttons are simply
-        // missing and nobody can tell whether that is a fault.
-        <div className="mx-3 mb-1.5 text-[11px] text-muted border-l-2 border-[var(--nd-warn,theme(colors.amber.400))] pl-2">{tLabel(String(data.meta.notice))}</div>
-      ) : null}
+      <CardNotice data={data} />
       <ul className="flex-1 min-h-0 scroll px-1.5 pb-1">
         {items.map((item, index) => {
           const status = statusOf(item.status)
@@ -1216,6 +1220,7 @@ export function PostersCard({ widget, data, canAct, onAction }: RenderProps) {
   const kept = isCustom(data) || Boolean(data?.meta?.actions_visible)
   return (
     <>
+    <CardNotice data={data} />
     <ul className="flex-1 min-h-0 scroll px-3 pb-3 grid auto-rows-max gap-2 content-start" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(84px, 1fr))' }} data-testid="posters">
       {items.map((item, index) => {
         const art = mediaUrl(widget.id, item.art as string | undefined)

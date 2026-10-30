@@ -18,7 +18,7 @@ from ..cards import load, store
 from ..models import CardRecord
 from ..services import chronicle
 from ..services.notify import emit
-from . import catalog, installed, state
+from . import catalog, derived, installed, state
 from .installed import Installed
 
 logger = logging.getLogger("nexdeck.workshop")
@@ -130,6 +130,7 @@ def permissions(old: dict[str, Any], new: dict[str, Any]) -> dict[str, Any]:
     old_buttons = {str(one["id"]): _button(one) for one in old.get("buttons", [])}
     new_buttons = {str(one["id"]): _button(one) for one in new.get("buttons", [])}
     changed = [{"before": old_buttons[key], "after": new_buttons[key]} for key in new_buttons if key in old_buttons and _act(old_buttons[key]) != _act(new_buttons[key])]
+    old_pictures, new_pictures = derived.picture_paths(old), derived.picture_paths(new)
     return {
         "requires": {"added": [k for k in after_kinds if k not in before_kinds], "removed": [k for k in before_kinds if k not in after_kinds]},
         "requests": {
@@ -142,12 +143,22 @@ def permissions(old: dict[str, Any], new: dict[str, Any]) -> dict[str, Any]:
             "changed": changed,
             "removed": [old_buttons[key] for key in old_buttons if key not in new_buttons],
         },
+        # A picture path is fetched like a read, with the connection's credentials: a new or changed one is confirmed (B2 of a review of 1.0.2).
+        "pictures": {
+            "added": [path for path in new_pictures if path not in old_pictures],
+            "removed": [path for path in old_pictures if path not in new_pictures],
+        },
     }
 
 
 def to_confirm(change: dict[str, Any]) -> list[str]:
     """The buttons the administrator has to confirm one by one: those that are new and those that act differently (AC-3)."""
     return [one["id"] for one in change["buttons"]["added"]] + [one["after"]["id"] for one in change["buttons"]["changed"]]
+
+
+def pictures_to_confirm(change: dict[str, Any]) -> list[str]:
+    """The picture paths the administrator has to confirm: those the new version makes and the old one did not."""
+    return list(change["pictures"]["added"])
 
 
 def connection_changed(change: dict[str, Any]) -> bool:
@@ -216,7 +227,10 @@ def row_of(db: Session, slug: str) -> CardRecord | None:
     return db.query(CardRecord).filter(CardRecord.slug == slug, CardRecord.kind == "card", CardRecord.origin == "shop", CardRecord.shop_ref != "").first()
 
 
-def apply(db: Session, row: CardRecord, entry: catalog.Entry, text: str, confirmed: list[str], keep_mine: bool, expected: str | None, *, user_id: int) -> dict[str, Any]:
+def apply(
+    db: Session, row: CardRecord, entry: catalog.Entry, text: str, confirmed: list[str], keep_mine: bool, expected: str | None, *, user_id: int,
+    confirmed_pictures: list[str] | None = None,
+) -> dict[str, Any]:
     """Make the card the new version, without committing; the caller holds ``store.saving`` and commits.
 
     Everything is looked at again here, in the lock: two administrators who accept the same update at nearly the same
@@ -235,6 +249,9 @@ def apply(db: Session, row: CardRecord, entry: catalog.Entry, text: str, confirm
     missing = [one for one in to_confirm(change) if one not in confirmed]
     if missing:
         raise catalog.CatalogError("buttons_not_confirmed", "Every new or changed button has to be confirmed.", 409, missing=missing)
+    unconfirmed = [one for one in pictures_to_confirm(change) if one not in (confirmed_pictures or [])]
+    if unconfirmed:
+        raise catalog.CatalogError("pictures_not_confirmed", "Every new or changed picture path has to be confirmed.", 409, missing=unconfirmed)
     one = Installed("card", row.slug, row.shop_ref, row.shop_version, row.yaml_source, row.shop_hash)
     copy_slug: str | None = None
     if one.locally_changed and keep_mine:

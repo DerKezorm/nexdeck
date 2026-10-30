@@ -68,6 +68,19 @@ export function ShopActs({ entry }: { entry: ShopEntry | undefined }) {
           </ul>
         )}
       </section>
+      {entry.pictures && entry.pictures.length > 0 && (
+        <section className="grid gap-1" data-testid="shop-pictures">
+          <h4 className="text-[11px] uppercase tracking-wide text-faint">{t('cards.shop.sections.pictures')}</h4>
+          <p className="text-[12px] text-muted">{t('cards.shop.picturesHelp')}</p>
+          <ul className="grid gap-0.5">
+            {entry.pictures.map((picture, index) => (
+              <li key={index} className="text-sm break-words">
+                {labelOf(picture.kind)} <span className="font-mono text-[12px] text-muted">{picture.path}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </>
   )
 }

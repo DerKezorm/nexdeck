@@ -795,6 +795,13 @@ async def custom_picture(path: str, service: Any) -> tuple[MediaSource, httpx.As
     real_path = card_images.connection_path(path, adapter.raw_base(config)) if adapter.raw_access else None
     if real_path is None:
         raise error("bad_path", "That picture path is not one this card named.", status.HTTP_400_BAD_REQUEST)
+    if card_images.made_by_card(path):
+        # ⚠️ The second wall, as for the requests of a card: a path the card's text made is checked again here, against
+        # the kind as it is now, before it leaves with the connection's credentials (B2 of a review of 1.0.2).
+        try:
+            card_images.refuse_a_made_path(real_path, adapter)
+        except AdapterError as failure:
+            raise error("command_refused", failure.message, status.HTTP_400_BAD_REQUEST) from failure
     source = await _source_on_connection(adapter, config, real_path, ctx)
     # A picture underneath the connection's address is fetched the way the card's own requests are.
     from ..adapters import rawread

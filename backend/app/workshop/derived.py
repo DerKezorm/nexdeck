@@ -26,6 +26,34 @@ class Facts:
     class_: str
     reads: list[dict[str, str]]
     buttons: list[dict[str, Any]] = field(default_factory=list)
+    #: The picture paths the card's text makes (templates): fetched with the connection's credentials like a read.
+    pictures: list[dict[str, str]] = field(default_factory=list)
+
+
+def picture_paths(data: dict[str, Any]) -> list[str]:
+    """The picture paths a card's text makes (``template`` of ``item.image`` and of picture blocks), in the order written.
+
+    ⚠️ Such a path is fetched by GET with the connection's credentials for whoever looks at the board, so the shop shows
+    it like a read before installing and an update that brings a new one is confirmed (B2 of a review of 1.0.2).
+    """
+    found: list[str] = []
+
+    def visit(node: Any) -> None:
+        if isinstance(node, list):
+            for one in node:
+                visit(one)
+        elif isinstance(node, dict):
+            for key, value in node.items():
+                if key == "demo":
+                    continue
+                if key in ("image", "src") and isinstance(value, dict) and isinstance(value.get("template"), str):
+                    if value["template"] not in found:
+                        found.append(value["template"])
+                else:
+                    visit(value)
+
+    visit(data)
+    return found
 
 
 def kind_of(text: str) -> str | None:
@@ -44,6 +72,7 @@ def read(text: str) -> Facts:
             "card", kinds, "buttons" if definition.buttons else "read",
             [{"kind": kinds[0], "path": request.path} for request in definition.requests] if kinds else [],
             [{"label": one.get("label"), "method": one.get("method"), "path": one.get("path")} for one in loaded.data.get("buttons", [])],
+            [{"kind": kinds[0], "path": path} for path in picture_paths(loaded.data)] if kinds else [],
         )
     if found == "integration":
         piece = integration_loader.load_integration(text, saved=[]).definition

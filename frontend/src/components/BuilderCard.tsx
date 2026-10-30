@@ -11,7 +11,7 @@ import { ImageOff } from 'lucide-react'
 import { BLOCK_COLORS, colorOf, holdsList, statusColor, type Block, type BlockRow, type Gap, type HeightStep, type ShownBlockValue, type Size } from '../lib/blocks'
 import { safeUrl } from '../lib/safeUrl'
 import { useDisguise } from '../lib/showcase'
-import { ActionButtons, type RenderProps } from './renderers'
+import { ActionButtons, CardNotice, type RenderProps } from './renderers'
 import { LucideByName } from './ServiceIcon'
 import { Sparkline } from './Sparkline'
 
@@ -207,6 +207,7 @@ export function BuilderCard({ data, series, canAct, onAction }: RenderProps) {
   const draw: Draw = { series, canAct, onAction }
   return (
     <div ref={root} className="flex-1 min-h-0 min-w-0 overflow-hidden px-3 pb-2 flex flex-col gap-2" data-testid="builder-card">
+      <CardNotice data={data} />
       {blocks.map((block, index) => (
         <BlockView key={block.id ?? index} block={block} draw={draw} />
       ))}

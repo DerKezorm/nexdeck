@@ -4150,6 +4150,7 @@
     "Reported messages": "Gemeldete Nachrichten",
     "Unread replies": "Ungelesene Antworten",
     "The service does not say which version it runs.": "Der Dienst nennt seine Version nicht.",
-    "The service did not answer within twenty seconds.": "Der Dienst hat nicht binnen zwanzig Sekunden geantwortet."
+    "The service did not answer within twenty seconds.": "Der Dienst hat nicht binnen zwanzig Sekunden geantwortet.",
+    "A picture of this card is not shown: its path asks the service to do something, and a card only reads.": "Ein Bild dieser Karte wird nicht gezeigt: Sein Pfad lässt den Dienst etwas tun, und eine Karte liest nur."
   }
 }

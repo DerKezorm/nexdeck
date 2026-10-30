@@ -173,7 +173,8 @@
       "card_integration_github": "Write the project as owner/name or as https://github.com/owner/name.",
       "card_integration_logo": "The logo is the name of a logo from the collection, or an image uploaded to nexdeck. A picture from the web is not allowed.",
       "import_unknown_document": "This is neither a card (nexdeck-card: 1) nor an integration (nexdeck: integration).",
-      "import_twice": "This short name stands twice in the file."
+      "import_twice": "This short name stands twice in the file.",
+      "card_picture_acts": "A picture only reads. This path asks the service to do something, and nexdeck does not fetch it with the connection's credentials."
     },
     "cardTerms": {
       "text": "text",
@@ -2910,7 +2911,8 @@
         "description": "Description",
         "changes": "What changed",
         "reads": "What it reads",
-        "buttons": "Buttons"
+        "buttons": "Buttons",
+        "pictures": "Pictures it fetches"
       },
       "noChanges": "The author wrote no list of changes.",
       "noReads": "It reads nothing from a service.",
@@ -3001,14 +3003,19 @@
           "github_rejected": "GitHub refused the request.",
           "github_rate_limited": "GitHub says: too many requests. Try again in a few minutes.",
           "catalog_invalid": "The catalog is broken.",
-          "type_mismatch": "The file is not what the catalog says it is (a card or an integration). Nothing was changed."
+          "type_mismatch": "The file is not what the catalog says it is (a card or an integration). Nothing was changed.",
+          "pictures_not_confirmed": "Confirm every new or changed picture path first."
         },
         "flag": {
           "confirm": "asks first",
           "danger": "marked dangerous",
           "asks": "asks for: {{names}}",
           "answer": "shows the answer"
-        }
+        },
+        "picturesNew": "New picture path:",
+        "picturesGone": "Picture path removed:",
+        "confirmPictures": "Confirm each new or changed picture path",
+        "confirmPicturesHelp": "A picture is fetched with the connection's credentials whenever somebody looks at the board. Update now stays locked until you have ticked every one."
       },
       "unchecked": "What it reads and which buttons it has could not be checked, so none of it is shown.",
       "claimsDiffer": "The catalog describes this entry differently from its file ({{parts}}). What you see here is read from the file.",
@@ -3018,7 +3025,8 @@
         "buttons": "its buttons",
         "requires": "what it needs"
       },
-      "filesWarning": "Part of this entry could not be used: {{message}}"
+      "filesWarning": "Part of this entry could not be used: {{message}}",
+      "picturesHelp": "Fetched with the connection's credentials whenever the card is shown."
     },
     "share": {
       "button": "Share in the Card shop",

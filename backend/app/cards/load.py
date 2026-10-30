@@ -367,6 +367,8 @@ def _semantic(definition: Any, lines: dict[Path, int], running: str) -> list[Pro
                 "A picture is a value of the answer, or a path on the connection that starts with a single /.",
                 (*path, "formula" if shown.formula is not None else "template"),
             )
+        elif shown.template is not None and _picture_acts(shown.template, definition.requires):
+            add("card_picture_acts", PICTURE_ACTS, (*path, "template"))
     link = getattr(getattr(definition, "item", None), "link", None)
     if not pipeline.fixed_place(link):
         add(
@@ -390,6 +392,33 @@ def _semantic(definition: Any, lines: dict[Path, int], running: str) -> list[Pro
             )
         )
     return problems
+
+
+#: A picture path the card's text makes that a read of a kind it needs may not ask (B2 of a review of 1.0.2).
+PICTURE_ACTS = "A picture only reads. This path asks the service to do something, and nexdeck does not fetch it with the connection's credentials."
+
+
+def _picture_acts(template: str, kinds: list[str]) -> bool:
+    """Whether a picture path of a template is refused for one of the kinds the card reads through, as its requests would be.
+
+    ⚠️ The picture is fetched by GET with the connection's credentials whenever the board is looked at: ``/relay/0?turn=off``
+    switches a Shelly, ``/v1/update`` starts an update run of Watchtower. A kind nexdeck does not know (an own connection)
+    still has the words that act for every kind.
+    """
+    from ..adapters import get_adapter
+    from ..adapters.base import AdapterError
+    from . import images
+
+    for kind in kinds or [""]:
+        try:
+            adapter = get_adapter(kind) if kind and not kind.startswith("custom:") else None
+        except KeyError:
+            adapter = None
+        try:
+            images.refuse_a_made_path(template.strip(), adapter)
+        except AdapterError:
+            return True
+    return False
 
 
 def _pictures(definition: Any) -> list[tuple[Path, Any]]:

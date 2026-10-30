@@ -78,6 +78,8 @@ export interface ShopEntry {
   class: ShopClass
   reads: ShopRead[]
   buttons: ShopButton[]
+  /** The picture paths the card's text makes, fetched with the connection's credentials like a read; only from the checked definition. */
+  pictures?: ShopRead[]
   /**
    * `class`, `reads`, `buttons` and `requires` were read from the checked definition (the detail and the check before
    * installing). In the list they are the words of the catalog, which the definition may contradict.
@@ -253,8 +255,11 @@ export interface ShopUpdate {
     requires: { added: string[]; removed: string[] }
     requests: { added: { id: string; path: string }[]; changed: { id: string; before: string; after: string }[]; removed: { id: string; path: string }[] }
     buttons: { added: ShopButtonText[]; changed: { before: ShopButtonText; after: ShopButtonText }[]; removed: ShopButtonText[] }
+    pictures?: { added: string[]; removed: string[] }
   }
   buttons_to_confirm: string[]
+  /** The picture paths of the new version to confirm one by one, like the buttons. */
+  pictures_to_confirm?: string[]
   connection_changed: boolean
   placed_on: number
 }
