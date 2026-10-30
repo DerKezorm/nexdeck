@@ -281,13 +281,11 @@ class MailcowAdapter(Adapter):
                     f"{human_bytes(used)} of {human_bytes(quota)}" if quota > 0 else human_bytes(used),
                     "" if active else "Switched off") if part),
                 "status": status_from_percent(share) if share is not None else "ok",
-                # Readable like the line below it, not the bytes themselves (#57).
-                "value": human_bytes(used),
-                "used": used,
+                # The bytes for the bars, written out like the line below it (#57).
+                "value": used,
+                "display": human_bytes(used),
             })
-        rows.sort(key=lambda row: (-row["used"], row["title"]))
-        for row in rows:
-            del row["used"]
+        rows.sort(key=lambda row: (-row["value"], row["title"]))
         states = {row["status"] for row in rows}
         return WidgetData(
             status="bad" if "bad" in states else "warn" if "warn" in states else "ok",
@@ -311,8 +309,9 @@ class MailcowAdapter(Adapter):
                     human_bytes(used) if used else "",
                     "Switched off" if not active else "", "Backup MX" if _switched_on(one.get("backupmx")) else "") if part),
                 "status": "ok" if active else "warn",
-                # The mailboxes against the limit, as the line below says it (#57).
-                "value": f"{boxes} / {limit}" if limit else boxes,
+                # The mailboxes for the bars, written out against the limit as the line below says it (#57).
+                "value": boxes,
+                **({"display": f"{boxes} / {limit}"} if limit else {}),
             })
         rows.sort(key=lambda row: (row["status"] == "ok", row["title"]))
         return WidgetData(

@@ -970,9 +970,16 @@ export function ListCard({ widget, data, onAction, canAct, series }: RenderProps
                   <ActionButtons actions={item.actions as Action[]} onAction={onAction} canAct={canAct} compact />
                 </span>
               ) : null}
-              {/* With its unit where the row names one: a storage row said "41.6" and meant per cent. */}
+              {/* With its unit where the row names one: a storage row said "41.6" and meant per cent. A row that
+                  writes its number out (display: "10.5 GB", "1 / 5") keeps the number for the bars (#57). */}
               {item.value !== undefined && item.value !== '' && (
-                <span className="num text-xs text-muted whitespace-nowrap">{item.unit ? formatValue(item.value as number | string, String(item.unit)) : disguise.free(L(String(item.value)))}</span>
+                <span className="num text-xs text-muted whitespace-nowrap">
+                  {typeof item.display === 'string'
+                    ? disguise.free(L(item.display))
+                    : item.unit
+                      ? formatValue(item.value as number | string, String(item.unit))
+                      : disguise.free(L(String(item.value)))}
+                </span>
               )}
               {/* How old the newer release is, on a row of the updates card. */}
               {typeof item.released === 'number' && (

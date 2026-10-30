@@ -232,8 +232,9 @@ async def test_a_domain_that_mailcow_writes_active_as_true_is_not_switched_off(c
 async def test_57_the_right_side_says_the_limit_of_a_domain_and_the_space_of_a_mailbox_in_words(ctx: Context) -> None:
     served()
     domains = await get_adapter("mailcow").fetch("domains", CONFIG, {}, ctx)
-    assert [row["value"] for row in domains.items] == ["1 / 5", "2 / 10"]
+    assert [row["display"] for row in domains.items] == ["1 / 5", "2 / 10"]
     boxes = await get_adapter("mailcow").fetch("mailboxes", CONFIG, {}, ctx)
     # Still the fullest first, now readable like the line below it.
-    assert [row["value"] for row in boxes.items] == ["2.0 GB", "937.5 KB", "4.9 KB"]
-    assert all("used" not in row for row in boxes.items)
+    assert [row["display"] for row in boxes.items] == ["2.0 GB", "937.5 KB", "4.9 KB"]
+    # The numbers stay where the bars read them.
+    assert [row["value"] for row in domains.items] == [1, 2] and [row["value"] for row in boxes.items] == [2 * 1024 ** 3, 960_000, 5000]
