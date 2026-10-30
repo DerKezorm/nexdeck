@@ -238,3 +238,19 @@ def test_a_skin_nexdeck_would_not_wear_is_refused_by_the_kit(made: Path, tmp_pat
 def test_a_skin_handed_in_as_a_card_and_a_card_as_a_skin_are_refused(made: Path, tmp_path: Path) -> None:
     assert _codes(_run(made, tmp_path, SKIN, "--type", "card")[1]) == ["type_mismatch"]
     assert _codes(_run(made, tmp_path, GOOD, "--type", "skin")[1]) == ["type_mismatch"]
+
+
+def test_a_page_that_did_not_build_stops_the_kit_whatever_the_exit_code_says(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """On Windows npx through the shell answered 0 for a failed build, and a kit without its page was written as whole."""
+    tool = _load_tool()
+    monkeypatch.setattr(tool.subprocess, "run", lambda *args, **kwargs: subprocess.CompletedProcess(args, 0, stdout="error during build", stderr=""))
+    with pytest.raises(SystemExit, match="did not build"):
+        tool.build_page(tmp_path / "page")
+
+    def built(*args: Any, **kwargs: Any) -> subprocess.CompletedProcess[str]:
+        (tmp_path / "page").mkdir(exist_ok=True)
+        (tmp_path / "page" / "workshop-preview.html").write_text("<!doctype html>", encoding="utf-8")
+        return subprocess.CompletedProcess(args, 0, stdout="", stderr="")
+
+    monkeypatch.setattr(tool.subprocess, "run", built)
+    tool.build_page(tmp_path / "page")

@@ -337,10 +337,14 @@ def write(path: Path, text: str) -> None:
 
 
 def build_page(target: Path) -> None:
-    """The page that draws a card, built by Vite from ``frontend/workshop-preview.html``."""
+    """The page that draws a card or a skin, built by Vite from ``frontend/workshop-preview.html``.
+
+    ⚠️ The page is looked for, not only the exit code: on Windows ``npx`` ran through the shell answered 0 for a build
+    that failed (a package missing from ``node_modules``), and a kit without its page was written as if it were whole.
+    """
     command = ["npx", "vite", "build", "-c", "vite.workshop.config.ts", "--outDir", str(target.resolve()), "--emptyOutDir"]
     done = subprocess.run(command, cwd=FRONTEND, shell=sys.platform == "win32", capture_output=True, text=True)
-    if done.returncode != 0:
+    if done.returncode != 0 or not (target / "workshop-preview.html").is_file():
         raise SystemExit("The drawing page did not build:\n" + done.stdout[-2000:] + done.stderr[-2000:])
 
 
