@@ -102,7 +102,9 @@
       "wornByAll": "Par défaut",
       "wornByYou": "Votre skin",
       "wearForAll": "Définir par défaut",
-      "nowForAll": "{{name}} est maintenant le skin par défaut."
+      "nowForAll": "{{name}} est maintenant le skin par défaut.",
+      "shopTitle": "Skins du Card shop",
+      "shopHelp": "Des skins que d’autres ont partagés dans le Workshop. Un clic en installe un ; il apparaît alors dans la liste ci-dessus et peut être défini par défaut."
     },
     "pickHelp": "Cliquez sur une partie de la scène. Son cadre, son mouvement, son son et ses décorations se règlent ici.",
     "picture": "Image",

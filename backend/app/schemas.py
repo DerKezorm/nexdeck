@@ -67,7 +67,7 @@ class MePatch(BaseModel):
     light_from: Clock | None = None
     dark_from: Clock | None = None
     tilt: bool | None = None
-    #: A skin of one's own, ``{"key", "options", "sounds"}``; ``{}`` wears the installation's.
+    #: A skin of one's own, ``{"key", "options", "sounds"}``; ``{"plain": true}`` wears none; ``{}`` the installation's.
     skin: dict[str, Any] | None = None
     start_board_id: int | None = None
     seen_version: str | None = Field(default=None, max_length=16)

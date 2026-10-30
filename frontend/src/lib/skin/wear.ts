@@ -17,6 +17,8 @@ export interface SkinChoice {
   key?: string
   options?: Record<string, string>
   sounds?: boolean
+  /** An account's word for no skin at all, nexdeck as it is, whatever the installation wears. */
+  plain?: boolean
 }
 
 export interface SkinSound {
@@ -50,6 +52,7 @@ export interface CompiledSkin {
 export const NATIVE_1984 = '1984'
 
 export function chosenSkin(account: SkinChoice | null | undefined, installation: SkinChoice | null | undefined): SkinChoice {
+  if (account?.plain) return {}
   if (account?.key) return account
   return installation?.key ? { ...installation, sounds: account?.sounds } : {}
 }

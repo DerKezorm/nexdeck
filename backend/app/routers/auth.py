@@ -239,7 +239,10 @@ def me(user: CurrentUser, request: Request, db: DbSession) -> UserPublic:
 
 
 def own_skin(db: DbSession, given: dict) -> dict:
-    """A skin of one's own among the installed ones, or ``{}`` for the installation's; sounds are each person's to switch on."""
+    """A skin of one's own among the installed ones, ``{"plain": true}`` for none at all (nexdeck as it is, whatever
+    the installation wears), or ``{}`` for the installation's; sounds are each person's to switch on."""
+    if given.get("plain") is True:
+        return {"plain": True}
     sounds = given.get("sounds", False)
     if not isinstance(sounds, bool):
         raise error("bad_skin_choice", "Whether a skin plays sounds is yes or no.")

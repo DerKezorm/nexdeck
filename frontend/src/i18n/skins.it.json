@@ -102,7 +102,9 @@
       "wornByAll": "Predefinita",
       "wornByYou": "La tua skin",
       "wearForAll": "Imposta come predefinita",
-      "nowForAll": "{{name}} è ora la skin predefinita."
+      "nowForAll": "{{name}} è ora la skin predefinita.",
+      "shopTitle": "Skin dal Card shop",
+      "shopHelp": "Skin che altri hanno condiviso nel Workshop. Un clic ne installa una; poi compare nell’elenco qui sopra e si può impostare come predefinita."
     },
     "pickHelp": "Fai clic su una parte del palco. Cornice, movimento, suono e decorazioni si impostano qui.",
     "picture": "Immagine",

@@ -102,7 +102,9 @@
       "wornByAll": "Default",
       "wornByYou": "Your skin",
       "wearForAll": "Make default",
-      "nowForAll": "{{name}} is the default now."
+      "nowForAll": "{{name}} is the default now.",
+      "shopTitle": "Skins from the Card shop",
+      "shopHelp": "Skins others shared in the Workshop. Install one with a click; it then stands in the list above and can be made the default."
     },
     "pickHelp": "Click a part on the stage. Its frame, motion, sound and decorations are set here.",
     "picture": "Picture",

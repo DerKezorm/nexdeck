@@ -102,7 +102,9 @@
       "wornByAll": "Predeterminado",
       "wornByYou": "Tu skin",
       "wearForAll": "Hacer predeterminado",
-      "nowForAll": "{{name}} es ahora el predeterminado."
+      "nowForAll": "{{name}} es ahora el predeterminado.",
+      "shopTitle": "Skins del Card shop",
+      "shopHelp": "Skins que otros compartieron en el Workshop. Uno se instala con un clic; después aparece arriba en la lista y puede hacerse predeterminado."
     },
     "pickHelp": "Haz clic en una parte del escenario. Su marco, movimiento, sonido y adornos se ajustan aquí.",
     "picture": "Imagen",

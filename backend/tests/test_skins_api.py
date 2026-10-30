@@ -268,3 +268,26 @@ def test_the_workshop_makes_a_skin_worn_by_everybody_and_leaves_the_rest_of_the_
     wrong = admin_client.post("/api/v1/skins/console/wear", headers=CSRF, json={"options": {"desk": "moon"}})
     assert wrong.status_code == 400 and wrong.json()["detail"]["code"] == "bad_skin_choice"
     assert user_client.post("/api/v1/skins/console/wear", headers=CSRF, json={}).status_code == 403
+
+
+def test_the_default_skin_alone_is_changed_and_none_is_nexdeck_as_it_is(admin_client: TestClient, user_client: TestClient) -> None:
+    save_console(admin_client)
+    assert admin_client.put("/api/v1/settings/appearance", headers=CSRF, json={**LOOK, "accent": "#123456", "skin": {"key": "1984"}}).status_code == 200
+    made = admin_client.put("/api/v1/settings/appearance/skin", headers=CSRF, json={"key": "console"})
+    assert made.status_code == 200, made.text
+    assert made.json()["skin"] == {"key": "console", "options": {"desk": "bricks"}} and made.json()["card_style"] == "glass" and made.json()["accent"] == "#123456"
+    assert admin_client.put("/api/v1/settings/appearance/skin", headers=CSRF, json={"key": "1984"}).json()["card_style"] == "window"
+    none = admin_client.put("/api/v1/settings/appearance/skin", headers=CSRF, json={"key": ""}).json()
+    assert none["skin"] == {} and none["card_style"] == "glass", "none takes 1984's window away as well"
+    missing = admin_client.put("/api/v1/settings/appearance/skin", headers=CSRF, json={"key": "nothing"})
+    assert missing.status_code == 400 and missing.json()["detail"]["code"] == "no_such_skin"
+    assert user_client.put("/api/v1/settings/appearance/skin", headers=CSRF, json={"key": ""}).status_code == 403
+
+
+def test_an_account_may_wear_no_skin_whatever_the_installation_wears(user_client: TestClient, admin_client: TestClient) -> None:
+    save_console(admin_client)
+    assert admin_client.put("/api/v1/settings/appearance/skin", headers=CSRF, json={"key": "console"}).status_code == 200
+    answer = user_client.patch("/api/v1/auth/me", headers=CSRF, json={"skin": {"plain": True, "key": "console", "sounds": True}})
+    assert answer.status_code == 200 and answer.json()["skin"] == {"plain": True}
+    assert user_client.get("/api/v1/auth/me").json()["skin"] == {"plain": True}
+    assert user_client.patch("/api/v1/auth/me", headers=CSRF, json={"skin": {"plain": "yes"}}).json()["skin"] == {}, "only true is none"

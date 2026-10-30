@@ -3,6 +3,21 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## Unreleased
+
+### Changed
+
+- **Skins from the Card shop are found in the skin workshop**, with a search of their own, and no longer among the cards and connections of the Card shop under Custom cards.
+- **The default skin.** The skin workshop speaks of it plainly: "Make default" instead of "Wear for everybody", and each skin says whether it is the default or your skin. nexdeck without any skin is a row of its own there, so the default can be set back to none from the workshop as well as from Look.
+
+### Added
+
+- **No skin for one account.** Under Profile an account can wear nexdeck as it is, without the default skin and without 1984, whatever everybody else wears.
+
+### Fixed
+
+- The field to bring in a skin said its help twice, and the skin workshop still pointed to a page called Appearance.
+
 ## 1.1.0 (2026-10-30)
 
 ### Added

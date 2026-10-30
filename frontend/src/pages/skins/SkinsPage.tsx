@@ -12,16 +12,17 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 
-import { ApiError, get, post } from '../../api/client'
+import { ApiError, get, put } from '../../api/client'
 import { Dialog, Spinner, Toast } from '../../components/ui'
-import { SHOP_UPDATES_KEY, type ShopUpdates } from '../../lib/cardShop'
+import { SHOP_UPDATES_KEY, SKIN_KINDS, type ShopUpdates } from '../../lib/cardShop'
 import { useSkinTexts } from '../../lib/skin/texts'
 import { usePaint } from '../../lib/skin/wear'
 import { useAuth } from '../../stores/auth'
 import { SettingsCard } from '../settings/SettingsCard'
 import { ShareDialog } from '../settings/share/ShareDialog'
+import { ShopTab } from '../settings/shop/ShopTab'
 import { SkinUpdateDialog } from '../settings/shop/SkinUpdateDialog'
-import { SkinShelf, useSkins } from '../settings/SkinChooser'
+import { SkinShelf, useSkins, type SkinEntry } from '../settings/SkinChooser'
 import type { Appearance } from '../../lib/appearance'
 import type { Starter } from './SkinEditorPage'
 
@@ -38,13 +39,14 @@ export function SkinsPage() {
   const waiting = new Set((updates.data?.updates ?? []).filter((one) => one.type === 'skin').map((one) => one.slug))
   const starters = useQuery({ queryKey: ['skin-starters'], queryFn: () => get<{ starters: Starter[] }>('/skins/starters'), enabled: choosing })
   const look = useQuery({ queryKey: ['appearance'], queryFn: () => get<Appearance>('/settings/appearance') })
-  const mine = useAuth((state) => state.user?.skin?.key ?? '')
+  // What this account wears of its own: a skin, no skin at all (''), or the default (null, which no row is).
+  const mine = useAuth((state) => (state.user?.skin?.plain ? '' : (state.user?.skin?.key ?? null)))
   const client = useQueryClient()
   // The server names 1984 as the skin 1984 also where it is stored the old way, as the card style window.
   const forAll = look.data?.skin?.key ?? ''
   const wearForAll = async (key: string, name: string) => {
     try {
-      const answer = await post<Appearance>(`/skins/${encodeURIComponent(key)}/wear`, {})
+      const answer = await put<Appearance>('/settings/appearance/skin', { key })
       client.setQueryData(['appearance'], answer)
       usePaint.getState().again()
       setToast({ text: t('skinEditor.page.nowForAll', { name }), level: 'ok' })
@@ -55,13 +57,15 @@ export function SkinsPage() {
   if (!ready || skins.isLoading) return <Spinner />
   const all = skins.data?.skins ?? []
   const own = all.filter((skin) => skin.origin !== 'builtin')
+  // nexdeck as it is, without any skin: a row of its own, so that the default can be set back to it here too.
+  const plain: SkinEntry = { key: '', name: t('settings.skins.none'), description: '', author: '', origin: 'builtin', options: [], native: null, wearable: true, swatches: [] }
   const open = (from: string) => navigate(`/system/skins/new?from=${encodeURIComponent(from)}`)
   return (
     <>
       <SettingsCard title={t('skinEditor.page.title')} description={t('skinEditor.page.help')}>
         <ul className="divide-y divide-line text-sm" data-testid="skins-list">
-          {all.map((skin) => (
-            <li key={skin.key} className="flex items-center gap-2 py-2">
+          {[plain, ...all].map((skin) => (
+            <li key={skin.key || '-'} className="flex items-center gap-2 py-2">
               <span className="flex-1 min-w-0">
                 <span className="flex flex-wrap items-center gap-1.5">
                   <span className="truncate font-medium">{skin.name}</span>
@@ -107,6 +111,9 @@ export function SkinsPage() {
         <button type="button" className="btn btn-accent mt-4" onClick={() => setChoosing(true)}>
           <Plus size={14} /> {t('skinEditor.page.new')}
         </button>
+      </SettingsCard>
+      <SettingsCard title={t('skinEditor.page.shopTitle')} description={t('skinEditor.page.shopHelp')}>
+        <ShopTab kinds={SKIN_KINDS} />
       </SettingsCard>
       <SettingsCard title={t('settings.skins.import')} description={t('settings.skins.importHelp')}>
         <SkinShelf onMessage={(text, level) => setToast({ text, level })} />

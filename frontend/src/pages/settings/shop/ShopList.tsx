@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 
 import { EmptyState, Select } from '../../../components/ui'
 import {
+  CARD_KINDS,
   narrowed,
   NO_FILTERS,
   rememberFits,
@@ -16,6 +17,7 @@ import {
   type ShopEntry,
   type ShopFilters,
   type ShopState,
+  type ShopType,
 } from '../../../lib/cardShop'
 import { useShopSwitch } from './hooks'
 import { ShopTile } from './ShopTile'
@@ -28,14 +30,16 @@ export const PAGE = 48
  * work on the list the server sent, so the list changes at once. "Fits my connections" is on at first and remembered for
  * this browser (EC-9).
  */
-export function ShopList({ catalog, onOpen }: { catalog: ShopCatalog; state: ShopState; onOpen?: (entry: ShopEntry) => void }) {
+export function ShopList({ catalog, kinds = CARD_KINDS, onOpen }: { catalog: ShopCatalog; state: ShopState; kinds?: ShopType[]; onOpen?: (entry: ShopEntry) => void }) {
   const { t, i18n } = useTranslation()
   const switchShop = useShopSwitch()
   const [filters, setFilters] = useState<ShopFilters>(() => ({ ...NO_FILTERS, fits: storedFits() }))
   const [limit, setLimit] = useState(PAGE)
   const lang = i18n.language
 
-  const entries = useMemo(() => catalog.entries.filter(visible), [catalog.entries])
+  // Skins are the skin workshop's and need nothing to read through: no category, no "fits my connections" for them.
+  const skins = kinds.length === 1 && kinds[0] === 'skin'
+  const entries = useMemo(() => catalog.entries.filter((entry) => visible(entry) && kinds.includes(entry.type)), [catalog.entries, kinds])
   const shown = useMemo(() => shopList(entries, filters, lang), [entries, filters, lang])
   // A new search or filter starts at the top of the list again.
   useEffect(() => setLimit(PAGE), [filters])
@@ -50,12 +54,7 @@ export function ShopList({ catalog, onOpen }: { catalog: ShopCatalog; state: Sho
   }
 
   const categories = [{ value: 'all', label: t('cards.shop.allCategories') }, ...SHOP_CATEGORIES.map((one) => ({ value: one, label: t(`cards.shop.category.${one}`) }))]
-  const types = [
-    { value: 'all', label: t('cards.shop.allTypes') },
-    { value: 'card', label: t('cards.shop.type.cards') },
-    { value: 'integration', label: t('cards.shop.type.integrations') },
-    { value: 'skin', label: t('cards.shop.type.skins') },
-  ]
+  const types = [{ value: 'all', label: t('cards.shop.allTypes') }, ...kinds.map((kind) => ({ value: kind, label: t(`cards.shop.type.${kind}s`) }))]
   const sorts = SHOP_SORTS.map((one) => ({ value: one, label: t(`cards.shop.sort.${one}`) }))
 
   return (
@@ -68,20 +67,22 @@ export function ShopList({ catalog, onOpen }: { catalog: ShopCatalog; state: Sho
       <div className="flex flex-wrap items-center gap-2 mb-3">
         <div className="relative flex-1 basis-56 min-w-0">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" aria-hidden="true" />
-          <input className="input input-icon" aria-label={t('cards.shop.search')} placeholder={t('cards.shop.search')} value={filters.query} onChange={(event) => change({ query: event.target.value })} />
+          <input className="input input-icon" aria-label={t(skins ? 'cards.shop.searchSkins' : 'cards.shop.search')} placeholder={t(skins ? 'cards.shop.searchSkins' : 'cards.shop.search')} value={filters.query} onChange={(event) => change({ query: event.target.value })} />
         </div>
-        <Select className="!w-auto" value={filters.category} onChange={(value) => change({ category: value as ShopFilters['category'] })} options={categories} id="shop-category" />
-        <Select className="!w-auto" value={filters.type} onChange={(value) => change({ type: value as ShopFilters['type'] })} options={types} id="shop-type" />
+        {!skins && <Select className="!w-auto" value={filters.category} onChange={(value) => change({ category: value as ShopFilters['category'] })} options={categories} id="shop-category" />}
+        {kinds.length > 1 && <Select className="!w-auto" value={filters.type} onChange={(value) => change({ type: value as ShopFilters['type'] })} options={types} id="shop-type" />}
         <Select className="!w-auto" value={filters.sort} onChange={(value) => change({ sort: value as ShopFilters['sort'] })} options={sorts} id="shop-sort" />
       </div>
-      <label className="inline-flex items-center gap-2 text-sm mb-3">
-        <input type="checkbox" className="accent-accent" checked={filters.fits} onChange={(event) => change({ fits: event.target.checked })} />
-        {t('cards.shop.fits')}
-      </label>
+      {!skins && (
+        <label className="inline-flex items-center gap-2 text-sm mb-3">
+          <input type="checkbox" className="accent-accent" checked={filters.fits} onChange={(event) => change({ fits: event.target.checked })} />
+          {t('cards.shop.fits')}
+        </label>
+      )}
 
       {shown.length === 0 ? (
         <EmptyState
-          title={t('cards.shop.noMatch')}
+          title={t(skins ? 'cards.shop.noMatchSkins' : 'cards.shop.noMatch')}
           action={
             narrowed(filters) ? (
               <button className="btn" onClick={clear}>

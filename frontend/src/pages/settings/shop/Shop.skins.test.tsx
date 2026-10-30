@@ -7,6 +7,7 @@ import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { SKIN_KINDS } from '../../../lib/cardShop'
 import { calls, entry, renderWith, reset, STATE_ON, stub, world } from '../../../test/shopWorld'
 import { ShopTab } from './ShopTab'
 
@@ -30,7 +31,7 @@ const card = entry()
 const CHECK = (over = {}) => ({ entry: skin(), ok: true, documents: [], problems: [], skin_key: 'pixel-desk-2', missing_integrations: [], offered_integrations: [], risk_acknowledged: false, ...over })
 
 async function open() {
-  renderWith(<ShopTab />)
+  renderWith(<ShopTab kinds={SKIN_KINDS} />)
   await userEvent.click(await screen.findByText('Pixel desk'))
   return await screen.findByTestId('shop-detail')
 }
@@ -52,15 +53,21 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals())
 
 describe('a skin in the list', () => {
-  it('is found by its type, and its tile names no reach', async () => {
-    renderWith(<ShopTab />)
+  it('is in the skin workshop’s shop, alone and with no reach, and not among the cards', async () => {
+    const { unmount } = renderWith(<ShopTab kinds={SKIN_KINDS} />)
     const tile = await screen.findByTestId('shop-tile-7/pixel-desk')
     expect(within(tile).getByText('Skin')).toBeInTheDocument()
     expect(within(tile).queryByText('Only reads')).toBeNull()
-    expect(within(screen.getByTestId('shop-tile-123/queue-size')).getByText('Only reads')).toBeInTheDocument()
-    await userEvent.selectOptions(screen.getByDisplayValue('Every type'), 'skin')
-    await waitFor(() => expect(screen.queryByTestId('shop-tile-123/queue-size')).toBeNull())
-    expect(screen.getByTestId('shop-tile-7/pixel-desk')).toBeInTheDocument()
+    expect(screen.queryByTestId('shop-tile-123/queue-size')).toBeNull()
+    // Skins need nothing to read through: no category, no type and no "fits my connections" to choose.
+    expect(screen.getByPlaceholderText('Search by name or author')).toBeInTheDocument()
+    expect(screen.queryByDisplayValue('Every type')).toBeNull()
+    expect(screen.queryByRole('checkbox', { name: /Fits my connections/ })).toBeNull()
+    unmount()
+    renderWith(<ShopTab />)
+    expect(await screen.findByTestId('shop-tile-123/queue-size')).toBeInTheDocument()
+    expect(screen.queryByTestId('shop-tile-7/pixel-desk')).toBeNull()
+    expect(within(screen.getByDisplayValue('Every type')).queryByRole('option', { name: 'Skins' })).toBeNull()
   })
 
   it('says on its page that a skin only changes the look, instead of what it reads and presses', async () => {

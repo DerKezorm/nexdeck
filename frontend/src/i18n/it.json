@@ -3070,7 +3070,9 @@
         "action": "Aggiorna",
         "done": "Aggiornata.",
         "doneCopy": "Aggiornata. Le tue modifiche restano come skin {{key}}."
-      }
+      },
+      "searchSkins": "Cerca per nome o autore",
+      "noMatchSkins": "Nessuna skin corrisponde"
     },
     "share": {
       "button": "Condividi nel Card shop",

@@ -102,7 +102,9 @@
       "wornByAll": "Standard",
       "wornByYou": "Dein Skin",
       "wearForAll": "Als Standard setzen",
-      "nowForAll": "{{name}} ist jetzt der Standard."
+      "nowForAll": "{{name}} ist jetzt der Standard.",
+      "shopTitle": "Skins aus dem Kartenladen",
+      "shopHelp": "Skins, die andere im Workshop geteilt haben. Ein Klick installiert einen; danach steht er oben in der Liste und lässt sich als Standard setzen."
     },
     "pickHelp": "Klick auf ein Teil der Bühne. Rahmen, Bewegung, Ton und Deko stellst du hier ein.",
     "picture": "Bild",

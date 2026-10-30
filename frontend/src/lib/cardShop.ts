@@ -19,6 +19,9 @@ export type ShopSort = 'thumbs' | 'new' | 'name'
 export const SHOP_SORTS: ShopSort[] = ['thumbs', 'new', 'name']
 
 export type ShopType = 'card' | 'integration' | 'skin'
+/** What the Card shop under Custom cards offers; skins are offered in the skin workshop. */
+export const CARD_KINDS: ShopType[] = ['card', 'integration']
+export const SKIN_KINDS: ShopType[] = ['skin']
 
 /** Why an entry left the shop (KARTEN-15 AC-6). */
 export type RemovedLevel = 'harmful' | 'not_useful' | 'withdrawn'

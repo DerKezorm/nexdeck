@@ -40,7 +40,8 @@ export function SkinChooser({ value, onChange, forAccount = false }: { value: Sk
   return (
     <div className="flex flex-col gap-3">
       <ul className="grid gap-2 sm:grid-cols-3" aria-label={t('settings.skins.title')}>
-        <SkinButton label={forAccount ? t('settings.skins.installation') : t('settings.skins.none')} chosen={!value.key} onClick={() => pick(null)} />
+        <SkinButton label={forAccount ? t('settings.skins.installation') : t('settings.skins.none')} chosen={!value.key && !value.plain} onClick={() => pick(null)} />
+        {forAccount && <SkinButton label={t('settings.skins.none')} chosen={value.plain === true} onClick={() => onChange({ plain: true })} />}
         {shown.map((skin) => (
           <SkinButton key={skin.key} label={skin.name} chosen={value.key === skin.key} swatches={skin.swatches} note={skin.wearable ? skin.author || t(`settings.skins.origin.${skin.origin}`, { defaultValue: '' }) : t('settings.skins.off')} onClick={() => pick(skin)} />
         ))}
