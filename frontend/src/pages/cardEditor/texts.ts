@@ -131,4 +131,4 @@ export function removeLanguage(doc: Document, spots: TextSpot[], language: strin
 }
 
 /** Languages offered by "+ Language"; any other code can be written in the YAML view. */
-export const OFFERED_LANGUAGES = ['de', 'es', 'fr', 'it', 'nl', 'pt', 'pl', 'sv', 'da', 'nb', 'fi', 'cs', 'tr', 'ru', 'ja', 'zh', 'ko']
+export const OFFERED_LANGUAGES = ['de', 'es', 'fr', 'it', 'nl', 'pt', 'pl', 'sv', 'da', 'nb', 'fi', 'cs', 'tr', 'ru', 'uk', 'ja', 'zh', 'ko']

@@ -24,6 +24,9 @@ const loaders: Record<string, () => Promise<{ default: unknown }>> = {
   pl: () => import('../i18n/mcp.pl.json'),
   pt: () => import('../i18n/mcp.pt.json'),
   ru: () => import('../i18n/mcp.ru.json'),
+  zh: () => import('../i18n/mcp.zh.json'),
+  ja: () => import('../i18n/mcp.ja.json'),
+  uk: () => import('../i18n/mcp.uk.json'),
 }
 
 /** Puts the words of ``language`` in place. A language that cannot be fetched stays English rather than blank. */

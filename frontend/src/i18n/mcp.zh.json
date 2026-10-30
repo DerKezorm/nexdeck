@@ -1,0 +1,170 @@
+{
+  "mcp": {
+    "nav": "AI from outside (MCP)",
+    "palette": "MCP keys",
+    "group": {
+      "read": "Reading",
+      "act": "Card actions",
+      "admin": "Administration"
+    },
+    "level": {
+      "read": "Read",
+      "act": "Read and act"
+    },
+    "rights": {
+      "title": "Rights per tool",
+      "allow": "Allow",
+      "ask": "Ask me first",
+      "deny": "Deny",
+      "save": "Save rights",
+      "for": "Right for {{tool}}",
+      "why": {
+        "blocked": "Blocked by the administrator for every key.",
+        "adminOnly": "Only administrators can use this tool.",
+        "level": "Needs the level \"Read and act\"."
+      }
+    },
+    "keys": {
+      "title": "AI from outside (MCP)",
+      "help": "A key lets a program such as Claude Code look at your boards over MCP. Each key has its own level, its own boards and its own rights per tool. The key is shown once, when it is made.",
+      "off": "MCP is switched off on this installation. Only an administrator can switch it on.",
+      "offAdmin": "MCP is switched off on this installation.",
+      "offAdminLink": "Switch it on under System.",
+      "created": "This is your key. It is shown only once.",
+      "claudeCode": "For Claude Code",
+      "json": "As JSON, for other programs",
+      "copyLine": "Copy: {{what}}",
+      "copied": "I have copied it",
+      "connected": "Connected program",
+      "revoked": "Revoked",
+      "expired": "Expired",
+      "revokeKey": "Revoke {{name}}",
+      "boardsAll": "All boards you may see, later ones too",
+      "boardsSome": "Boards: {{names}}",
+      "lastUsed": "Last used {{when}}",
+      "neverUsed": "never used",
+      "expiresOn": "Expires {{date}}",
+      "noExpiry": "never expires",
+      "revokeTitle": "Revoke this key?",
+      "revokeBody": "\"{{name}}\" stops working at once. This cannot be undone.",
+      "revoke": "Revoke",
+      "tokensHint": "Programs such as Claude Code connect over MCP, with keys of their own:"
+    },
+    "form": {
+      "name": "Name of the key",
+      "namePlaceholder": "Claude Code on my laptop",
+      "level": "Level",
+      "levelHelp": {
+        "read": "The program can look at cards, the chronicle and history.",
+        "act": "The program can also ask to press card buttons. You answer each press in the bell, unless you allow a tool without asking. Dangerous buttons always ask."
+      },
+      "expires": "Expires",
+      "never": "Never",
+      "days": "After {{days}} days",
+      "boards": "Boards",
+      "boardsAll": "All boards I may see, later ones too",
+      "boardsPick": "Only these boards",
+      "create": "Create key"
+    },
+    "admin": {
+      "title": "AI from outside (MCP)",
+      "help": "Programs such as Claude Code can read your boards, and press card buttons after an approval, over MCP. Off until you switch it on.",
+      "allowed": "Allow MCP",
+      "allowedHelp": "When off, no key works and the endpoint answers as if it did not exist.",
+      "maxLevel": "Highest level",
+      "maxLevelHelp": "No key goes above it, keys that already exist included.",
+      "oauth": "Allow connectors",
+      "oauthHelp": "A program such as Claude can ask a signed-in person for access instead of being given a key.",
+      "blocked": "Blocked tools",
+      "blockedHelp": "A blocked tool is gone for every key: it is not listed, and it answers like a tool that does not exist.",
+      "keysTitle": "All keys",
+      "keysHelp": "The keys of every account. Revoking one ends it at once.",
+      "noKeys": "No keys yet.",
+      "revokeKey": "Revoke {{name}}",
+      "revokeBody": "\"{{name}}\" of {{user}} stops working at once. This cannot be undone."
+    },
+    "request": {
+      "title": "Approval request",
+      "heading": "{{program}} asks to press a button",
+      "help": "Nothing happens until you answer. Allow runs exactly what is shown below. The request runs out after ten minutes.",
+      "helpDone": "This request has been dealt with.",
+      "gone": "This request does not exist.",
+      "back": "Back to notices",
+      "program": "Program",
+      "tool": "Tool",
+      "card": "Card",
+      "board": "Board",
+      "button": "Button",
+      "params": "Parameters",
+      "until": "Answer until",
+      "impact": "What it would hit",
+      "result": "Result",
+      "danger": "Dangerous button",
+      "allow": "Allow",
+      "review": "Review",
+      "confirmTitle": "Allow a dangerous button?",
+      "confirmBody": "{{button}} on {{card}} can stop or remove something. It runs as soon as you confirm.",
+      "confirmAllow": "Yes, press it",
+      "decline": "Decline",
+      "conflict": "This request was already answered or has run out.",
+      "status": {
+        "waiting": "Waiting for your answer",
+        "approved": "Allowed",
+        "declined": "Declined",
+        "expired": "Ran out",
+        "failed": "Allowed, but it did not work"
+      },
+      "row": "Row",
+      "up": "{{name}}: {{text}}"
+    },
+    "chronicle": {
+      "pressed": "{{after}} on {{name}} by {{before}}",
+      "approved": "{{after}} on {{name}} by {{before}}, approved by {{user}}"
+    },
+    "connect": {
+      "title": "Connect a program",
+      "heading": "{{program}} wants to connect to your nexdeck",
+      "help": "The program gets a key of its own. It sees only what you choose here, it shows in your list of keys under Settings, and you can revoke it there at any time.",
+      "program": "Program",
+      "returnsTo": "Returns to",
+      "account": "Account",
+      "level": "Level",
+      "boards": "Boards",
+      "check": "Only allow this if you started connecting in the program yourself and you recognise the address it returns to.",
+      "allow": "Allow",
+      "decline": "Decline",
+      "sending": "Back to the program …",
+      "back": "Back to the program",
+      "backHost": "The button opens {{host}}, the address the program registered.",
+      "error": {
+        "off": "Connectors are not allowed on this installation. Only an administrator can allow them.",
+        "client": "This program is not registered here. Start connecting again in the program.",
+        "redirect": "The program wants to return to an address it did not register. Nothing was sent to it.",
+        "request": "The request of the program is incomplete or meant for another server. Start connecting again in the program.",
+        "guest": "Guests cannot connect programs.",
+        "session": "Sign in with your password to connect a program.",
+        "tooMany": "Your account holds the most keys it may have. Revoke one under Settings first."
+      }
+    },
+    "tool": {
+      "needs_attention": "What needs a look right now: yellow and red cards, failing checks and unread warnings.",
+      "find_cards": "Finds cards by title, service, kind or board.",
+      "card_details": "Everything one card shows: colour, numbers, rows and the buttons it offers.",
+      "chronicle": "What happened lately: colour changes, outages, new versions, restarts and changes in nexdeck.",
+      "metric_history": "How one number of a card moved over the last hours.",
+      "diagnosis": "Why a service is in trouble, as its diagnosis page shows it.",
+      "container_log": "The last lines of a container's log, with secrets masked.",
+      "press_button": "Presses a button a card offers. Asks you first unless allowed; dangerous buttons always ask.",
+      "request_status": "How a press stands that waits for your answer."
+    },
+    "notice": {
+      "asks": "{{program}} asks to press {{button}} on {{card}}",
+      "board": "Board {{board}}.",
+      "what": "{{button}} ({{row}})",
+      "pressed": "{{button}} on {{card}}, by {{program}} (MCP)",
+      "pressedApproved": "{{button}} on {{card}}, by {{program}} (MCP), approved by {{user}}",
+      "failed": "{{button}} on {{card}} failed, by {{program}} (MCP)",
+      "failedApproved": "{{button}} on {{card}} failed, by {{program}} (MCP), approved by {{user}}"
+    }
+  }
+}

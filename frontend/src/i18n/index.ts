@@ -34,6 +34,9 @@ export const LANGUAGES: Record<string, string> = {
   pl: 'Polski',
   pt: 'Português (Brasil)',
   ru: 'Русский',
+  zh: '简体中文',
+  ja: '日本語',
+  uk: 'Українська',
 }
 
 const loaders: Record<string, () => Promise<{ default: Record<string, unknown> }>> = {
@@ -45,6 +48,9 @@ const loaders: Record<string, () => Promise<{ default: Record<string, unknown> }
   pl: () => import('./pl.json'),
   pt: () => import('./pt.json'),
   ru: () => import('./ru.json'),
+  zh: () => import('./zh.json'),
+  ja: () => import('./ja.json'),
+  uk: () => import('./uk.json'),
 }
 
 /** The sign-in words of each language besides English (see above). */
@@ -57,6 +63,9 @@ const oidcLoaders: Record<string, () => Promise<{ default: unknown }>> = {
   pl: () => import('./oidc.pl.json'),
   pt: () => import('./oidc.pt.json'),
   ru: () => import('./oidc.ru.json'),
+  zh: () => import('./oidc.zh.json'),
+  ja: () => import('./oidc.ja.json'),
+  uk: () => import('./oidc.uk.json'),
 }
 
 /** A language's own words with the sign-in words merged in (nexdeck has many accounts, not one). */
@@ -73,6 +82,9 @@ const textLoaders: Record<string, () => Promise<{ default: unknown }>> = {
   pl: () => import('./texts.pl.json'),
   pt: () => import('./texts.pt.json'),
   ru: () => import('./texts.ru.json'),
+  zh: () => import('./texts.zh.json'),
+  ja: () => import('./texts.ja.json'),
+  uk: () => import('./texts.uk.json'),
 }
 
 /** The phrases with numbers of each language; German's stand in texts.ts. */
@@ -84,6 +96,9 @@ const patternLoaders: Record<string, () => Promise<{ patterns: Pattern[] }>> = {
   pl: () => import('./patterns.pl'),
   pt: () => import('./patterns.pt'),
   ru: () => import('./patterns.ru'),
+  zh: () => import('./patterns.zh'),
+  ja: () => import('./patterns.ja'),
+  uk: () => import('./patterns.uk'),
 }
 
 void i18next.use(initReactI18next).init({

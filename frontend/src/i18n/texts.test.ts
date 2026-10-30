@@ -15,10 +15,13 @@ import nl from './texts.nl.json'
 import pl from './texts.pl.json'
 import pt from './texts.pt.json'
 import ru from './texts.ru.json'
+import zh from './texts.zh.json'
+import ja from './texts.ja.json'
+import uk from './texts.uk.json'
 import { PATTERNS, registerTexts, translateText, type Pattern, type TextBundle } from './texts'
 
 /** Every language besides English and German, each with its table of server texts. */
-const OTHERS: Record<string, TextBundle> = { es, fr, it: it_, nl, pl, pt, ru } as Record<string, TextBundle>
+const OTHERS: Record<string, TextBundle> = { es, fr, it: it_, nl, pl, pt, ru, zh, ja, uk } as Record<string, TextBundle>
 
 /** Their patterns, which the app fetches with the table (index.ts). */
 const PATTERN_FILES = import.meta.glob<Pattern[]>('./patterns.*.ts', { eager: true, import: 'patterns' })

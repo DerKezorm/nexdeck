@@ -28,6 +28,9 @@ const loaders: Record<string, Record<string, () => Promise<{ default: unknown }>
     pl: () => import('../i18n/assistant.pl.json'),
     pt: () => import('../i18n/assistant.pt.json'),
     ru: () => import('../i18n/assistant.ru.json'),
+    zh: () => import('../i18n/assistant.zh.json'),
+    ja: () => import('../i18n/assistant.ja.json'),
+    uk: () => import('../i18n/assistant.uk.json'),
   },
   inventory: {
     de: () => import('../i18n/inventory.de.json'),
@@ -38,6 +41,9 @@ const loaders: Record<string, Record<string, () => Promise<{ default: unknown }>
     pl: () => import('../i18n/inventory.pl.json'),
     pt: () => import('../i18n/inventory.pt.json'),
     ru: () => import('../i18n/inventory.ru.json'),
+    zh: () => import('../i18n/inventory.zh.json'),
+    ja: () => import('../i18n/inventory.ja.json'),
+    uk: () => import('../i18n/inventory.uk.json'),
   },
   diagnosis: {
     de: () => import('../i18n/diagnosis.de.json'),
@@ -48,6 +54,9 @@ const loaders: Record<string, Record<string, () => Promise<{ default: unknown }>
     pl: () => import('../i18n/diagnosis.pl.json'),
     pt: () => import('../i18n/diagnosis.pt.json'),
     ru: () => import('../i18n/diagnosis.ru.json'),
+    zh: () => import('../i18n/diagnosis.zh.json'),
+    ja: () => import('../i18n/diagnosis.ja.json'),
+    uk: () => import('../i18n/diagnosis.uk.json'),
   },
 }
 
