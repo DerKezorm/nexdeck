@@ -1,101 +1,101 @@
 {
   "diagnosis": {
-    "title": "Diagnosis",
-    "back": "Back",
-    "notFound": "There is no such service, container or guest any more.",
+    "title": "Diagnose",
+    "back": "Terug",
+    "notFound": "Deze service, container of gast bestaat niet meer.",
     "kind": {
-      "integration": "Connection",
-      "tile": "App tile",
+      "integration": "Verbinding",
+      "tile": "App-tegel",
       "container": "Container",
-      "guest": "Guest"
+      "guest": "Gast"
     },
     "state": {
-      "now_bad": "Red since {{when}}",
-      "now_warn": "Yellow since {{when}}",
-      "nowOpen_bad": "Red",
-      "nowOpen_warn": "Yellow",
-      "past_bad": "Was red from {{from}} to {{to}}",
-      "past_warn": "Was yellow from {{from}} to {{to}}",
-      "pastOpen_bad": "Was red from {{from}}",
-      "pastOpen_warn": "Was yellow from {{from}}",
-      "ok": "Nothing wrong in the last 30 days"
+      "now_bad": "Rood sinds {{when}}",
+      "now_warn": "Geel sinds {{when}}",
+      "nowOpen_bad": "Rood",
+      "nowOpen_warn": "Geel",
+      "past_bad": "Was rood van {{from}} tot {{to}}",
+      "past_warn": "Was geel van {{from}} tot {{to}}",
+      "pastOpen_bad": "Was rood vanaf {{from}}",
+      "pastOpen_warn": "Was geel vanaf {{from}}",
+      "ok": "Niets mis in de laatste 30 dagen"
     },
     "length": {
       "minutes": "{{minutes}} min",
-      "hours": "{{hours}} h {{minutes}} min",
-      "days": "{{days}} d {{hours}} h"
+      "hours": "{{hours}} u {{minutes}} min",
+      "days": "{{days}} d {{hours}} u"
     },
     "cause": {
-      "now": "Probably because of {{name}}",
-      "past": "It was because of {{name}}",
-      "note": "{{name}} hangs on it, so it was not told on its own.",
-      "open": "Look at it"
+      "now": "Waarschijnlijk door {{name}}",
+      "past": "Het kwam door {{name}}",
+      "note": "{{name}} hangt hieraan, dus hier kwam geen apart bericht over.",
+      "open": "Bekijken"
     },
-    "happened": "What happened",
-    "windowNow": "two hours before until now",
-    "windowPast": "two hours before until it ended",
-    "windowOk": "the last two hours",
-    "nothingHappened": "Nothing was written down in that time.",
-    "via": "hangs on: {{name}}",
-    "began": "{{time}} · it began",
-    "ended": "{{time}} · it ended",
-    "readOn": "Read on in the chronicle",
-    "checksTitle": "Check and cards",
-    "checkOk": "answers",
-    "checkUnknown": "not checked yet",
-    "checkDown": "down since {{when}}",
-    "checkOff": "switched off",
-    "noCards": "No card shows this.",
+    "happened": "Wat er gebeurde",
+    "windowNow": "twee uur ervoor tot nu",
+    "windowPast": "twee uur ervoor tot het afliep",
+    "windowOk": "de laatste twee uur",
+    "nothingHappened": "In die tijd is niets genoteerd.",
+    "via": "hangt af van: {{name}}",
+    "began": "{{time}} · het begon",
+    "ended": "{{time}} · het eindigde",
+    "readOn": "Verder lezen in de kroniek",
+    "checksTitle": "Controle en kaarten",
+    "checkOk": "antwoordt",
+    "checkUnknown": "nog niet gecontroleerd",
+    "checkDown": "uit sinds {{when}}",
+    "checkOff": "uitgeschakeld",
+    "noCards": "Geen enkele kaart toont dit.",
     "log": {
       "title": "Log",
-      "show": "Show the log",
-      "help": "Reads the last 100 lines of {{container}} on {{engine}}. Passwords, tokens and keys are masked.",
-      "from": "{{container}} on {{engine}} · {{count}} lines · read at {{time}}",
-      "again": "Read again",
-      "hide": "Hide",
-      "empty": "The log is empty.",
+      "show": "Log tonen",
+      "help": "Leest de laatste 100 regels van {{container}} op {{engine}}. Wachtwoorden, tokens en sleutels worden afgeschermd.",
+      "from": "{{container}} op {{engine}} · {{count}} regels · gelezen om {{time}}",
+      "again": "Opnieuw lezen",
+      "hide": "Verbergen",
+      "empty": "De log is leeg.",
       "why": {
-        "no_container": "No container is known for this, so there is no log to read. Logs come from containers of Docker, Portainer and a Synology.",
-        "no_logs": "{{engine}} gives no container logs.",
-        "demo": "{{engine}} is in the demo and has no real log."
+        "no_container": "Hiervoor is geen container bekend, dus er is geen log om te lezen. Logs komen van containers van Docker, Portainer en een Synology.",
+        "no_logs": "{{engine}} geeft geen containerlogs.",
+        "demo": "{{engine}} staat in de demo en heeft geen echte log."
       }
     },
     "ask": {
-      "title": "Ask nexdeck about it",
-      "help": "The chat gets this page to start from.",
-      "button": "Explain it",
-      "off": "Switch the assistant on under System, Assistant to ask about this page.",
-      "question_now": "Why is {{name}} in trouble?",
-      "question_past": "What happened to {{name}}?",
-      "question_ok": "Is {{name}} all right?"
+      "title": "Vraag nexdeck erover",
+      "help": "De chat krijgt deze pagina als startpunt.",
+      "button": "Uitleg vragen",
+      "off": "Zet de assistent aan onder Systeem, Assistent om over deze pagina te vragen.",
+      "question_now": "Waarom heeft {{name}} problemen?",
+      "question_past": "Wat is er met {{name}} gebeurd?",
+      "question_ok": "Is alles goed met {{name}}?"
     },
     "hangs": {
-      "title": "Hangs on",
-      "nothing": "On nothing nexdeck knows.",
-      "this": "this service",
-      "carries": "Hanging on it",
-      "open": "Diagnosis",
-      "down": "down",
-      "up": "running"
+      "title": "Hangt af van",
+      "nothing": "Van niets wat nexdeck kent.",
+      "this": "deze service",
+      "carries": "Hangt hieraan",
+      "open": "Diagnose",
+      "down": "uit",
+      "up": "actief"
     },
     "runbook": {
       "title": "Runbook",
-      "empty": "No runbook yet. Write down what helps next time, or link to a guide.",
-      "write": "Write a runbook",
-      "edit": "Edit",
-      "text": "What to do",
-      "link": "Link to a longer guide (optional)",
-      "hint": "Markdown: lists with 1. or -, **bold**, `code`.",
-      "save": "Save",
-      "cancel": "Cancel",
+      "empty": "Nog geen runbook. Schrijf op wat de volgende keer helpt, of verwijs naar een handleiding.",
+      "write": "Runbook schrijven",
+      "edit": "Bewerken",
+      "text": "Wat te doen",
+      "link": "Link naar een uitgebreidere handleiding (optioneel)",
+      "hint": "Markdown: lijsten met 1. of -, **vet**, `code`.",
+      "save": "Opslaan",
+      "cancel": "Annuleren",
       "by": "{{user}}, {{when}}",
-      "badLink": "A link starts with http:// or https://."
+      "badLink": "Een link begint met http:// of https://."
     },
     "buttons": {
-      "title": "Buttons",
-      "none": "No buttons: nexdeck cannot restart this itself.",
-      "from": "From the card {{card}}. Each asks first and says what it would hit.",
-      "done": "{{label}}: done."
+      "title": "Knoppen",
+      "none": "Geen knoppen: nexdeck kan dit niet zelf herstarten.",
+      "from": "Van de kaart {{card}}. Elke knop vraagt eerst om bevestiging en zegt wat hij zou raken.",
+      "done": "{{label}}: klaar."
     }
   }
 }
