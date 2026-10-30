@@ -292,7 +292,8 @@
       "apps": "Apps",
       "assistant": "Assistent",
       "inventory": "Inventar",
-      "cards": "Eigene Karten"
+      "cards": "Eigene Karten",
+      "skins": "Skin-Werkstatt"
     },
     "mail": {
       "title": "Mailserver",
@@ -707,6 +708,15 @@
           "titles": "Für Titel",
           "all": "Überall"
         }
+      },
+      "skinReplaces": "Der Standard-Skin „{{name}}“ ersetzt gerade: {{parts}}. Was hier eingestellt ist, bleibt gespeichert und gilt wieder ohne den Skin.",
+      "replacedPart": {
+        "theme": "das Farbthema",
+        "accent": "die Akzentfarbe",
+        "card_style": "den Kartenstil",
+        "radius": "die Ecken",
+        "gap": "den Abstand",
+        "font": "die Schrift"
       }
     },
     "journal": {
@@ -867,6 +877,34 @@
       "tiles": "Jede App-Kachel hat einen Kurznamen, einstellbar in ihren Einstellungen: {{example}} öffnet die Kachel mit dem Kurznamen plex, auf den Boards, die du öffnen darfst.",
       "engines": "Chrome, Edge und Firefox können nexdeck als Suchmaschine aufnehmen. Ein Kurzname dort öffnet seine Kachel, andere Wörter öffnen hier die Suche mit den Wörtern darin, und beim Tippen schlägt die Adresszeile Kacheln und Karten vor. Chrome und Edge führen es unter Einstellungen, Suchmaschine, Suchmaschinen verwalten, wo es eingeschaltet werden kann; Firefox bietet es im Menü der Adresszeile an.",
       "safari": "Safari kann Suchmaschinen so nicht aufnehmen. Dort hilft ein Lesezeichen auf eine Kurzadresse."
+    },
+    "skins": {
+      "title": "Skin",
+      "help": "Ein Skin zeichnet mehr als die Farben neu: Rahmen, kleine Bilder, Bewegung und Töne. Seiten, die nach einem Passwort, einem Schlüssel oder einer Bestätigung fragen, behalten immer nexdecks eigene Zeichnung, in den Farben des Skins.",
+      "none": "nexdeck, ohne Skin",
+      "installation": "Der der Installation",
+      "off": "Abgeschaltet, er passt nicht mehr zu dieser Version",
+      "yours": "Dein Skin",
+      "yoursHelp": "Trag einen Skin dieser Installation für dich, oder den, den alle tragen.",
+      "sounds": "Töne des Skins",
+      "soundsHelp": "Kurze Töne, wenn du ein Teil drückst, dem der Skin einen gibt. Nie auf Seiten, die nach einem Passwort fragen.",
+      "import": "Skin hereinholen",
+      "importHelp": "Füge eine Skin-Datei, einen Look oder ein Farbschema ein. Ein Look oder ein Farbschema wird ein Skin aus Farben und Formen.",
+      "importButton": "Hereinholen",
+      "imported": "Der Skin ist da. Wähl ihn oben aus, um ihn zu tragen.",
+      "download": "{{name}} als Datei",
+      "delete": "{{name}} löschen",
+      "deleteTitle": "{{name}} löschen?",
+      "deleteBody": "Wer ihn trägt, trägt wieder den Skin der Installation.",
+      "toWorkshop": "Skins baust, holst und teilst du in der Skin-Werkstatt.",
+      "toWorkshopLink": "Zur Skin-Werkstatt",
+      "origin": {
+        "own": "Eigener",
+        "shop": "Aus dem Card shop",
+        "builtin": "Kommt mit nexdeck"
+      },
+      "defaultTitle": "Standard-Skin",
+      "defaultLead": "Den sehen alle, die sich im Profil keinen eigenen ausgesucht haben."
     }
   },
   "menu": {
@@ -2858,9 +2896,11 @@
         "card": "Karte",
         "integration": "Anbindung",
         "cards": "Karten",
-        "integrations": "Anbindungen"
+        "integrations": "Anbindungen",
+        "skin": "Skin",
+        "skins": "Skins"
       },
-      "allTypes": "Karten und Anbindungen",
+      "allTypes": "Alle Arten",
       "installed": "Installiert",
       "updateAvailable": "Update verfügbar",
       "removed": "Aus dem Kartenladen entfernt",
@@ -2935,7 +2975,10 @@
         "done": "Installiert.",
         "dropped": "Beim Ersetzen von {{name}} gehen die gespeicherten Werte dieser Felder verloren, Geheimnisse eingeschlossen: {{fields}}.",
         "droppedCheck": "Ich weiß, dass diese Werte verloren gehen",
-        "offeredStranger": "Von jemand anderem als dem Autor dieser Karte. Sieh sie dir an, bevor du sie mitnimmst."
+        "offeredStranger": "Von jemand anderem als dem Autor dieser Karte. Sieh sie dir an, bevor du sie mitnimmst.",
+        "skinAs": "Er wird zum Skin {{key}}. Auswählen kannst du ihn unter Darstellung oder in deinem Profil.",
+        "skinDone": "Installiert.",
+        "toSkins": "Zu den Skins"
       },
       "errors": {
         "checksum_mismatch": "Die Datei passt nicht zur Prüfsumme im Katalog. Es wurde nichts installiert.",
@@ -3027,7 +3070,18 @@
         "requires": "was sie braucht"
       },
       "filesWarning": "Ein Teil dieses Eintrags ließ sich nicht verwenden: {{message}}",
-      "picturesHelp": "Werden mit dem Zugang der Verbindung geholt, sobald die Karte zu sehen ist."
+      "picturesHelp": "Werden mit dem Zugang der Verbindung geholt, sobald die Karte zu sehen ist.",
+      "skinActs": "Ein Skin ändert nur, wie nexdeck aussieht. Er liest nichts und drückt keine Knöpfe. nexdeck übersetzt ihn selbst, und an die Anmeldung und die Seiten mit Geheimnissen kommt er nie heran.",
+      "skinUpdate": {
+        "title": "{{name}} aktualisieren",
+        "lead": "Von Version {{from}} auf {{to}}. Wer diesen Skin trägt, trägt sofort die neue Version.",
+        "keepMine": "Was ich hier geändert habe, als Kopie behalten",
+        "action": "Aktualisieren",
+        "done": "Aktualisiert.",
+        "doneCopy": "Aktualisiert. Deine Änderungen bleiben als Skin {{key}}."
+      },
+      "searchSkins": "Nach Name oder Autor suchen",
+      "noMatchSkins": "Keine Skins passen"
     },
     "share": {
       "button": "Im Card shop teilen",
@@ -3040,7 +3094,8 @@
       "signedInAs": "Bei GitHub angemeldet als {{login}}",
       "kind": {
         "card": "Karte",
-        "integration": "Anbindung"
+        "integration": "Anbindung",
+        "skin": "Skin"
       },
       "mode": {
         "new": "Ein neuer Eintrag im Card shop.",
@@ -3160,7 +3215,10 @@
         "edited": "Gespeichert und erneut in Issue {{number}} gesendet.",
         "recheck": "Gespeichert. Der Text hat sich nicht geändert, deshalb wurde der Workshop gebeten, Issue {{number}} noch einmal zu prüfen.",
         "failed": "Gespeichert, aber nicht erneut gesendet: {{message}}"
-      }
+      },
+      "skinTile": "Ein Skin. Der Workshop zeichnet seine Bilder auf der Bühne des Editors, dunkel und hell.",
+      "leadSkin": "Dein Skin geht als Issue im Workshop unter deinem GitHub-Namen in den Card shop. Der Workshop prüft ihn, und wenn alles passt, wird er von allein aufgenommen. Alles, was du sendest, ist öffentlich und steht unter der MIT-Lizenz.",
+      "descriptionHelpSkin": "Wie er aussieht, auf Englisch, in ein paar Sätzen. Nur Text."
     }
   }
 }

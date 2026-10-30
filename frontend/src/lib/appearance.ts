@@ -12,7 +12,7 @@
 import { useEffect } from 'react'
 import { create } from 'zustand'
 
-import { DEFAULT_FONT, fontOf, setFont } from './fonts'
+import { DEFAULT_FONT, fontOf, loadFace, setFont } from './fonts'
 import { useGround } from './ground'
 import { paintRetro, retroOf, type RetroChoices } from './retro'
 
@@ -52,6 +52,13 @@ export interface Appearance {
   fonts?: string[]
   /** The window style's choices (lib/retro.ts). */
   retro?: Partial<RetroChoices>
+  /** The skin everybody wears unless they chose their own (lib/skin/wear.ts). */
+  skin?: { key?: string; options?: Record<string, string> }
+  /** What `wear` lays on: the skin worn, its compiled sheet, its options and fonts. Never stored on the server. */
+  skin_key?: string
+  skin_css?: string
+  skin_options?: Record<string, string>
+  skin_fonts?: string[]
 }
 
 /**
@@ -128,6 +135,7 @@ export function useBoardCardStyle(style: unknown): void {
 }
 
 const STYLE_ID = 'nexdeck-appearance'
+const SKIN_ID = 'nexdeck-skin'
 const STYLES: readonly CardStyle[] = CARD_STYLES
 const THEME_ID = 'nexdeck-theme'
 const HEX = /^#[0-9a-f]{6}$/i
@@ -335,6 +343,9 @@ export function applyAppearance(look: Appearance | null | undefined): void {
   paintAccent()
   tagFor(THEME_ID, themeCss(look?.theme), document.getElementById(STYLE_ID))
   tagFor(STYLE_ID, (look?.css ?? '').trim())
+  // The skin's sheet before the operator's: the operator's own style sheet stays the last word.
+  tagFor(SKIN_ID, look?.skin_css ?? '', document.getElementById(STYLE_ID))
+  paintSkin(look)
   // The cards: a style the sheet answers to, and two sizes. Glass is the
   // default and needs no mark, so a page without a stored look is unchanged.
   // A board with a style of its own wins over this one (setBoardStyle).
@@ -351,6 +362,22 @@ export function applyAppearance(look: Appearance | null | undefined): void {
   remember(look)
 }
 
+/** The marks a skin's sheet answers to: which skin, and each of its options (backend/app/skins/css.py). */
+function paintSkin(look: Appearance | null | undefined): void {
+  const root = document.documentElement
+  for (const name of root.getAttributeNames()) if (name.startsWith('data-skin-o-')) root.removeAttribute(name)
+  if (!look?.skin_key) {
+    root.removeAttribute('data-skin')
+    return
+  }
+  root.setAttribute('data-skin', look.skin_key)
+  for (const [option, value] of Object.entries(look.skin_options ?? {})) root.setAttribute(`data-skin-o-${option}`, value)
+  for (const font of look.skin_fonts ?? []) void loadFace(font)
+}
+
+/** A skin's sheet is kept for the next start up to this size; a bigger one waits for the server. */
+const KEPT_SKIN = 100_000
+
 const KEPT = 'nexdeck.look'
 
 /**
@@ -366,8 +393,10 @@ function remember(look: Appearance | null | undefined): void {
   try {
     if (!look) localStorage.removeItem(KEPT)
     else {
-      const { theme, accent, colour, preset, card_style, radius, gap, refraction, font, retro } = look
-      localStorage.setItem(KEPT, JSON.stringify({ theme: theme ?? null, accent, colour, preset, card_style, radius, gap, refraction, font, retro, css: '' }))
+      const { theme, accent, colour, preset, card_style, radius, gap, refraction, font, retro, skin_key, skin_options, skin_fonts } = look
+      const skin_css = (look.skin_css ?? '').length <= KEPT_SKIN ? look.skin_css : ''
+      const skin = skin_css ? { skin_key, skin_css, skin_options, skin_fonts } : {}
+      localStorage.setItem(KEPT, JSON.stringify({ theme: theme ?? null, accent, colour, preset, card_style, radius, gap, refraction, font, retro, css: '', ...skin }))
     }
   } catch {
     // A browser that keeps nothing starts in nexdeck's own look, as it always did.

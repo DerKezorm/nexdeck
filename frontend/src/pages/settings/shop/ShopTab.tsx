@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Spinner } from '../../../components/ui'
-import { SHOP_CATALOG_KEY } from '../../../lib/cardShop'
+import { CARD_KINDS, SHOP_CATALOG_KEY, type ShopType } from '../../../lib/cardShop'
 import { codeOf, useShopCatalog, useShopState, useShopSwitch } from './hooks'
 import { ShopDetailPage } from './ShopDetailPage'
 import { ShopList } from './ShopList'
@@ -58,9 +58,9 @@ function ShopProblem({ code, onAgain }: { code: string; onAgain: () => void }) {
 
 /**
  * The Card shop tab of System > Custom cards (KARTEN-14): off, a problem with the catalog, or the list.
- * The catalog is asked only once the shop is on.
+ * The catalog is asked only once the shop is on. The skin workshop shows the same shop with its skins only.
  */
-export function ShopTab() {
+export function ShopTab({ kinds = CARD_KINDS }: { kinds?: ShopType[] }) {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
   const state = useShopState()
@@ -93,7 +93,7 @@ export function ShopTab() {
     <>
       {current && <ShopDetailPage entry={current} entries={catalog.data.entries} state={state.data} onBack={() => setOpened(null)} onOpenEntry={setOpened} />}
       <div hidden={current !== undefined}>
-        <ShopList catalog={catalog.data} state={state.data} onOpen={(one) => setOpened(one.id)} />
+        <ShopList catalog={catalog.data} state={state.data} kinds={kinds} onOpen={(one) => setOpened(one.id)} />
       </div>
     </>
   )

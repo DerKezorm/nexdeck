@@ -1,18 +1,38 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Check } from 'lucide-react'
+import { ArrowRight, Check } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom'
 
 import { ApiError, get, put } from '../../api/client'
 import { Field, Spinner, Switch, Toast } from '../../components/ui'
 import { accentVariables, applyAppearance, CARD_STYLES, type Appearance, type CardStyle } from '../../lib/appearance'
 import { canRefract } from '../../lib/refraction'
-import { RETRO_CHOICES, retroOf, type RetroChoices } from '../../lib/retro'
+import { retroOf } from '../../lib/retro'
+import { compiledSkin, NATIVE_1984, replaces, usePaint, wear, type Replaced, type SkinChoice } from '../../lib/skin/wear'
 import { BrandSettings } from './BrandSettings'
 import { SettingsCard } from './SettingsCard'
+import { SkinChooser, useSkins } from './SkinChooser'
 import { FontPicker } from './FontPicker'
-import { LookShare } from './LookShare'
 import { ThemeChooser } from './ThemeChooser'
+
+/**
+ * What the skin chosen for everybody puts in place of the settings of one card of this page, said above them: those
+ * settings stay stored and come back when the skin goes.
+ */
+function SkinReplaces({ name, replaced, parts }: { name: string; replaced: Replaced[]; parts: Replaced[] }) {
+  const { t } = useTranslation()
+  const shown = parts.filter((part) => replaced.includes(part))
+  if (shown.length === 0) return null
+  return (
+    <p className="text-sm text-warn rounded-xl border border-warn/40 px-3 py-2 mb-3" role="note" data-testid="skin-replaces">
+      {t('settings.appearance.skinReplaces', { name, parts: shown.map((part) => t(`settings.appearance.replacedPart.${part}`)).join(', ') })}
+    </p>
+  )
+}
+
+/** What choosing 1984 sets besides its card style, as the look 1984 did before it was a skin. */
+const LOOK_1984 = (look: Appearance): Partial<Appearance> => ({ theme: look.themes?.['1984'] ?? look.theme, radius: 0, gap: 14 })
 
 const EMPTY: Appearance = { preset: 'cyan', accent: '', css: '', colour: '#22d3ee', presets: {}, card_style: 'glass', radius: 16, gap: 12, refraction: true, font: 'inter' }
 
@@ -39,6 +59,15 @@ const SAMPLE: Record<CardStyle, React.CSSProperties> = {
 }
 
 /**
+ * The skin to store with the look. ⚠️ Always sent: a save without it would take the installation's skin off.
+ * 1984 is kept as the card style window with its choices in retro (what 1.0 reads), so that style says so.
+ */
+function skinOf(form: Appearance): SkinChoice {
+  if (form.card_style === 'window') return { key: NATIVE_1984, options: { ...retroOf(form.retro) } }
+  return form.skin?.key && form.skin.key !== NATIVE_1984 ? form.skin : {}
+}
+
+/**
  * The look of the whole installation: a colour theme, one accent colour
  * and, for whoever wants it, a style sheet of their own.
  *
@@ -52,25 +81,30 @@ export function AppearanceSettings() {
   const saved = useQuery({ queryKey: ['appearance'], queryFn: () => get<Appearance>('/settings/appearance') })
   const [form, setForm] = useState<Appearance>(EMPTY)
   const [toast, setToast] = useState<{ text: string; level: 'ok' | 'error' } | null>(null)
+  // The skin chosen for everybody, saved or not yet: what it replaces of the settings below is said beside them.
+  const skinKey = form.card_style === 'window' || form.skin?.key === NATIVE_1984 ? '' : (form.skin?.key ?? '')
+  const worn = useQuery({ queryKey: ['skin-compiled', skinKey], queryFn: () => compiledSkin(skinKey), enabled: skinKey !== '' })
+  const skins = useSkins()
+  const replaced = skinKey ? replaces(worn.data ?? null) : []
+  const skinName = (skins.data?.skins ?? []).find((skin) => skin.key === skinKey)?.name ?? skinKey
 
   useEffect(() => {
     if (saved.data) setForm(saved.data)
   }, [saved.data])
 
-  // Show it while it is being chosen, and put the stored look back on leaving.
+  // Show it while it is being chosen, with the skin chosen for everybody (its colours: this page keeps nexdeck's own
+  // drawing). ⚠️ Painted without the skin, choosing or saving one showed nothing and took off the one worn.
   const preview = form.accent.trim() || form.presets?.[form.preset] || form.colour
   useEffect(() => {
-    applyAppearance({ ...form, colour: preview })
-    return () => {
-      if (saved.data) applyAppearance(saved.data)
-    }
-  }, [form, preview, saved.data])
+    applyAppearance(wear({ ...form, colour: preview }, skinOf(form), skinKey ? (worn.data ?? null) : null))
+  }, [form, preview, skinKey, worn.data])
+  // On leaving, this account's own look goes back on, as the app puts it on: from the server, with its skin.
+  useEffect(() => () => usePaint.getState().again(), [])
 
   const store = async () => {
     try {
-      const answer = await put<Appearance>('/settings/appearance', { preset: form.preset, accent: form.accent, css: form.css, theme: form.theme ?? null, card_style: form.card_style ?? 'glass', radius: form.radius ?? 16, gap: form.gap ?? 12, refraction: form.refraction !== false, font: form.font ?? 'inter', retro: retroOf(form.retro) })
+      const answer = await put<Appearance>('/settings/appearance', { preset: form.preset, accent: form.accent, css: form.css, theme: form.theme ?? null, card_style: form.card_style ?? 'glass', radius: form.radius ?? 16, gap: form.gap ?? 12, refraction: form.refraction !== false, font: form.font ?? 'inter', retro: retroOf(form.retro), skin: skinOf(form) })
       setForm(answer)
-      applyAppearance(answer)
       client.setQueryData(['appearance'], answer)
       setToast({ text: t('common.saved'), level: 'ok' })
     } catch (failure) {
@@ -101,7 +135,30 @@ export function AppearanceSettings() {
   return (
     <>
       <BrandSettings />
+      <SettingsCard title={t('settings.skins.defaultTitle')} description={`${t('settings.skins.defaultLead')} ${t('settings.skins.help')}`}>
+        <SkinChooser
+          value={skinOf(form)}
+          onChange={(skin) =>
+            setForm((current) =>
+              // 1984 brings what its look always brought: its one-bit theme, square corners and its gap.
+              skin.key === NATIVE_1984
+                ? { ...current, card_style: 'window', retro: { ...retroOf(current.retro), ...skin.options }, skin: {}, ...(current.card_style === 'window' ? {} : LOOK_1984(current)) }
+                : { ...current, skin, card_style: current.card_style === 'window' ? 'glass' : current.card_style },
+            )
+          }
+        />
+        <button className="btn btn-accent mt-4" onClick={store}>
+          {t('common.save')}
+        </button>
+        <p className="mt-4 text-sm text-muted">
+          {t('settings.skins.toWorkshop')}{' '}
+          <Link className="inline-flex items-center gap-1 text-accent" to="/system/skins">
+            {t('settings.skins.toWorkshopLink')} <ArrowRight size={14} />
+          </Link>
+        </p>
+      </SettingsCard>
       <SettingsCard title={t('settings.appearance.themeTitle')} description={t('settings.appearance.themeHelp')}>
+        <SkinReplaces name={skinName} replaced={replaced} parts={['theme']} />
         <ThemeChooser
           value={form.theme ?? null}
           themes={form.themes ?? {}}
@@ -112,8 +169,9 @@ export function AppearanceSettings() {
         </button>
       </SettingsCard>
       <SettingsCard title={t('settings.appearance.cardsTitle')} description={t('settings.appearance.cardsHelp')}>
+        <SkinReplaces name={skinName} replaced={replaced} parts={['card_style', 'radius', 'gap']} />
         <ul className="grid gap-2 grid-cols-3 sm:grid-cols-7" aria-label={t('settings.appearance.cardsTitle')}>
-          {(form.card_styles ?? CARD_STYLES).filter((style) => style in SAMPLE).map((style) => {
+          {(form.card_styles ?? CARD_STYLES).filter((style) => style in SAMPLE && style !== 'window').map((style) => {
             const chosen = (form.card_style ?? 'glass') === style
             return (
               <li key={style}>
@@ -139,7 +197,6 @@ export function AppearanceSettings() {
             )
           })}
         </ul>
-        {form.card_style === 'window' && <RetroFields value={retroOf(form.retro)} onChange={(retro) => setForm((current) => ({ ...current, retro }))} />}
         {form.card_style === 'liquid' && (
           <div className="mt-3">
             <Switch
@@ -169,13 +226,14 @@ export function AppearanceSettings() {
         </button>
       </SettingsCard>
       <SettingsCard title={t('settings.appearance.fontTitle')} description={form.card_style === 'window' ? `${t('settings.appearance.fontHelp')} ${t('settings.appearance.retro.fontNote')}` : t('settings.appearance.fontHelp')}>
+        <SkinReplaces name={skinName} replaced={replaced} parts={['font']} />
         <FontPicker value={form.font ?? 'inter'} onChange={(font) => setForm((current) => ({ ...current, font }))} />
         <button className="btn btn-accent mt-4" onClick={store}>
           {t('common.save')}
         </button>
       </SettingsCard>
-      <LookShare form={form} onChange={setForm} onSave={store} />
       <SettingsCard title={t('settings.appearance.title')} description={t('settings.appearance.help')}>
+        <SkinReplaces name={skinName} replaced={replaced} parts={['accent']} />
         <Field label={t('settings.appearance.accent')} help={t('settings.appearance.accentHelp')}>
           <div className="flex flex-wrap gap-2">
             {presets.map(([name, colour]) => {
@@ -268,37 +326,5 @@ export function AppearanceSettings() {
         </Toast>
       )}
     </>
-  )
-}
-
-/**
- * What 1984 can be told, each as a row of choices: how a yellow or red window
- * says so, the logos, the desk and the type. Shown while the window style is
- * chosen, painted at once like the rest of this page.
- */
-function RetroFields({ value, onChange }: { value: RetroChoices; onChange: (next: RetroChoices) => void }) {
-  const { t } = useTranslation()
-  return (
-    <div className="mt-4 grid gap-3" data-testid="retro-fields">
-      <p className="text-xs text-muted">{t('settings.appearance.retro.help')}</p>
-      {(Object.keys(RETRO_CHOICES) as (keyof RetroChoices)[]).map((key) => (
-        <div key={key} role="group" aria-label={t(`settings.appearance.retro.${key}.title`)}>
-          <p className="text-xs font-medium text-muted mb-1">{t(`settings.appearance.retro.${key}.title`)}</p>
-          <div className="flex flex-wrap gap-1.5">
-            {RETRO_CHOICES[key].map((choice) => (
-              <button
-                key={choice}
-                type="button"
-                className="btn btn-xs"
-                aria-pressed={value[key] === choice}
-                onClick={() => onChange({ ...value, [key]: choice })}
-              >
-                {t(`settings.appearance.retro.${key}.${choice}`)}
-              </button>
-            ))}
-          </div>
-        </div>
-      ))}
-    </div>
   )
 }

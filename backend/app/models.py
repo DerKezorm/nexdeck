@@ -96,6 +96,9 @@ class User(Base):
     tilt: Mapped[bool] = mapped_column(Boolean, default=True, server_default="1")
     #: With ``theme == "schedule"``: when the light look begins and when the
     #: dark one does, ``HH:MM`` on the clock of the browser that shows it.
+    #: The skin this account wears instead of the installation's: ``{"key", "options", "sounds"}``, empty for the
+    #: installation's own. ⚠️ With a default the database knows, like ``tilt``: 1.0 does not know the column.
+    skin: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict, server_default="{}")
     light_from: Mapped[str] = mapped_column(String(5), default="07:00", server_default="07:00")
     dark_from: Mapped[str] = mapped_column(String(5), default="20:00", server_default="20:00")
     start_board_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
@@ -747,6 +750,33 @@ class GithubLogin(Base):
     #: When the sign-in ends for good (at most six months after it was made); after that the person signs in again.
     until: Mapped[datetime] = mapped_column(Utc())
     created_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
+
+
+class Skin(Base):
+    """A skin of this installation (``skins/``): the file as it was saved and what a browser is handed of it.
+
+    The skins nexdeck ships are files beside the code and not rows; a row's key never takes one of theirs.
+    ``compiled`` is rewritten at start when ``engine`` is older than ``skins.compile.ENGINE``.
+    """
+
+    __tablename__ = "skins"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    key: Mapped[str] = mapped_column(String(32), unique=True, index=True)
+    name: Mapped[str] = mapped_column(String(60))
+    #: ``own`` (made or imported here) or ``shop``.
+    origin: Mapped[str] = mapped_column(String(10), default="own")
+    #: The file as JSON text, as it was saved: what is edited and exported.
+    text: Mapped[str] = mapped_column(Text)
+    compiled: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    engine: Mapped[int] = mapped_column(Integer, default=0)
+    shop_ref: Mapped[str] = mapped_column(String(200), default="")
+    shop_version: Mapped[str] = mapped_column(String(20), default="")
+    shop_hash: Mapped[str] = mapped_column(String(64), default="")
+    created_by: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
+    updated_by: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
 
 
 class Conversation(Base):

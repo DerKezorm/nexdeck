@@ -29,6 +29,7 @@ from ..workshop import (
     updates,
     views,
 )
+from ..workshop import skins as shop_skins
 
 router = APIRouter(prefix="/api/v1/workshop", tags=["workshop"])
 logger = logging.getLogger("nexdeck.workshop")
@@ -284,6 +285,19 @@ async def _prepared(db: DbSession, author: str, slug: str) -> tuple[catalog.Entr
 async def check_install(author: str, slug: str, user: AdminUser, db: DbSession) -> dict[str, Any]:
     """The documents of the entry (and the own connections on offer) read the way an import reads a file: what exists here already needs a choice (KARTEN-14 AC-7, AC-8, EC-4)."""
     entry, plan, ctx = await _prepared(db, author, slug)
+    if entry.type == "skin":
+        # A skin is one file that becomes one skin here, under its own short name or the next free one: nothing to choose.
+        refusal = install.check_text(entry, plan.text)
+        return {
+            "entry": views.entry_view(entry, ctx, plan.facts, unreadable=plan.facts is None),
+            "ok": refusal is None,
+            "documents": [],
+            "problems": refusal.more.get("problems", []) if refusal is not None else [],
+            "skin_key": install.free_short(db, entry),
+            "missing_integrations": [],
+            "offered_integrations": [],
+            "risk_acknowledged": state.risk_acknowledged(db, user.id),
+        }
     seen = install.inspect(db, plan, [one.id for one in plan.offered])
     return {
         "entry": views.entry_view(entry, ctx, plan.facts, unreadable=plan.facts is None),
@@ -306,6 +320,13 @@ async def install_entry(author: str, slug: str, body: InstallBody, user: AdminUs
     except catalog.CatalogError as failure:
         raise _failure(failure) from failure
     db.commit()
+    if entry.type == "skin":
+        try:
+            key = shop_skins.install(db, entry, plan.text, user_id=user.id)
+        except catalog.CatalogError as failure:
+            raise _failure(failure) from failure
+        logger.info("%s installed skin %s from the Card shop.", user.username, entry.id)
+        return {"slug": None, "integration": None, "skin": key, "integrations": [], "outcome": None, "missing_integrations": [], "place_url": "/system/skins"}
     try:
         install.confirm_drops(db, plan, body.choices, body.with_integrations, body.confirm_dropped)
     except catalog.CatalogError as failure:
@@ -343,6 +364,57 @@ def read_updates(user: AdminUser, db: DbSession) -> dict[str, Any]:
         return {"enabled": False, "catalog_known": False, "updates": [], "removed": []}
     found = catalog.known(state.repo(db))
     return {"enabled": True, "catalog_known": found is not None, **updates.updates_and_recalls(db, found)}
+
+
+class SkinAcceptBody(BaseModel):
+    """Whether to keep what was changed here as a copy, and the version the administrator looked at."""
+
+    keep_mine: bool = True
+    expected_version: str | None = Field(default=None, max_length=20)
+
+
+async def _installed_skin(db: DbSession, key: str) -> tuple[str, Any, catalog.Entry]:
+    row = shop_skins.from_shop(db, key)
+    if row is None:
+        raise error("not_installed_from_shop", "This skin did not come from the Card shop.", 404)
+    repo, found, _warning = await _catalog(db)
+    entry = found.by_id.get(row.shop_ref)
+    if entry is None:
+        raise error("no_such_entry", "The catalog has no such entry any more.", 404)
+    return repo, row, entry
+
+
+@router.get("/updates/skins/{key}", summary="What the update of a skin from the Card shop is: its versions and its list of changes")
+async def read_skin_update(key: str, user: AdminUser, db: DbSession) -> dict[str, Any]:
+    """A skin reads and presses nothing, so there is nothing to confirm; whoever wears it wears the new version at once."""
+    repo, row, entry = await _installed_skin(db, key)
+    try:
+        if entry.removed is not None:
+            raise catalog.CatalogError("entry_removed", "This entry was removed from the Card shop.", 409)
+        if not installed.newer(entry.version, row.shop_version):
+            raise catalog.CatalogError("no_update", "This skin is up to date.", 409)
+        changelog = await files.text(repo, entry.files.changelog)
+    except catalog.CatalogError as failure:
+        raise _failure(failure) from failure
+    return {
+        "key": row.key, "name": entry.name, "ref": entry.id, "installed_version": row.shop_version, "new_version": entry.version,
+        "needs_newer": load.needs_newer(entry.min_nexdeck), "min_nexdeck": entry.min_nexdeck, "changelog": changelog,
+        "locally_changed": shop_skins.as_installed(row).locally_changed,
+    }
+
+
+@router.post("/updates/skins/{key}/accept", summary="Take the update of a skin from the Card shop: whoever wears it wears the new version at once")
+async def accept_skin_update(key: str, body: SkinAcceptBody, user: AdminUser, db: DbSession) -> dict[str, Any]:
+    repo, row, entry = await _installed_skin(db, key)
+    try:
+        install.gate(entry)
+        text = await files.definition(repo, entry)
+        result = shop_skins.apply(db, row, entry, text, body.keep_mine, body.expected_version, user_id=user.id)
+    except catalog.CatalogError as failure:
+        raise _failure(failure) from failure
+    if result["status"] == "updated":
+        logger.info("%s updated skin %s from the Card shop to %s.", user.username, key, entry.version)
+    return result
 
 
 async def _installed_entry(db: DbSession, slug: str) -> tuple[str, CardRecord, catalog.Entry]:

@@ -14,6 +14,11 @@ import diagnosisEn from './diagnosis.en.json'
 import diagnosisEs from './diagnosis.es.json'
 import diagnosisFr from './diagnosis.fr.json'
 import diagnosisIt from './diagnosis.it.json'
+import skinsDe from './skins.de.json'
+import skinsEn from './skins.en.json'
+import skinsEs from './skins.es.json'
+import skinsFr from './skins.fr.json'
+import skinsIt from './skins.it.json'
 import editorDe from './editor.de.json'
 import editorEn from './editor.en.json'
 import editorEs from './editor.es.json'
@@ -121,6 +126,7 @@ const LAZY = {
   assistant: { en: assistantEn, de: assistantDe, es: assistantEs, fr: assistantFr, it: assistantIt },
   inventory: { en: inventoryEn, de: inventoryDe, es: inventoryEs, fr: inventoryFr, it: inventoryIt },
   diagnosis: { en: diagnosisEn, de: diagnosisDe, es: diagnosisEs, fr: diagnosisFr, it: diagnosisIt },
+  skins: { en: skinsEn, de: skinsDe, es: skinsEs, fr: skinsFr, it: skinsIt },
   editor: { en: editorEn, de: editorDe, es: editorEs, fr: editorFr, it: editorIt },
 }
 for (const [part, bundles] of Object.entries(LAZY)) {

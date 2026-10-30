@@ -157,6 +157,8 @@ export function BackgroundLayer({ background, alarm = false }: { background?: Ba
         <div className="absolute inset-0" style={{ background: gradient }} />
       )}
       {isImage && <div className="absolute inset-0" style={{ background: `rgba(6,9,14,${dim / 100})` }} />}
+      {/* Empty unless a skin lays a tile here (part desk-tile): above nexdeck's own light, under the red of an alarm. */}
+      <div className="absolute inset-0" data-desk-tile />
       {/* A card on the board is red: the room turns a little red as well, so a
           wall display says it from across the room. Faded in and out, never
           blinking, and always there so the fade has something to run on. */}

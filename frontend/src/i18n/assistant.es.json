@@ -94,7 +94,9 @@
       "test": "Guardar y probar",
       "testCosts": "La prueba hace una pregunta corta y cuesta unos pocos tokens.",
       "testOk": "{{model}} responde.",
-      "loadModels": "Cargar modelos"
+      "loadModels": "Cargar modelos",
+      "vision": "El modelo entiende imágenes",
+      "visionHelp": "Entonces el editor de skins le muestra el escenario, para que vea lo que ha hecho. Claude siempre puede; de los modelos de Ollama solo algunos (llava, qwen-vl, gemma3)."
     }
   }
 }

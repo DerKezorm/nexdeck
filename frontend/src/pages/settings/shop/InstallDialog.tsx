@@ -13,7 +13,7 @@ type Answer = ImportChoice | 'cancel'
 const ANSWERS: Answer[] = ['replace', 'copy', 'cancel']
 
 /** The queries that show cards, integrations and the shop itself, refreshed when something came in. */
-const LISTS = [['custom-cards'], ['cards-library'], ['own-integrations'], ['adapters'], ['cards-sources'], ['integrations'], SHOP_CATALOG_KEY, SHOP_STATE_KEY, ['workshop-entry'], ['workshop-updates']]
+const LISTS = [['skins'], ['custom-cards'], ['cards-library'], ['own-integrations'], ['adapters'], ['cards-sources'], ['integrations'], SHOP_CATALOG_KEY, SHOP_STATE_KEY, ['workshop-entry'], ['workshop-updates']]
 
 /** What the install itself says went wrong, in the words of the interface; anything else is worded as an import is. */
 const OWN = ['checksum_mismatch', 'needs_newer_nexdeck', 'entry_removed', 'risk_not_acknowledged', 'no_such_entry', 'github_unreachable', 'github_rejected', 'github_rate_limited', 'catalog_invalid', 'type_mismatch', 'definition_unreadable', 'dropped_not_confirmed']
@@ -70,7 +70,10 @@ export function InstallDialog({
   // Replacing an own connection whose new text drops fields throws their stored values away, secrets included.
   const left = (document: ImportDocument) => offered.some((one) => document.type === 'integration' && one.slug === document.short && !takes(one))
   const losing = documents.filter((document) => document.exists && !left(document) && answers[documentKey(document)] === 'replace' && (document.dropped_fields ?? []).length > 0)
-  const ready = result !== undefined && documents.length > 0 && !problems && undecided.length === 0 && !stopped && (!needRisk || understood) && (losing.length === 0 || lossOk)
+  // A skin is one file that becomes one skin under a free name: nothing to choose, only whether this nexdeck can wear it.
+  const skin = entry.type === 'skin'
+  const fileOk = skin ? result?.ok === true : documents.length > 0 && !problems && undecided.length === 0 && !stopped && (losing.length === 0 || lossOk)
+  const ready = result !== undefined && fileOk && (!needRisk || understood)
 
   const picked = connections.find((one) => String(one.id) === connection) ?? connections[0] ?? null
   const failureText = (failure: unknown) => {
@@ -158,6 +161,17 @@ export function InstallDialog({
       )}
       {result && connections.length === 1 && <p className="text-sm mb-3">{t('cards.shop.install.connectionOne', { name: connections[0].name })}</p>}
       {result && entry.type === 'card' && connections.length === 0 && <p className="text-sm text-warn mb-3">{t('cards.shop.install.noConnection')}</p>}
+      {result && skin && result.ok && <p className="text-sm mb-3">{t('cards.shop.install.skinAs', { key: result.skin_key ?? entry.slug })}</p>}
+      {result && skin && !result.ok && (
+        <div className="text-sm text-bad mb-3" role="alert" data-testid="install-skin-problems">
+          <p>{t('cards.shop.install.problems')}</p>
+          <ul className="list-disc pl-5">
+            {(result.problems ?? []).slice(0, 8).map((one, index) => (
+              <li key={index}>{one.path ? `${one.path}: ${one.message}` : one.message}</li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {offered.length > 0 && (
         <fieldset className="mb-3" data-testid="install-offered">

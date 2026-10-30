@@ -10,6 +10,8 @@ from app import migrations
 from app.db import get_engine
 from app.models import Base
 
+NEWEST = max(number for number, _name, _step in migrations.MIGRATIONS)
+
 
 def test_karten16_migration_31_adds_the_table_to_an_older_database(data_dir: Path) -> None:
     engine = get_engine()
@@ -19,11 +21,11 @@ def test_karten16_migration_31_adds_the_table_to_an_older_database(data_dir: Pat
         connection.execute(text("CREATE TABLE schema_version (version INTEGER NOT NULL)"))
         connection.execute(text("INSERT INTO schema_version (version) VALUES (30)"))
     migrations.migrate()
-    assert migrations.schema_version() == 31
+    assert migrations.schema_version() == NEWEST
     with engine.connect() as connection:
         columns = {row[1] for row in connection.execute(text("PRAGMA table_info(github_logins)"))}
         links = [(row[2], row[6]) for row in connection.execute(text("PRAGMA foreign_key_list(github_logins)"))]
     assert {"user_id", "github_id", "login", "access", "refresh", "access_until", "until", "created_at"} <= columns
     assert ("users", "CASCADE") in links, "the sign-in goes with the account"
     migrations.migrate()
-    assert migrations.schema_version() == 31
+    assert migrations.schema_version() == NEWEST

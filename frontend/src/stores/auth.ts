@@ -22,7 +22,7 @@ interface AuthState {
   /** Signed in on the home network without a password; `again` after signing out on purpose. */
   homeSignIn: (again?: boolean) => Promise<void>
   logout: () => Promise<void>
-  update: (fields: Partial<Pick<User, 'display_name' | 'email' | 'locale' | 'language_pair' | 'theme' | 'light_from' | 'dark_from' | 'tilt' | 'start_board_id' | 'seen_version'>>) => Promise<void>
+  update: (fields: Partial<Pick<User, 'display_name' | 'email' | 'locale' | 'language_pair' | 'theme' | 'light_from' | 'dark_from' | 'tilt' | 'skin' | 'start_board_id' | 'seen_version'>>) => Promise<void>
   /** Take an account the server just handed back, after an upload for instance. */
   setUser: (user: User) => void
 }

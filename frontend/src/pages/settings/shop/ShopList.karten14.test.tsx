@@ -126,7 +126,7 @@ describe('search, filters and sorting', () => {
     await userEvent.selectOptions(screen.getByDisplayValue('All categories'), 'downloads')
     expect(names()).toEqual(['Download speed'])
     await userEvent.selectOptions(screen.getByDisplayValue('Downloads'), 'all')
-    await userEvent.selectOptions(screen.getByDisplayValue('Cards and integrations'), 'integration')
+    await userEvent.selectOptions(screen.getByDisplayValue('Every type'), 'integration')
     expect(names()).toEqual(['Lamp'])
   })
 

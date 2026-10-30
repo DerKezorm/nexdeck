@@ -5,12 +5,14 @@
 
 ``<out>/kit`` is what the actions of the workshop repository run, with no source of nexdeck beside it:
 
-* ``nexdeck_kit/``: the modules that read and check a card or an own connection, the way nexdeck does when a person
-  saves one, copied word for word from ``app/``. A few stand-ins take the place of what has nothing to do with checking
+* ``nexdeck_kit/``: the modules that read and check a card, an own connection or a skin, the way nexdeck does when a
+  person saves one, copied word for word from ``app/``. A few stand-ins take the place of what has nothing to do with checking
   (the database, the settings, the registry of connections, which keeps only the names of the kinds).
 * ``check.py``: reads one file and says what is wrong with it, how far it reaches (``read``, ``buttons`` or ``login``)
-  and what its demo data make of it (the ``WidgetData`` the renderers draw).
-* ``page/``: the page that draws a ``WidgetData`` with the renderers of nexdeck, light and dark (``frontend/workshop-preview.html``).
+  and what its demo data make of it (the ``WidgetData`` the renderers draw); for a skin, the style sheet nexdeck
+  compiles from it, which the page wears for the pictures.
+* ``page/``: the page that draws a ``WidgetData`` with the renderers of nexdeck, or a skin on the stage of the skin
+  editor, light and dark (``frontend/workshop-preview.html``).
 * ``VERSION``: the version of nexdeck and the commit the kit comes from.
 * ``requirements.txt``: the plain Python packages the kit needs, at the versions of nexdeck.
 
@@ -51,10 +53,16 @@ COPIED = (
     "adapters/base.py",
     "adapters/rawread.py",
     "adapters/custom.py",
+    "services/themes.py",
+    "skins/parts.json",
+    "skins/css.py",
+    "skins/schema.py",
+    "skins/sprites.py",
+    "skins/compile.py",
 )
 
 #: The packages of ``requirements.txt`` the copied modules import.
-NEEDED_PACKAGES = ("pydantic", "pyyaml", "httpx", "jmespath")
+NEEDED_PACKAGES = ("pydantic", "pyyaml", "httpx", "jmespath", "tinycss2")
 
 STAND_INS = {
     "__init__.py": '"""The checking kit of the nexdeck workshop."""\n\n__version__ = "{version}"\n',
@@ -87,12 +95,17 @@ def all_adapters():
 ''',
     "cards/store.py": '"""No saved cards in the kit."""\n\n\ndef get(db, slug):\n    return None\n',
     "db.py": '"""No database in the kit."""\n\nfrom contextlib import contextmanager\n\n\n@contextmanager\ndef db_session():\n    yield None\n',
+    "services/__init__.py": '"""Only what the skins of the kit ask for."""\n',
+    # The limits a skin file is held to, as that nexdeck had them; nothing that reads or writes the look of an installation.
+    "services/appearance.py": '"""The limits of the look of nexdeck a skin file is held to, as the nexdeck of the kit had them."""\n\n'
+    "CARD_STYLES = {card_styles}\nFONTS = {fonts}\nRADIUS = {radius}\nGAP = {gap}\n",
+    "skins/__init__.py": '"""Skins, read and compiled as nexdeck does."""\n',
     "config.py": '"""The only setting a copied module asks for."""\n\nfrom types import SimpleNamespace\n\n\ndef get_settings():\n    return SimpleNamespace(resolved_secret_key=lambda: "nexdeck-workshop-kit")\n',
 }
 
 CHECK_PY = '''"""Checks one file of the workshop the way nexdeck does when a person saves it.
 
-    python check.py FILE [--type card|integration] [--scan LABEL=FILE ...]
+    python check.py FILE [--type card|integration|skin] [--scan LABEL=FILE ...]
 
 ``--scan`` reads a plain text of the submission (its description, its list of changes) and reports a key or a token in it.
 
@@ -115,7 +128,16 @@ from nexdeck_kit.adapters.rawread import refuse_a_command  # noqa: E402
 from nexdeck_kit.cards import credentials, integration, load, pipeline, schema  # noqa: E402
 from nexdeck_kit.cards import integration_schema as isch  # noqa: E402
 
+from nexdeck_kit.skins import compile as skin_compile  # noqa: E402
+from nexdeck_kit.skins import css as skin_css  # noqa: E402
+from nexdeck_kit.skins import schema as skin_schema  # noqa: E402
+from pydantic import ValidationError  # noqa: E402
+
 from types import SimpleNamespace  # noqa: E402
+
+#: The longest skin file nexdeck takes, and the names of the skins it ships, which no other skin may take.
+SKIN_MAX = __SKIN_MAX__
+SHIPPED_SKINS = __SHIPPED_SKINS__
 
 _CARD = re.compile(r"^nexdeck-card[ \\t]*:", re.MULTILINE)
 _INTEGRATION = re.compile(r"^nexdeck[ \\t]*:[ \\t]*[\\"']?integration[\\"']?[ \\t]*(#.*)?$", re.MULTILINE)
@@ -132,7 +154,17 @@ def problem(code, message, path="", line=None):
     return {"code": code, "message": message, "path": path, "line": line}
 
 
+def is_skin(text):
+    try:
+        data = json.loads(text)
+    except ValueError:
+        return False
+    return isinstance(data, dict) and data.get("nexdeck_skin") == 1
+
+
 def kind_of(text):
+    if is_skin(text):
+        return "skin"
     if _CARD.search(text):
         return "card"
     if _INTEGRATION.search(text):
@@ -143,6 +175,15 @@ def kind_of(text):
 def inspect(text, wanted=None):
     out = {"ok": False, "kit": __version__, "type": None, "problems": []}
     found = kind_of(text)
+    names = {"card": "a card", "integration": "a connection", "skin": "a skin"}
+    if found == "skin":
+        if wanted and wanted != found:
+            out["problems"].append(problem("type_mismatch", f"The submission says it is {names[wanted]}, the text is a skin."))
+            return out
+        out["type"] = found
+        _skin(text, out)
+        out["ok"] = not out["problems"]
+        return out
     if len(text) > schema.MAX_DEFINITION:
         out["problems"].append(problem("too_long", f"The definition is {len(text)} characters long, the limit is {schema.MAX_DEFINITION}."))
         return out
@@ -150,10 +191,9 @@ def inspect(text, wanted=None):
         out["problems"].append(problem("one_document", "A submission is one card or one connection, as a single YAML document."))
         return out
     if found is None:
-        out["problems"].append(problem("unknown_type", "The text is neither a card (nexdeck-card: 1) nor a connection (nexdeck: integration)."))
+        out["problems"].append(problem("unknown_type", "The text is neither a card (nexdeck-card: 1), a connection (nexdeck: integration) nor a skin (\\"nexdeck_skin\\": 1)."))
         return out
     if wanted and wanted != found:
-        names = {"card": "a card", "integration": "a connection"}
         out["problems"].append(problem("type_mismatch", f"The submission says it is {names[wanted]}, the text is {names[found]}."))
         return out
     out["type"] = found
@@ -204,6 +244,31 @@ def _card(text, out):
         out["problems"].append(problem("demo_failed", f"The demo data do not work with this card: {type(failure).__name__}.", "demo"))
 
 
+def _skin(text, out):
+    """A skin is read and compiled as nexdeck does when it is saved; what is compiled is what the pictures wear."""
+    if len(text) > SKIN_MAX:
+        out["problems"].append(problem("too_long", f"The skin is {len(text)} characters long, the limit is {SKIN_MAX}."))
+        return
+    try:
+        skin = skin_schema.SkinFile.model_validate(json.loads(text))
+    except ValidationError as failure:
+        out["problems"] += [problem("bad_skin", error["msg"], ".".join(str(step) for step in error["loc"])) for error in failure.errors()]
+        return
+    out.update(
+        slug=skin.key, name=skin.name, description=skin.description, version=skin.version, min_nexdeck=__version__,
+        requires=[], reads=[], buttons=[],
+    )
+    # A skin reads nothing and presses nothing: it reaches no further than any other.
+    out["class"] = "read"
+    if skin.key in SHIPPED_SKINS:
+        out["problems"].append(problem("taken", f"{skin.key} is the name of a skin nexdeck ships; give yours another.", "key"))
+        return
+    try:
+        out["compiled"] = skin_compile.compile_skin(skin).as_json()
+    except skin_css.SkinCssError as failure:
+        out["problems"] += [problem("bad_css", one.message, "css", one.line) for one in failure.problems]
+
+
 def _integration(text, out):
     loaded = integration.load_integration(text)
     definition = loaded.definition
@@ -225,7 +290,7 @@ def _integration(text, out):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("file")
-    parser.add_argument("--type", choices=("card", "integration"))
+    parser.add_argument("--type", choices=("card", "integration", "skin"))
     parser.add_argument("--scan", action="append", default=[], metavar="LABEL=FILE")
     arguments = parser.parse_args()
     text = Path(arguments.file).read_text(encoding="utf-8")
@@ -272,16 +337,23 @@ def write(path: Path, text: str) -> None:
 
 
 def build_page(target: Path) -> None:
-    """The page that draws a card, built by Vite from ``frontend/workshop-preview.html``."""
+    """The page that draws a card or a skin, built by Vite from ``frontend/workshop-preview.html``.
+
+    ⚠️ The page is looked for, not only the exit code: on Windows ``npx`` ran through the shell answered 0 for a build
+    that failed (a package missing from ``node_modules``), and a kit without its page was written as if it were whole.
+    """
     command = ["npx", "vite", "build", "-c", "vite.workshop.config.ts", "--outDir", str(target.resolve()), "--emptyOutDir"]
     done = subprocess.run(command, cwd=FRONTEND, shell=sys.platform == "win32", capture_output=True, text=True)
-    if done.returncode != 0:
+    if done.returncode != 0 or not (target / "workshop-preview.html").is_file():
         raise SystemExit("The drawing page did not build:\n" + done.stdout[-2000:] + done.stderr[-2000:])
 
 
 def build(out: Path, *, page: bool = True, page_dir: Path | None = None) -> None:
     from app import __version__, adapters
     from app.cards import integration_schema, schema
+    from app.services import appearance
+    from app.skins import schema as skin_schema
+    from app.skins import store as skin_store
 
     kit = out / "kit"
     if kit.exists():
@@ -295,14 +367,19 @@ def build(out: Path, *, page: bool = True, page_dir: Path | None = None) -> None
     stand_ins["adapters/__init__.py"] = stand_ins["adapters/__init__.py"].format(
         kinds=repr(sorted(adapters.builtin_kinds())), categories=repr(sorted(adapters.builtin_categories()))
     )
+    stand_ins["services/appearance.py"] = stand_ins["services/appearance.py"].format(
+        card_styles=repr(appearance.CARD_STYLES), fonts=repr(appearance.FONTS), radius=repr(appearance.RADIUS), gap=repr(appearance.GAP)
+    )
     for name, text in stand_ins.items():
         write(package / name, text)
-    write(kit / "check.py", CHECK_PY)
+    check = CHECK_PY.replace("__SKIN_MAX__", repr(skin_store.MAX_FILE)).replace("__SHIPPED_SKINS__", repr(sorted(skin_store.builtin())))
+    write(kit / "check.py", check)
     write(kit / "VERSION", json.dumps({"nexdeck": __version__, "commit": git_commit()}, indent=2) + "\n")
     write(kit / "requirements.txt", "\n".join(pinned(name) for name in NEEDED_PACKAGES) + "\n")
     schemas = out / "schema"
     write(schemas / "card.schema.json", json.dumps(schema.json_schema(), indent=2, ensure_ascii=False) + "\n")
     write(schemas / "integration.schema.json", json.dumps(integration_schema.json_schema(), indent=2, ensure_ascii=False) + "\n")
+    write(schemas / "skin.schema.json", json.dumps(skin_schema.SkinFile.model_json_schema(), indent=2, ensure_ascii=False) + "\n")
     if page_dir is not None:
         shutil.copytree(page_dir, kit / "page")
     elif page:

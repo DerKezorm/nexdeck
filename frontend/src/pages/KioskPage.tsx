@@ -12,6 +12,7 @@ import { ActionSheet, type PendingAction } from '../components/ActionSheet'
 import { Spinner, Toast } from '../components/ui'
 import { actionDoneText, actionFailureText } from '../lib/actionResult'
 import { applyAppearance, useBoardCardStyle, type Appearance } from '../lib/appearance'
+import { lookWithSkin } from '../lib/skin/wear'
 import { boardWidth, gridColumns, WIDTH_CLASS } from '../lib/grid'
 import { withNews, type HomeAnswer } from '../lib/home'
 import { needsSheet, startingValue, unanswered } from '../lib/unanswered'
@@ -137,7 +138,13 @@ export function KioskPage() {
   // session, and the shell paints the look only for someone signed in: every
   // kiosk stood in nexdeck's own cyan, whatever theme, accent or style sheet
   // the operator had chosen. Read again every half hour, as the board is.
-  const look = useQuery({ queryKey: ['kiosk-appearance', token], queryFn: () => get<Appearance>('/settings/appearance'), enabled: Boolean(data), refetchInterval: 30 * 60_000 })
+  // The installation's skin with it: a wall display has no account to choose one of its own.
+  const look = useQuery({
+    queryKey: ['kiosk-appearance', token],
+    queryFn: async () => (await lookWithSkin(await get<Appearance>('/settings/appearance'))).look,
+    enabled: Boolean(data),
+    refetchInterval: 30 * 60_000,
+  })
   useEffect(() => {
     if (look.data) applyAppearance(look.data)
   }, [look.data])

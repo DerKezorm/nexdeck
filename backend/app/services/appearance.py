@@ -23,6 +23,8 @@ from ..models import Setting
 from . import css_scan, themes
 
 KEY = "appearance"
+#: The skin that was the card style ``window`` before there were skins (``skins/builtin/1984.json``).
+NATIVE_1984 = "1984"
 #: Long enough for a real style sheet, short enough not to be a payload.
 MAX_CSS = 20_000
 COLOUR = re.compile(r"^#[0-9a-fA-F]{6}$")
@@ -83,7 +85,7 @@ RETRO: dict[str, tuple[str, ...]] = {
 RADIUS = (0, 28, 16)
 GAP = (4, 28, 12)
 DEFAULTS: dict[str, Any] = {"preset": "cyan", "accent": "", "css": "", "theme": None, "card_style": "glass", "radius": RADIUS[2], "gap": GAP[2], "refraction": True,
-                           "font": FONTS[0], "retro": {}}
+                           "font": FONTS[0], "retro": {}, "skin": {}}
 
 
 class AppearanceError(Exception):
@@ -109,6 +111,7 @@ def stored(db: DbSessionType) -> dict[str, Any]:
         "refraction": value.get("refraction") is not False,
         "font": value["font"] if value.get("font") in FONTS else FONTS[0],
         "retro": _retro(value.get("retro")),
+        "skin": _skin(value),
         "card_styles": list(CARD_STYLES),
         "fonts": list(FONTS),
         "presets": PRESETS,
@@ -116,6 +119,21 @@ def stored(db: DbSessionType) -> dict[str, Any]:
         # What in the chosen theme is hard to read, so the page can say so.
         "weak": themes.weak_spots(value["theme"]) if value.get("theme") else [],
     }
+
+
+def _skin(value: dict[str, Any]) -> dict[str, Any]:
+    """The skin everybody wears unless they chose their own; ``{}`` for none.
+
+    ⚠️ Before skins, 1984 was the card style ``window`` with its choices in
+    ``retro``. A row of that time is read as the skin 1984 with those choices,
+    and nothing is rewritten until the look is saved again.
+    """
+    skin = value.get("skin")
+    if isinstance(skin, dict) and isinstance(skin.get("key"), str) and skin["key"]:
+        return {"key": skin["key"], "options": dict(skin.get("options") or {})}
+    if value.get("card_style") == "window":
+        return {"key": NATIVE_1984, "options": _retro(value.get("retro"))}
+    return {}
 
 
 def _retro(value: Any) -> dict[str, str]:
@@ -136,6 +154,8 @@ def public(db: DbSessionType) -> dict[str, Any]:
         "theme": config["theme"], "card_style": config["card_style"], "font": config["font"],
         "retro": config["retro"], "radius": config["radius"], "gap": config["gap"],
         "colour": colour_of(config), "accent": config["accent"], "preset": config["preset"],
+        # Only a skin nexdeck ships draws the sign-in page; anyone else's never reaches a page that asks for a password.
+        "skin": config["skin"] if config["skin"].get("key") == NATIVE_1984 else {},
     }
 
 
@@ -168,6 +188,18 @@ def check_css(css: str) -> str:
     if why:
         raise AppearanceError(why, "css_refused")
     return text
+
+
+def _chosen_skin(db: DbSessionType, given: Any, card_style: str, retro: dict[str, str]) -> dict[str, Any]:
+    """The skin to store. A look saved the old way, card style ``window`` and no skin, still means 1984."""
+    from ..skins import store
+
+    if given is None and card_style == "window":
+        given = {"key": NATIVE_1984, "options": retro}
+    try:
+        return store.check_choice(db, given)
+    except store.SkinError as failure:
+        raise AppearanceError(failure.message, failure.code) from failure
 
 
 def save(db: DbSessionType, incoming: dict[str, Any]) -> dict[str, Any]:
@@ -205,9 +237,16 @@ def save(db: DbSessionType, incoming: dict[str, Any]) -> dict[str, Any]:
         if key not in RETRO or choice not in RETRO[key]:
             known = "; ".join(f"{name} is {' or '.join(options)}" for name, options in RETRO.items())
             raise AppearanceError(f"The window style knows these choices: {known}.", "bad_retro")
+    retro = _retro(retro)
+    skin = _chosen_skin(db, incoming.get("skin"), card_style, retro)
+    if skin.get("key") == NATIVE_1984:
+        # ⚠️ Mirrored for one version: 1.0 knows 1984 only as this card style with these choices.
+        card_style, retro = "window", _retro(skin["options"])
+    elif card_style == "window":
+        card_style = "glass"
     value = {
         "preset": preset, "accent": accent.lower(), "css": check_css(incoming.get("css") or ""), "theme": theme,
-        "card_style": card_style, **sizes, "refraction": refraction, "font": font, "retro": _retro(retro),
+        "card_style": card_style, **sizes, "refraction": refraction, "font": font, "retro": retro, "skin": skin,
     }
     row = db.get(Setting, KEY)
     if row is None:

@@ -18,7 +18,10 @@ export type ShopClass = 'read' | 'buttons' | 'login' | 'unknown'
 export type ShopSort = 'thumbs' | 'new' | 'name'
 export const SHOP_SORTS: ShopSort[] = ['thumbs', 'new', 'name']
 
-export type ShopType = 'card' | 'integration'
+export type ShopType = 'card' | 'integration' | 'skin'
+/** What the Card shop under Custom cards offers; skins are offered in the skin workshop. */
+export const CARD_KINDS: ShopType[] = ['card', 'integration']
+export const SKIN_KINDS: ShopType[] = ['skin']
 
 /** Why an entry left the shop (KARTEN-15 AC-6). */
 export type RemovedLevel = 'harmful' | 'not_useful' | 'withdrawn'
@@ -201,6 +204,8 @@ export interface ShopCatalog {
 /** One update waiting for an installed card (`GET /workshop/updates`). */
 export interface ShopUpdateRow {
   slug: string
+  /** What the row is: a card, or a skin (``slug`` is then its short name). */
+  type?: ShopType
   ref: string
   name: CardText
   installed_version: string
@@ -289,12 +294,16 @@ export interface ShopInstallCheck {
   missing_integrations: string[]
   offered_integrations: ShopEntry[]
   risk_acknowledged: boolean
+  /** A skin: the short name it gets here, and what this nexdeck finds wrong with it. */
+  skin_key?: string
+  problems?: { path?: string; message: string }[]
 }
 
 /** What an install answers (`POST /workshop/entries/{author}/{slug}/install`). */
 export interface ShopInstalledAnswer {
   slug: string | null
   integration: string | null
+  skin?: string | null
   missing_integrations: string[]
 }
 

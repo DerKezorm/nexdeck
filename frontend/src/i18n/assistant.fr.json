@@ -94,7 +94,9 @@
       "test": "Enregistrer et tester",
       "testCosts": "Le test pose une courte question et coûte quelques jetons.",
       "testOk": "{{model}} répond.",
-      "loadModels": "Charger les modèles"
+      "loadModels": "Charger les modèles",
+      "vision": "Le modèle comprend les images",
+      "visionHelp": "L’éditeur de skins lui montre alors la scène, pour qu’il voie ce qu’il a fait. Claude le peut toujours ; parmi les modèles d’Ollama, seulement certains (llava, qwen-vl, gemma3)."
     }
   }
 }

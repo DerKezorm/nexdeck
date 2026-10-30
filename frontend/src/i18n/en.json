@@ -292,7 +292,8 @@
       "apps": "Apps",
       "assistant": "Assistant",
       "inventory": "Inventory",
-      "cards": "Custom cards"
+      "cards": "Custom cards",
+      "skins": "Skin workshop"
     },
     "mail": {
       "title": "Mail server",
@@ -707,6 +708,15 @@
           "titles": "For titles",
           "all": "Everywhere"
         }
+      },
+      "skinReplaces": "The default skin “{{name}}” takes the place of: {{parts}}. What is set here stays stored and comes back without the skin.",
+      "replacedPart": {
+        "theme": "the colour theme",
+        "accent": "the accent colour",
+        "card_style": "the card style",
+        "radius": "the corners",
+        "gap": "the gap",
+        "font": "the type"
       }
     },
     "journal": {
@@ -867,6 +877,34 @@
       "tiles": "Every app tile answers to a short name, set in its settings: {{example}} opens the tile with the short name plex, on the boards you may open.",
       "engines": "Chrome, Edge and Firefox can add nexdeck as a search engine. A short name typed there opens its tile, other words open the search bar here with the words in it, and the address bar suggests tiles and cards while you type. Chrome and Edge list it under Settings, Search engine, Manage search engines, where it can be switched on; Firefox offers it in the menu of the address bar.",
       "safari": "Safari cannot add search engines this way. A bookmark to a short address works there."
+    },
+    "skins": {
+      "title": "Skin",
+      "help": "A skin redraws more than the colours: frames, little pictures, motion and sounds. Pages that ask for a password, a key or a confirmation always keep nexdeck's own drawing, with the skin's colours.",
+      "none": "nexdeck, no skin",
+      "installation": "The installation's",
+      "off": "Switched off, it no longer fits this version",
+      "yours": "Your skin",
+      "yoursHelp": "Wear a skin of this installation for yourself, or the one everybody wears.",
+      "sounds": "Sounds of the skin",
+      "soundsHelp": "Short tones when you press a part the skin gives a sound. Never on pages that ask for a password.",
+      "import": "Bring in a skin",
+      "importHelp": "Paste a skin file, a look or a theme. A look or a theme becomes a skin of colours and shapes.",
+      "importButton": "Bring in",
+      "imported": "The skin is here. Choose it above to wear it.",
+      "download": "{{name}} as a file",
+      "delete": "Delete {{name}}",
+      "deleteTitle": "Delete {{name}}?",
+      "deleteBody": "Whoever wears it wears the installation's skin again.",
+      "toWorkshop": "Skins are built, brought in and shared in the skin workshop.",
+      "toWorkshopLink": "To the skin workshop",
+      "origin": {
+        "own": "Your own",
+        "shop": "From the Card shop",
+        "builtin": "Comes with nexdeck"
+      },
+      "defaultTitle": "Default skin",
+      "defaultLead": "Everybody sees it who has not chosen one of their own under Profile."
     }
   },
   "menu": {
@@ -2858,9 +2896,11 @@
         "card": "Card",
         "integration": "Integration",
         "cards": "Cards",
-        "integrations": "Integrations"
+        "integrations": "Integrations",
+        "skin": "Skin",
+        "skins": "Skins"
       },
-      "allTypes": "Cards and integrations",
+      "allTypes": "Every type",
       "installed": "Installed",
       "updateAvailable": "Update available",
       "removed": "Removed from the Card shop",
@@ -2935,7 +2975,10 @@
         "done": "Installed.",
         "dropped": "Replacing {{name}} throws away what is stored in these fields, secrets included: {{fields}}.",
         "droppedCheck": "I understand that these values are lost",
-        "offeredStranger": "By someone other than the author of this card. Look at it before you take it along."
+        "offeredStranger": "By someone other than the author of this card. Look at it before you take it along.",
+        "skinAs": "It becomes the skin {{key}}. Choose it under Look or in your profile.",
+        "skinDone": "Installed.",
+        "toSkins": "To the skins"
       },
       "errors": {
         "checksum_mismatch": "The file does not match the checksum of the catalog. Nothing was installed.",
@@ -3027,7 +3070,18 @@
         "requires": "what it needs"
       },
       "filesWarning": "Part of this entry could not be used: {{message}}",
-      "picturesHelp": "Fetched with the connection's credentials whenever the card is shown."
+      "picturesHelp": "Fetched with the connection's credentials whenever the card is shown.",
+      "skinActs": "A skin only changes how nexdeck looks. It reads nothing and presses nothing. nexdeck compiles it itself, and it never reaches the sign-in or the pages that hold secrets.",
+      "skinUpdate": {
+        "title": "Update {{name}}",
+        "lead": "From version {{from}} to {{to}}. Whoever wears this skin wears the new version at once.",
+        "keepMine": "Keep what I changed here as a copy",
+        "action": "Update",
+        "done": "Updated.",
+        "doneCopy": "Updated. Your changes are kept as the skin {{key}}."
+      },
+      "searchSkins": "Search by name or author",
+      "noMatchSkins": "No skins match"
     },
     "share": {
       "button": "Share in the Card shop",
@@ -3040,7 +3094,8 @@
       "signedInAs": "Signed in to GitHub as {{login}}",
       "kind": {
         "card": "Card",
-        "integration": "Connection"
+        "integration": "Connection",
+        "skin": "Skin"
       },
       "mode": {
         "new": "A new entry in the Card shop.",
@@ -3160,7 +3215,10 @@
         "edited": "Saved and sent again into issue {{number}}.",
         "recheck": "Saved. The text did not change, so the Workshop was asked to check issue {{number}} again.",
         "failed": "Saved, but not sent again: {{message}}"
-      }
+      },
+      "skinTile": "A skin. The Workshop draws its pictures on the stage of the editor, dark and light.",
+      "leadSkin": "Your skin goes into the Card shop as an issue in the Workshop, under your GitHub name. The Workshop checks it, and if everything passes it is added by itself. Everything you send is public and under the MIT License.",
+      "descriptionHelpSkin": "What it looks like, in English, in a few sentences. Plain text."
     }
   }
 }

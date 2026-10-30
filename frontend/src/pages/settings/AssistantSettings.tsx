@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { ApiError, get, post, put } from '../../api/client'
-import { Field, PasswordInput, Select, Toast } from '../../components/ui'
+import { Field, PasswordInput, Select, Switch, Toast } from '../../components/ui'
 import { useAssistant } from '../../lib/assistant'
 import { useAssistantTexts } from '../../lib/assistantTexts'
 import { SettingsCard } from './SettingsCard'
@@ -22,6 +22,8 @@ interface Stored {
   has_key: boolean
   ready: boolean
   leaves_the_house: boolean
+  /** A model of the OpenAI form that understands pictures (the skin editor shows it its stage). */
+  vision?: boolean
 }
 
 /**
@@ -45,6 +47,7 @@ function Setting() {
   const [model, setModel] = useState('')
   const [key, setKey] = useState('')
   const [hasKey, setHasKey] = useState(false)
+  const [vision, setVision] = useState(false)
   const [busy, setBusy] = useState(false)
   const [models, setModels] = useState<Model[] | null>(null)
   const [toast, setToast] = useState<{ text: string; level: 'ok' | 'error' } | null>(null)
@@ -54,6 +57,7 @@ function Setting() {
     setAddress(saved.data.base_url)
     setModel(saved.data.model)
     setHasKey(saved.data.has_key)
+    setVision(saved.data.vision === true)
   }, [saved.data])
 
   // What the provider said, in the reader's words where nexdeck has them.
@@ -84,6 +88,8 @@ function Setting() {
         provider,
         base_url: address,
         model,
+        // Only for the OpenAI form: Claude always sees pictures, and the server keeps what was stored.
+        ...(provider === 'openai' ? { vision } : {}),
         ...(dropKey ? { key: '' } : key.trim() ? { key: key.trim() } : {}),
       })
       setKey('')
@@ -147,6 +153,7 @@ function Setting() {
             />
           </Field>
         )}
+        {provider === 'openai' && <Switch checked={vision} onChange={setVision} label={t('settings.assistant.vision')} description={t('settings.assistant.visionHelp')} />}
         {provider !== 'off' && (
           <>
             <Field label={t('settings.assistant.key')} help={provider === 'openai' ? t('settings.assistant.keyHelpOpenai') : undefined} htmlFor="assistant-key">

@@ -30,6 +30,8 @@ class AssistantSetting(BaseModel):
     model: str = Field(default="", max_length=120)
     #: Left out keeps the stored key, an empty one removes it.
     key: str | None = Field(default=None, max_length=500)
+    #: Whether a model of the OpenAI form understands pictures (the skin editor shows it its stage); left out keeps it.
+    vision: bool | None = None
 
 
 class ModelsAsked(BaseModel):
@@ -74,7 +76,7 @@ def read_setting(user: AdminUser, db: DbSession) -> dict:
 @router.put("/settings/assistant", summary="Choose the assistant's provider, model and key")
 def write_setting(body: AssistantSetting, user: AdminUser, db: DbSession) -> dict:
     try:
-        settings.store(db, provider=body.provider, base_url=body.base_url, model=body.model, key=body.key)
+        settings.store(db, provider=body.provider, base_url=body.base_url, model=body.model, key=body.key, vision=body.vision)
     except settings.Refused as refused:
         raise error(refused.code, refused.message) from None
     db.commit()

@@ -63,7 +63,11 @@ class Turn:
 def to_anthropic(transcript: list[dict[str, Any]]) -> list[dict[str, Any]]:
     messages: list[dict[str, Any]] = []
     for entry in transcript:
-        if entry["role"] == "user":
+        if entry["role"] == "user" and entry.get("images"):
+            # A picture first, then what is asked about it (the skin editor's look at its stage).
+            pictures = [{"type": "image", "source": {"type": "base64", "media_type": image["media_type"], "data": image["data"]}} for image in entry["images"]]
+            messages.append({"role": "user", "content": [*pictures, {"type": "text", "text": entry["text"]}]})
+        elif entry["role"] == "user":
             messages.append({"role": "user", "content": entry["text"]})
         elif entry["role"] == "assistant":
             raw = entry.get("raw") if entry.get("provider") == "anthropic" else None
@@ -134,7 +138,10 @@ async def anthropic_turn(settings: dict[str, Any], key: str, system: str, transc
 def to_openai(system: str, transcript: list[dict[str, Any]]) -> list[dict[str, Any]]:
     messages: list[dict[str, Any]] = [{"role": "system", "content": system}]
     for entry in transcript:
-        if entry["role"] == "user":
+        if entry["role"] == "user" and entry.get("images"):
+            pictures = [{"type": "image_url", "image_url": {"url": f"data:{image['media_type']};base64,{image['data']}"}} for image in entry["images"]]
+            messages.append({"role": "user", "content": [{"type": "text", "text": entry["text"]}, *pictures]})
+        elif entry["role"] == "user":
             messages.append({"role": "user", "content": entry["text"]})
         elif entry["role"] == "assistant":
             message: dict[str, Any] = {"role": "assistant", "content": entry.get("text") or None}

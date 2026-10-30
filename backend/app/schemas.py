@@ -37,6 +37,7 @@ class UserPublic(BaseModel):
     light_from: str = "07:00"
     dark_from: str = "20:00"
     tilt: bool = True
+    skin: dict[str, Any] = Field(default_factory=dict)
     start_board_id: int | None
     disabled: bool
     seen_version: str
@@ -66,6 +67,8 @@ class MePatch(BaseModel):
     light_from: Clock | None = None
     dark_from: Clock | None = None
     tilt: bool | None = None
+    #: A skin of one's own, ``{"key", "options", "sounds"}``; ``{"plain": true}`` wears none; ``{}`` the installation's.
+    skin: dict[str, Any] | None = None
     start_board_id: int | None = None
     seen_version: str | None = Field(default=None, max_length=16)
 
@@ -641,6 +644,8 @@ class AppearanceBody(BaseModel):
     theme: dict[str, Any] | None = None
     #: How a card is drawn: glass, liquid, flat, outline, neon, calm or window.
     card_style: str = Field(default="glass", max_length=20)
+    #: The skin everybody wears, ``{"key", "options"}``; empty for none. Absent keeps what a look saved without skins meant.
+    skin: dict[str, Any] | None = None
     #: The type of the interface, one of ``appearance.FONTS``. Loose for the same reason as the accent.
     font: str = Field(default="inter", max_length=20)
     #: The corners of a card and the room between two, in pixels. Loose for the same reason as the accent.

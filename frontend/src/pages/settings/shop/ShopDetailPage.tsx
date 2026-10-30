@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, ThumbsUp } from 'lucide-react'
 import { lazy, Suspense, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom'
 
 import { get, serverUrl } from '../../../api/client'
 import { Select } from '../../../components/ui'
@@ -12,6 +13,7 @@ import { safeUrl } from '../../../lib/safeUrl'
 import { Changelog } from './Changelog'
 import { InstallDialog } from './InstallDialog'
 import { PlaceOnBoard } from './PlaceOnBoard'
+import { SkinUpdateDialog } from './SkinUpdateDialog'
 import { UpdateDialog } from './UpdateDialog'
 import { CheckedClass, ShopActs, useWarningText } from './ShopActs'
 import { hasDiscussion, ThumbButton, ThumbNotes, ThumbSignIn, useThumb } from './shopThumb'
@@ -93,7 +95,7 @@ export function ShopDetailPage({
           </div>
           <div className="flex flex-wrap items-center gap-1.5">
             <span className="chip !py-0 text-[11px]">{t(`cards.shop.type.${entry.type}`)}</span>
-            <CheckedClass entry={checked} />
+            {entry.type !== 'skin' && <CheckedClass entry={checked} />}
             <ShopBadges entry={entry} />
           </div>
           <dl className="grid grid-cols-2 gap-x-4 gap-y-2">
@@ -184,7 +186,16 @@ export function ShopDetailPage({
       </div>
       {done && (
         <p className="mt-2 text-sm text-ok" role="status">
-          {t('cards.shop.install.done')}
+          {entry.type === 'skin' ? (
+            <>
+              {t('cards.shop.install.skinDone')}{' '}
+              <Link className="underline" to="/system/skins">
+                {t('cards.shop.install.toSkins')}
+              </Link>
+            </>
+          ) : (
+            t('cards.shop.install.done')
+          )}
         </p>
       )}
 
@@ -233,7 +244,11 @@ export function ShopDetailPage({
           if (answer.slug && entry.type === 'card') setPlacing({ slug: answer.slug, connection: chosen })
         }}
       />
-      <UpdateDialog slug={installed?.slug ?? ''} name={name} open={updating} onClose={() => setUpdating(false)} />
+      {entry.type === 'skin' ? (
+        <SkinUpdateDialog skin={installed?.slug ?? ''} open={updating} onClose={() => setUpdating(false)} />
+      ) : (
+        <UpdateDialog slug={installed?.slug ?? ''} name={name} open={updating} onClose={() => setUpdating(false)} />
+      )}
       <PlaceOnBoard slug={placing?.slug ?? ''} prefer={placing?.connection ?? null} open={placing !== null} onClose={() => setPlacing(null)} />
     </div>
   )

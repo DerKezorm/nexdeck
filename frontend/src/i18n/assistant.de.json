@@ -94,7 +94,9 @@
       "test": "Speichern und testen",
       "testCosts": "Der Test stellt eine kurze Frage und kostet ein paar Tokens.",
       "testOk": "{{model}} antwortet.",
-      "loadModels": "Modelle laden"
+      "loadModels": "Modelle laden",
+      "vision": "Das Modell versteht Bilder",
+      "visionHelp": "Dann zeigt ihm der Skin-Editor die Bühne, damit es sieht, was es gebaut hat. Claude kann das immer, von den Modellen in Ollama nur manche (llava, qwen-vl, gemma3)."
     }
   }
 }
