@@ -18,6 +18,13 @@ project uses semantic versioning.
 
 - The field to bring in a skin said its help twice, and the skin workshop still pointed to a page called Appearance.
 
+### Security
+
+- **A picture of a custom card no longer makes a service act.** A picture path the card writes itself goes through the same check as a read of its kind, when the card is checked, before nexdeck signs it and again when it is fetched, so a path such as `/relay/0?turn=off` is refused instead of being asked with the connection's credentials every time a board is opened. The Card shop shows the picture paths of a card when it is installed, and an update that brings new ones is a change you confirm.
+- **GETs that act are not reads.** Watchtower's `/v1/update`, ntfy's publishing, cup's and the m3u editor's refresh, changedetection's recheck, the pings of Healthchecks and Uptime Kuma, n8n's webhooks, Elasticsearch's refresh and flush and GoatCounter's count are refused for custom cards, and a card asking one is refused when it is checked.
+- **The card help asks on its own only what is known to read.** It asks the paths you named and those nexdeck's own cards read from the kind; a path the AI chose beyond those is not asked before you take the card over, the AI is pointed at the known paths once, and the proposal says which paths were left unasked. The chat asks only known paths of a kind.
+- **Copying a custom card** to another board is checked like placing it: a card that was not released to members stays an administrator's to place.
+
 ## 1.1.0 (2026-10-30)
 
 ### Added
