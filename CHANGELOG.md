@@ -7,7 +7,7 @@ project uses semantic versioning.
 
 ### Added
 
-- **Dutch, Polish, Brazilian Portuguese and Russian.** The whole interface, the card editor, the skins, the assistant and what the services report, in four more languages. Polish and Russian count in all their plural forms. A word that reads wrong is worth an issue.
+- **Dutch, Polish, Brazilian Portuguese, Russian, Ukrainian, Japanese and Simplified Chinese.** The whole interface, the card editor, the skins, the assistant and what the services report, in seven more languages. Polish, Russian and Ukrainian count in all their plural forms. A word that reads wrong is worth an issue.
 
 ### Changed
 

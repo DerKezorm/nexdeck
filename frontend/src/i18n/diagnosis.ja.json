@@ -1,101 +1,101 @@
 {
   "diagnosis": {
-    "title": "Diagnosis",
-    "back": "Back",
-    "notFound": "There is no such service, container or guest any more.",
+    "title": "診断",
+    "back": "戻る",
+    "notFound": "そのようなサービス、コンテナ、ゲストはもうありません。",
     "kind": {
-      "integration": "Connection",
-      "tile": "App tile",
-      "container": "Container",
-      "guest": "Guest"
+      "integration": "接続",
+      "tile": "アプリタイル",
+      "container": "コンテナ",
+      "guest": "ゲスト"
     },
     "state": {
-      "now_bad": "Red since {{when}}",
-      "now_warn": "Yellow since {{when}}",
-      "nowOpen_bad": "Red",
-      "nowOpen_warn": "Yellow",
-      "past_bad": "Was red from {{from}} to {{to}}",
-      "past_warn": "Was yellow from {{from}} to {{to}}",
-      "pastOpen_bad": "Was red from {{from}}",
-      "pastOpen_warn": "Was yellow from {{from}}",
-      "ok": "Nothing wrong in the last 30 days"
+      "now_bad": "{{when}}から赤",
+      "now_warn": "{{when}}から黄色",
+      "nowOpen_bad": "レッド",
+      "nowOpen_warn": "イエロー",
+      "past_bad": "{{from}}から{{to}}まで赤でした",
+      "past_warn": "{{from}}から{{to}}まで黄色でした",
+      "pastOpen_bad": "{{from}}から赤でした",
+      "pastOpen_warn": "{{from}}から黄色でした",
+      "ok": "過去30日間に問題はありません"
     },
     "length": {
-      "minutes": "{{minutes}} min",
-      "hours": "{{hours}} h {{minutes}} min",
-      "days": "{{days}} d {{hours}} h"
+      "minutes": "{{minutes}}分",
+      "hours": "{{hours}}時間{{minutes}}分",
+      "days": "{{days}}日{{hours}}時間"
     },
     "cause": {
-      "now": "Probably because of {{name}}",
-      "past": "It was because of {{name}}",
-      "note": "{{name}} hangs on it, so it was not told on its own.",
-      "open": "Look at it"
+      "now": "おそらく{{name}}が原因です",
+      "past": "{{name}}が原因でした",
+      "note": "{{name}}がこれに依存しているため、単独では通知されませんでした。",
+      "open": "確認する"
     },
-    "happened": "What happened",
-    "windowNow": "two hours before until now",
-    "windowPast": "two hours before until it ended",
-    "windowOk": "the last two hours",
-    "nothingHappened": "Nothing was written down in that time.",
-    "via": "hangs on: {{name}}",
-    "began": "{{time}} · it began",
-    "ended": "{{time}} · it ended",
-    "readOn": "Read on in the chronicle",
-    "checksTitle": "Check and cards",
-    "checkOk": "answers",
-    "checkUnknown": "not checked yet",
-    "checkDown": "down since {{when}}",
-    "checkOff": "switched off",
-    "noCards": "No card shows this.",
+    "happened": "何が起きたか",
+    "windowNow": "2時間前から現在まで",
+    "windowPast": "2時間前から終了まで",
+    "windowOk": "直近2時間",
+    "nothingHappened": "その間に記録されたものはありません。",
+    "via": "依存先: {{name}}",
+    "began": "{{time}} · 開始",
+    "ended": "{{time}} · 終了",
+    "readOn": "クロニクルで続きを読む",
+    "checksTitle": "チェックとカード",
+    "checkOk": "応答あり",
+    "checkUnknown": "未チェック",
+    "checkDown": "{{when}}から停止中",
+    "checkOff": "オフ",
+    "noCards": "これを表示しているカードはありません。",
     "log": {
-      "title": "Log",
-      "show": "Show the log",
-      "help": "Reads the last 100 lines of {{container}} on {{engine}}. Passwords, tokens and keys are masked.",
-      "from": "{{container}} on {{engine}} · {{count}} lines · read at {{time}}",
-      "again": "Read again",
-      "hide": "Hide",
-      "empty": "The log is empty.",
+      "title": "ログ",
+      "show": "ログを表示",
+      "help": "{{engine}}上の{{container}}の最後の100行を読み取ります。パスワード、トークン、キーはマスクされます。",
+      "from": "{{engine}}上の{{container}} · {{count}}行 · {{time}}に読み取り",
+      "again": "再読み込み",
+      "hide": "非表示",
+      "empty": "ログは空です。",
       "why": {
-        "no_container": "No container is known for this, so there is no log to read. Logs come from containers of Docker, Portainer and a Synology.",
-        "no_logs": "{{engine}} gives no container logs.",
-        "demo": "{{engine}} is in the demo and has no real log."
+        "no_container": "これに対応するコンテナが不明なため、読み取れるログがありません。ログは、Docker、Portainer、Synologyのコンテナから取得されます。",
+        "no_logs": "{{engine}}はコンテナログを提供しません。",
+        "demo": "{{engine}}はデモ用で、実際のログがありません。"
       }
     },
     "ask": {
-      "title": "Ask nexdeck about it",
-      "help": "The chat gets this page to start from.",
-      "button": "Explain it",
-      "off": "Switch the assistant on under System, Assistant to ask about this page.",
-      "question_now": "Why is {{name}} in trouble?",
-      "question_past": "What happened to {{name}}?",
-      "question_ok": "Is {{name}} all right?"
+      "title": "nexdeckに質問",
+      "help": "チャットは、このページを出発点として始まります。",
+      "button": "説明してもらう",
+      "off": "このページについて質問するには、「システム」の「アシスタント」でアシスタントをオンにしてください。",
+      "question_now": "{{name}}に問題があるのはなぜですか?",
+      "question_past": "{{name}}に何がありましたか?",
+      "question_ok": "{{name}}は問題ありませんか?"
     },
     "hangs": {
-      "title": "Hangs on",
-      "nothing": "On nothing nexdeck knows.",
-      "this": "this service",
-      "carries": "Hanging on it",
-      "open": "Diagnosis",
-      "down": "down",
-      "up": "running"
+      "title": "接続先",
+      "nothing": "nexdeckが把握しているものには依存していません。",
+      "this": "このサービス",
+      "carries": "これに依存するもの",
+      "open": "診断",
+      "down": "停止",
+      "up": "実行中"
     },
     "runbook": {
-      "title": "Runbook",
-      "empty": "No runbook yet. Write down what helps next time, or link to a guide.",
-      "write": "Write a runbook",
-      "edit": "Edit",
-      "text": "What to do",
-      "link": "Link to a longer guide (optional)",
-      "hint": "Markdown: lists with 1. or -, **bold**, `code`.",
-      "save": "Save",
-      "cancel": "Cancel",
-      "by": "{{user}}, {{when}}",
-      "badLink": "A link starts with http:// or https://."
+      "title": "ランブック",
+      "empty": "ランブックはまだありません。次回役立つ内容を書き留めるか、ガイドへのリンクを追加してください。",
+      "write": "ランブックを作成",
+      "edit": "編集",
+      "text": "対処方法",
+      "link": "より詳しいガイドへのリンク(任意)",
+      "hint": "Markdown: 1. や - によるリスト、**太字**、`コード`。",
+      "save": "保存",
+      "cancel": "キャンセル",
+      "by": "{{user}}、{{when}}",
+      "badLink": "リンクはhttp:// またはhttps:// で始めてください。"
     },
     "buttons": {
-      "title": "Buttons",
-      "none": "No buttons: nexdeck cannot restart this itself.",
-      "from": "From the card {{card}}. Each asks first and says what it would hit.",
-      "done": "{{label}}: done."
+      "title": "ボタン",
+      "none": "ボタンなし: nexdeck自身ではこれを再起動できません。",
+      "from": "カード{{card}}から。それぞれ先に確認し、影響を受ける内容を示します。",
+      "done": "{{label}}: 完了。"
     }
   }
 }

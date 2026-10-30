@@ -1,101 +1,101 @@
 {
   "diagnosis": {
-    "title": "Diagnosis",
-    "back": "Back",
-    "notFound": "There is no such service, container or guest any more.",
+    "title": "诊断",
+    "back": "返回",
+    "notFound": "这个服务、容器或虚拟机已不存在。",
     "kind": {
-      "integration": "Connection",
-      "tile": "App tile",
-      "container": "Container",
-      "guest": "Guest"
+      "integration": "连接",
+      "tile": "应用磁贴",
+      "container": "容器",
+      "guest": "虚拟机"
     },
     "state": {
-      "now_bad": "Red since {{when}}",
-      "now_warn": "Yellow since {{when}}",
-      "nowOpen_bad": "Red",
-      "nowOpen_warn": "Yellow",
-      "past_bad": "Was red from {{from}} to {{to}}",
-      "past_warn": "Was yellow from {{from}} to {{to}}",
-      "pastOpen_bad": "Was red from {{from}}",
-      "pastOpen_warn": "Was yellow from {{from}}",
-      "ok": "Nothing wrong in the last 30 days"
+      "now_bad": "自 {{when}} 起为红色",
+      "now_warn": "自 {{when}} 起为黄色",
+      "nowOpen_bad": "红色",
+      "nowOpen_warn": "黄色",
+      "past_bad": "{{from}} 至 {{to}} 为红色",
+      "past_warn": "{{from}} 至 {{to}} 为黄色",
+      "pastOpen_bad": "自 {{from}} 起曾为红色",
+      "pastOpen_warn": "自 {{from}} 起曾为黄色",
+      "ok": "最近 30 天一切正常"
     },
     "length": {
-      "minutes": "{{minutes}} min",
-      "hours": "{{hours}} h {{minutes}} min",
-      "days": "{{days}} d {{hours}} h"
+      "minutes": "{{minutes}} 分钟",
+      "hours": "{{hours}} 小时 {{minutes}} 分钟",
+      "days": "{{days}} 天 {{hours}} 小时"
     },
     "cause": {
-      "now": "Probably because of {{name}}",
-      "past": "It was because of {{name}}",
-      "note": "{{name}} hangs on it, so it was not told on its own.",
-      "open": "Look at it"
+      "now": "很可能是因为 {{name}}",
+      "past": "原因是 {{name}}",
+      "note": "{{name}} 依赖于它，所以它没有单独收到通知。",
+      "open": "查看"
     },
-    "happened": "What happened",
-    "windowNow": "two hours before until now",
-    "windowPast": "two hours before until it ended",
-    "windowOk": "the last two hours",
-    "nothingHappened": "Nothing was written down in that time.",
-    "via": "hangs on: {{name}}",
-    "began": "{{time}} · it began",
-    "ended": "{{time}} · it ended",
-    "readOn": "Read on in the chronicle",
-    "checksTitle": "Check and cards",
-    "checkOk": "answers",
-    "checkUnknown": "not checked yet",
-    "checkDown": "down since {{when}}",
-    "checkOff": "switched off",
-    "noCards": "No card shows this.",
+    "happened": "发生了什么",
+    "windowNow": "从两小时前到现在",
+    "windowPast": "从两小时前到结束",
+    "windowOk": "最近两小时",
+    "nothingHappened": "这段时间内没有任何记录。",
+    "via": "依赖于：{{name}}",
+    "began": "{{time}} · 开始",
+    "ended": "{{time}} · 结束",
+    "readOn": "在事件记录中继续查看",
+    "checksTitle": "检查与卡片",
+    "checkOk": "有响应",
+    "checkUnknown": "尚未检查",
+    "checkDown": "自 {{when}} 起宕机",
+    "checkOff": "已关闭",
+    "noCards": "没有卡片显示这一项。",
     "log": {
-      "title": "Log",
-      "show": "Show the log",
-      "help": "Reads the last 100 lines of {{container}} on {{engine}}. Passwords, tokens and keys are masked.",
-      "from": "{{container}} on {{engine}} · {{count}} lines · read at {{time}}",
-      "again": "Read again",
-      "hide": "Hide",
-      "empty": "The log is empty.",
+      "title": "日志",
+      "show": "显示日志",
+      "help": "读取 {{engine}} 上 {{container}} 的最后 100 行。密码、token 和密钥会被遮盖。",
+      "from": "{{engine}} 上的 {{container}} · {{count}} 行 · 读取于 {{time}}",
+      "again": "重新读取",
+      "hide": "隐藏",
+      "empty": "日志为空。",
       "why": {
-        "no_container": "No container is known for this, so there is no log to read. Logs come from containers of Docker, Portainer and a Synology.",
-        "no_logs": "{{engine}} gives no container logs.",
-        "demo": "{{engine}} is in the demo and has no real log."
+        "no_container": "没有找到对应的容器，因此无法读取日志。日志来自 Docker、Portainer 和 Synology 的容器。",
+        "no_logs": "{{engine}} 不提供容器日志。",
+        "demo": "{{engine}} 属于演示环境，没有真实日志。"
       }
     },
     "ask": {
-      "title": "Ask nexdeck about it",
-      "help": "The chat gets this page to start from.",
-      "button": "Explain it",
-      "off": "Switch the assistant on under System, Assistant to ask about this page.",
-      "question_now": "Why is {{name}} in trouble?",
-      "question_past": "What happened to {{name}}?",
-      "question_ok": "Is {{name}} all right?"
+      "title": "向 nexdeck 提问",
+      "help": "聊天会以此页面作为起点。",
+      "button": "解释一下",
+      "off": "请在“系统”“助手”中开启助手，才能就此页面提问。",
+      "question_now": "{{name}} 为什么出问题了？",
+      "question_past": "{{name}} 发生了什么？",
+      "question_ok": "{{name}} 还好吗？"
     },
     "hangs": {
-      "title": "Hangs on",
-      "nothing": "On nothing nexdeck knows.",
-      "this": "this service",
-      "carries": "Hanging on it",
-      "open": "Diagnosis",
-      "down": "down",
-      "up": "running"
+      "title": "依赖于",
+      "nothing": "不依赖 nexdeck 已知的任何内容。",
+      "this": "此服务",
+      "carries": "依赖它的项目",
+      "open": "诊断",
+      "down": "宕机",
+      "up": "运行中"
     },
     "runbook": {
-      "title": "Runbook",
-      "empty": "No runbook yet. Write down what helps next time, or link to a guide.",
-      "write": "Write a runbook",
-      "edit": "Edit",
-      "text": "What to do",
-      "link": "Link to a longer guide (optional)",
-      "hint": "Markdown: lists with 1. or -, **bold**, `code`.",
-      "save": "Save",
-      "cancel": "Cancel",
-      "by": "{{user}}, {{when}}",
-      "badLink": "A link starts with http:// or https://."
+      "title": "运行手册",
+      "empty": "还没有运行手册。把下次有用的做法记下来，或者链接到一份指南。",
+      "write": "编写运行手册",
+      "edit": "编辑",
+      "text": "该怎么做",
+      "link": "链接到更详细的指南（可选）",
+      "hint": "Markdown：用 1. 或 - 创建列表，**粗体**，`代码`。",
+      "save": "保存",
+      "cancel": "取消",
+      "by": "{{user}}，{{when}}",
+      "badLink": "链接必须以 http:// 或 https:// 开头。"
     },
     "buttons": {
-      "title": "Buttons",
-      "none": "No buttons: nexdeck cannot restart this itself.",
-      "from": "From the card {{card}}. Each asks first and says what it would hit.",
-      "done": "{{label}}: done."
+      "title": "按钮",
+      "none": "没有按钮：nexdeck 无法自行重启它。",
+      "from": "来自卡片 {{card}}。每个按钮都会先确认，并说明会影响什么。",
+      "done": "{{label}}：已完成。"
     }
   }
 }
