@@ -54,4 +54,6 @@ regexes = [
   '''9f86d081884c7d659a2feaa0''',
   '''k-0123456789''',
   '''Zk-Key-0123456789''',
+  # Made-up keys under credential names in other spellings, which the demo data of a card must hide.
+  '''k7Hq2pLw9Z0[a-c]''',
 ]
