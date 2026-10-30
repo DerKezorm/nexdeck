@@ -1915,6 +1915,23 @@
         "System, Look starts with the skin everybody wears and says above each setting what the skin replaces; the list of looks became starting points for skins.",
         "A model of the OpenAI form (Ollama, LM Studio) can be marked as one that understands pictures."
       ]
+    },
+    "1.1.1": {
+      "lead": "Skins move into the skin workshop, nexdeck without a skin is one click away, and custom cards are held to a stricter rule.",
+      "sections": [
+        {
+          "title": "Skins in the skin workshop",
+          "body": "Skins from the Card shop are found and installed in the skin workshop now, with a search of their own. Each skin says whether it is the default or your skin, and \"Make default\" sets it for everybody; nexdeck without a skin is a row of its own there. Under Profile an account can wear no skin at all, whatever everybody else wears."
+        },
+        {
+          "title": "Safer custom cards",
+          "body": "A picture a custom card writes itself is checked like a read, requests that make a service act (Watchtower's update, ntfy's publishing, a refresh) are no reads and are refused, the card help asks only paths you named or nexdeck's own cards read, and copying a card to a board is checked like placing it."
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "The field to bring in a skin says its help once."
+      ]
     }
   }
 }

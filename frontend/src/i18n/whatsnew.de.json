@@ -1915,6 +1915,23 @@
         "System, Aussehen beginnt mit dem Skin für alle und sagt über jeder Einstellung, was der Skin ersetzt; aus der Liste der Looks wurden Startpunkte für Skins.",
         "Ein Modell der OpenAI-Form (Ollama, LM Studio) lässt sich als eines markieren, das Bilder versteht."
       ]
+    },
+    "1.1.1": {
+      "lead": "Skins ziehen in die Skin-Werkstatt, nexdeck ohne Skin ist einen Klick entfernt, und eigene Karten werden strenger geprüft.",
+      "sections": [
+        {
+          "title": "Skins in der Skin-Werkstatt",
+          "body": "Skins aus dem Kartenladen findest und installierst du jetzt in der Skin-Werkstatt, mit eigener Suche. Jeder Skin sagt, ob er der Standard oder dein Skin ist, und „Als Standard setzen“ macht ihn zum Skin für alle; nexdeck ohne Skin hat dort eine eigene Zeile. Im Profil kann ein Konto ganz ohne Skin auskommen, egal was alle anderen tragen."
+        },
+        {
+          "title": "Sicherere eigene Karten",
+          "body": "Ein Bild, dessen Pfad eine eigene Karte selbst schreibt, wird wie ein Lesen geprüft. Anfragen, die bei einem Dienst etwas auslösen (das Update von Watchtower, das Senden bei ntfy, ein Auffrischen), gelten nicht als Lesen und werden abgelehnt. Die KI-Hilfe fragt nur Pfade ab, die du genannt hast oder die nexdecks eigene Karten lesen, und das Kopieren einer Karte auf ein Board wird wie das Platzieren geprüft."
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Das Feld zum Hereinholen eines Skins erklärt sich nur noch einmal."
+      ]
     }
   }
 }
