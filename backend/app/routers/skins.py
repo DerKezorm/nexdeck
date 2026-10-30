@@ -6,7 +6,7 @@ import hashlib
 import json
 import logging
 import re
-from typing import Any
+from typing import Any, Literal
 
 from fastapi import APIRouter, Request, Response, status
 from pydantic import BaseModel, Field
@@ -66,13 +66,19 @@ def described(admin: AdminUser, db: DbSession) -> dict:
     }
 
 
+class AiPicture(BaseModel):
+    mode: Literal["dark", "light"]
+    data: str = Field(max_length=skin_ai.MAX_IMAGE)
+    media_type: str = "image/jpeg"
+
+
 class AiBody(BaseModel):
     prompt: str = Field(default="", max_length=2000)
     skin: dict[str, Any]
     locked: list[str] = Field(default_factory=list, max_length=len(skin_ai.SECTIONS))
     review: bool = False
-    image: str = Field(default="", max_length=skin_ai.MAX_IMAGE)
-    image_type: str = "image/jpeg"
+    #: The stage in dark and in light mode, at most one of each.
+    pictures: list[AiPicture] = Field(default_factory=list, max_length=len(skin_ai.MODES))
     audit: list[str] = Field(default_factory=list, max_length=skin_ai.MAX_AUDIT)
 
 
@@ -84,14 +90,14 @@ async def skin_with_ai(body: AiBody, admin: AdminUser, db: DbSession) -> dict[st
     """Administrators only, one request at a time, cancellable; what leaves is built in skins/ai.py, nowhere else."""
     if not assistant.ready(db):
         raise error("assistant_off", "The assistant is not set up.", status.HTTP_409_CONFLICT)
-    if body.image and (not assistant.sees(db) or body.image_type not in skin_ai.IMAGE_TYPES):
+    if body.pictures and (not assistant.sees(db) or any(picture.media_type not in skin_ai.IMAGE_TYPES for picture in body.pictures)):
         raise error("bad_request", "This provider is not shown pictures.", status.HTTP_400_BAD_REQUEST)
     if len(json.dumps(body.skin)) > MAX_FILE:
         raise error("bad_request", "The skin is too large to send.", status.HTTP_400_BAD_REQUEST)
     config, key = assistant.stored(db), assistant.key_of(db)
     userid, username = admin.id, admin.username
     db.rollback()  # the provider may take minutes; no read transaction waits with it
-    ask = skin_ai.Ask(prompt=body.prompt, skin=body.skin, locked=body.locked, review=body.review, image=body.image, image_type=body.image_type, audit=body.audit)
+    ask = skin_ai.Ask(prompt=body.prompt, skin=body.skin, locked=body.locked, review=body.review, pictures=[skin_ai.Picture(picture.mode, picture.data, picture.media_type) for picture in body.pictures], audit=body.audit)
     try:
         finished, outcome = await card_ai.supervised(userid, skin_ai.generate(ask, config, key))
     except card_ai.Busy:
@@ -102,7 +108,10 @@ async def skin_with_ai(body: AiBody, admin: AdminUser, db: DbSession) -> dict[st
         with db_session() as fresh:
             gone = not assistant.ready(fresh)
         raise error("assistant_off" if gone else "ai_cancelled", "The assistant was switched off." if gone else "The request was cancelled.", status.HTTP_409_CONFLICT)
-    logger.info("%s had a skin %s by the assistant%s.", username, "made" if outcome.ok else "tried", " after a look at the stage" if body.review else "")
+    logger.info(
+        "%s had a skin %s by the assistant%s (%d tokens in, %d out).",
+        username, "made" if outcome.ok else "tried", " after a look at the stage" if body.review else "", outcome.tokens_in, outcome.tokens_out,
+    )
     return outcome.body()
 
 

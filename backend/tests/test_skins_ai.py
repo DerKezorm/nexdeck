@@ -23,8 +23,9 @@ EXAMPLE = json.loads(ai.EXAMPLE)
 CURRENT = {"nexdeck_skin": 1, "key": "mine", "name": "Mine", "tokens": {"radius": 4}, "switches": {"blur": "off"}}
 
 
-def submitted(skin: dict[str, Any], text: str = "A console with bricks.") -> providers.Turn:
-    return providers.Turn(text=text, calls=[{"id": "call-1", "name": "submit_skin", "input": {"skin": skin}}], stop="tools")
+def submitted(skin: dict[str, Any], text: str = "", summary: str = "A console with bricks.", tokens: tuple[int, int] = (0, 0)) -> providers.Turn:
+    call = {"id": "call-1", "name": "submit_skin", "input": {"skin": skin, "summary": summary}}
+    return providers.Turn(text=text, calls=[call], stop="tools", tokens_in=tokens[0], tokens_out=tokens[1])
 
 
 def run(ask: ai.Ask, script: Script, monkeypatch: pytest.MonkeyPatch) -> ai.Outcome:
@@ -47,6 +48,11 @@ def test_the_guide_names_every_part_motion_wave_font_and_property_there_is() -> 
             assert prop in guide, prop
 
 
+def test_the_guide_asks_for_both_modes_and_the_tool_for_a_summary() -> None:
+    assert ":mode(dark) or :mode(light)" in ai.guide()
+    assert ai.SUBMIT_TOOL["input_schema"]["required"] == ["skin", "summary"]
+
+
 def test_the_example_in_the_guide_is_a_skin_nexdeck_wears() -> None:
     assert ai.problems_of(EXAMPLE) == []
 
@@ -60,14 +66,16 @@ def test_only_the_request_the_skin_and_the_locks_leave_and_a_picture_only_on_the
     first = script.seen[0]["transcript"][0]
     assert "Like a console" in first["text"] and '"radius": 4' in first["text"] and "Locked, leave exactly as they are: tokens." in first["text"]
     assert "images" not in first and script.seen[0]["tools"] == [ai.SUBMIT_TOOL]
-    run(ai.Ask(prompt="Like a console", skin=CURRENT, review=True, image="AAAA", audit=["card-title: 2.1:1"]), script, monkeypatch)
+    pictures = [ai.Picture("dark", "AAAA"), ai.Picture("light", "BBBB", "image/png"), ai.Picture("dusk", "CCCC")]
+    run(ai.Ask(prompt="Like a console", skin=CURRENT, review=True, pictures=pictures, audit=["light: card-title: 2.1:1"]), script, monkeypatch)
     second = script.seen[1]["transcript"][0]
-    assert second["images"] == [{"media_type": "image/jpeg", "data": "AAAA"}]
-    assert "- card-title: 2.1:1" in second["text"] and "second look" in second["text"]
+    assert second["images"] == [{"media_type": "image/jpeg", "data": "AAAA"}, {"media_type": "image/png", "data": "BBBB"}]
+    assert "dark mode and light mode, in this order" in second["text"] and "reads badly in either mode" in second["text"]
+    assert "- light: card-title: 2.1:1" in second["text"] and "second look" in second["text"]
 
 
 def test_a_picture_without_the_second_look_stays_home() -> None:
-    _system, transcript = ai.outbound(ai.Ask(prompt="x", skin=CURRENT, image="AAAA"))
+    _system, transcript = ai.outbound(ai.Ask(prompt="x", skin=CURRENT, pictures=[ai.Picture("dark", "AAAA")]))
     assert "images" not in transcript[0]
 
 
@@ -89,6 +97,19 @@ def test_a_skin_that_passes_is_taken_with_its_key_and_its_locked_sections_as_the
     assert outcome.ok and outcome.text == "A console with bricks."
     assert outcome.skin["key"] == "mine" and outcome.skin["tokens"] == {"radius": 4} and outcome.skin["switches"] == {"blur": "off"}
     assert outcome.skin["sprites"] == EXAMPLE["sprites"]
+
+
+def test_the_summary_handed_in_with_the_skin_is_what_the_editor_shows_and_words_beside_it_only_without_one(monkeypatch: pytest.MonkeyPatch) -> None:
+    said = run(ai.Ask(prompt="x", skin=CURRENT), Script(submitted(EXAMPLE, text="Done.", summary="Bricks behind red cards.")), monkeypatch)
+    assert said.text == "Bricks behind red cards."
+    silent = run(ai.Ask(prompt="x", skin=CURRENT), Script(submitted(EXAMPLE, text="Done.", summary="  ")), monkeypatch)
+    assert silent.text == "Done."
+
+
+def test_the_tokens_of_every_round_are_counted(monkeypatch: pytest.MonkeyPatch) -> None:
+    broken = {**EXAMPLE, "css": "[data-part=chip] { color: red !important }"}
+    outcome = run(ai.Ask(prompt="x", skin=CURRENT), Script(submitted(broken, tokens=(1000, 200)), submitted(EXAMPLE, tokens=(1500, 300))), monkeypatch)
+    assert outcome.ok and (outcome.tokens_in, outcome.tokens_out) == (2500, 500)
 
 
 def test_a_locked_section_the_skin_did_not_have_stays_out() -> None:
@@ -149,23 +170,39 @@ def test_claude_sees_a_picture_and_a_service_of_the_openai_form_only_when_switch
     local = {"provider": "openai", "base_url": "http://ollama:11434/v1", "model": "llama3", "key": ""}
     assert admin.put("/api/v1/settings/assistant", json=local, headers=CSRF).status_code == 200
     assert admin.get("/api/v1/skins/schema").json()["ai"] == {"ready": True, "vision": False}
-    refused = admin.post("/api/v1/skins/ai", json={"prompt": "x", "skin": CURRENT, "review": True, "image": "AAAA"}, headers=CSRF)
+    refused = admin.post("/api/v1/skins/ai", json={"prompt": "x", "skin": CURRENT, "review": True, "pictures": [{"mode": "dark", "data": "AAAA"}]}, headers=CSRF)
     assert refused.status_code == 400
     assert admin.put("/api/v1/settings/assistant", json={**local, "vision": True}, headers=CSRF).json()["vision"] is True
     assert admin.get("/api/v1/skins/schema").json()["ai"]["vision"] is True
     assert admin.put("/api/v1/settings/assistant", json=local, headers=CSRF).json()["vision"] is True, "left out keeps it"
 
 
-def test_the_route_answers_with_the_skin_and_only_administrators_may(admin: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_the_route_answers_with_the_skin_and_only_administrators_may(admin: TestClient, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture) -> None:
     switch_on(admin)
-    monkeypatch.setattr(providers, "turn", Script(submitted(EXAMPLE)))
-    answer = admin.post("/api/v1/skins/ai", json={"prompt": "A console", "skin": CURRENT, "locked": ["tokens"]}, headers=CSRF)
+    monkeypatch.setattr(providers, "turn", Script(submitted(EXAMPLE, tokens=(4321, 765))))
+    with caplog.at_level("INFO", logger="nexdeck.skins"):
+        answer = admin.post("/api/v1/skins/ai", json={"prompt": "A console", "skin": CURRENT, "locked": ["tokens"]}, headers=CSRF)
     assert answer.status_code == 200, answer.text
     assert answer.json()["ok"] and answer.json()["skin"]["key"] == "mine" and answer.json()["skin"]["tokens"] == {"radius": 4}
+    assert answer.json()["text"] == "A console with bricks."
+    assert "had a skin made by the assistant (4321 tokens in, 765 out)." in caplog.text
     assert admin.delete("/api/v1/skins/ai", headers=CSRF).json() == {"cancelled": False}
     create_user(admin, "ann")
     login(admin, "ann", "another-long-password")
     assert admin.post("/api/v1/skins/ai", json={"prompt": "x", "skin": CURRENT}, headers=CSRF).status_code == 403
+
+
+def test_the_stage_comes_in_two_modes_at_most_and_only_as_dark_or_light(admin: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    switch_on(admin)
+    script = Script(submitted(EXAMPLE))
+    monkeypatch.setattr(providers, "turn", script)
+    body = {"prompt": "x", "skin": CURRENT, "review": True}
+    dusk = admin.post("/api/v1/skins/ai", json={**body, "pictures": [{"mode": "dusk", "data": "AAAA"}]}, headers=CSRF)
+    three = admin.post("/api/v1/skins/ai", json={**body, "pictures": [{"mode": "dark", "data": "A"}, {"mode": "light", "data": "B"}, {"mode": "dark", "data": "C"}]}, headers=CSRF)
+    gif = admin.post("/api/v1/skins/ai", json={**body, "pictures": [{"mode": "dark", "data": "A", "media_type": "image/gif"}]}, headers=CSRF)
+    assert (dusk.status_code, three.status_code, gif.status_code) == (422, 422, 400) and script.seen == []
+    both = admin.post("/api/v1/skins/ai", json={**body, "pictures": [{"mode": "dark", "data": "A"}, {"mode": "light", "data": "B"}]}, headers=CSRF)
+    assert both.status_code == 200 and [image["data"] for image in script.seen[0]["transcript"][0]["images"]] == ["A", "B"]
 
 
 def test_a_provider_that_fails_says_so_in_its_own_words(admin: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:

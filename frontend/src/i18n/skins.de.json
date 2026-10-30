@@ -174,7 +174,7 @@
       "cancel": "Abbrechen",
       "making": "Der Assistent baut den Skin …",
       "lookingNow": "Der Assistent schaut sich die Bühne an …",
-      "looking": "Der Assistent bekommt die Bühne gezeigt.",
+      "looking": "Der Assistent bekommt die Bühne gezeigt, dunkel und hell.",
       "checking": "Die Bühne hat {{count}} Dinge gefunden, die sie dem Assistenten sagt.",
       "improved": "Nach einem Blick auf die Bühne nachgebessert.",
       "unchanged": "Nach einem Blick auf die Bühne bleibt er so.",

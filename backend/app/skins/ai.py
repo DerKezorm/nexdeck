@@ -1,9 +1,12 @@
 """A skin made or changed by the provider of the assistant (skins, phase C).
 
 The editor's tab "AI" sends what the administrator wrote, the skin as it is,
-the sections they locked and, on a second round, what the stage looks like:
-a picture where the provider can see one, and what the stage found itself
-(text that cannot be read, parts that vanished). Nothing else leaves: the
+the sections they locked and, on a second round, what the stage looks like
+in dark and in light mode: a picture of each where the provider can see one,
+and what the stage found itself (text that cannot be read, parts that
+vanished). Both modes, because a skin is worn in both: a first try that set
+its cards dark in css read well on the dark stage and not at all on the light
+one, and a look at one mode never told. Nothing else leaves: the
 stage draws invented data, never the installation's.
 
 What comes back is a skin file and nothing else. It is checked like any skin
@@ -37,15 +40,20 @@ SECTIONS = ("tokens", "options", "sprites", "frames", "desk", "decorations", "st
 #: A picture of the stage, base64: a JPEG of the stage at 1024 pixels is far below this.
 MAX_IMAGE = 1_500_000
 IMAGE_TYPES = ("image/jpeg", "image/png")
+MODES = ("dark", "light")
 MAX_AUDIT = 40
 
 SUBMIT_TOOL: dict[str, Any] = {
     "name": "submit_skin",
-    "description": "Hand in the finished skin: the whole skin file as a JSON object, nothing else.",
+    "description": "Hand in the finished skin: the whole skin file as a JSON object, and in one or two sentences what you made or changed.",
     "input_schema": {
         "type": "object",
-        "properties": {"skin": {"type": "object", "description": "The whole skin file, starting with nexdeck_skin: 1."}},
-        "required": ["skin"],
+        "properties": {
+            "skin": {"type": "object", "description": "The whole skin file, starting with nexdeck_skin: 1."},
+            # Here and not as words beside the tool: Claude called the tool and said nothing, and the editor showed only that something changed.
+            "summary": {"type": "string", "description": "One or two sentences in the language of the request: what you made or changed."},
+        },
+        "required": ["skin", "summary"],
         "additionalProperties": False,
     },
 }
@@ -55,14 +63,22 @@ EXAMPLE = (Path(__file__).with_name("examples") / "console.json").read_text(enco
 
 
 @dataclass
+class Picture:
+    """The stage in one mode, base64."""
+
+    mode: str
+    data: str
+    media_type: str = "image/jpeg"
+
+
+@dataclass
 class Ask:
     prompt: str
     skin: dict[str, Any]
     locked: list[str] = field(default_factory=list)
     #: The second round: the stage as it looks now, to improve the skin once.
     review: bool = False
-    image: str = ""
-    image_type: str = "image/jpeg"
+    pictures: list[Picture] = field(default_factory=list)
     audit: list[str] = field(default_factory=list)
 
 
@@ -72,6 +88,9 @@ class Outcome:
     skin: dict[str, Any]
     text: str
     problems: list[dict[str, Any]]
+    #: What the provider counted over every round, for the log.
+    tokens_in: int = 0
+    tokens_out: int = 0
 
     def body(self) -> dict[str, Any]:
         return {"ok": self.ok, "skin": self.skin, "text": self.text, "problems": self.problems}
@@ -82,7 +101,9 @@ def guide() -> str:
     data = css.registry()
     lines = [
         "You design skins for nexdeck, a dashboard for a homelab. A skin is a JSON file and nothing else: no code, nothing that is fetched.",
-        "Hand in the whole skin with the tool submit_skin. Keep its key. Say in one or two sentences, in the language of the request, what you made.",
+        "Hand in the whole skin with the tool submit_skin. Keep its key. Its summary says in one or two sentences, in the language of the request, what you made.",
+        "A skin is worn in dark and in light mode. A colour set in css for one of them goes under :mode(dark) or :mode(light), with its partner for the other; "
+        "the palettes dark and light do the rest.",
         "",
         "# The file",
         '{"nexdeck_skin": 1, "key": "…", "name": "…", "description": "…", "tokens": {…}, "options": […], "sprites": {…}, "frames": {…}, '
@@ -146,14 +167,16 @@ def outbound(ask: Ask) -> tuple[str, list[dict[str, Any]]]:
     parts = [f"The request: {ask.prompt.strip() or '(none, improve the skin as it is)'}", "", "The skin as it is now:", json.dumps(ask.skin, ensure_ascii=False)]
     if locked:
         parts += ["", f"Locked, leave exactly as they are: {', '.join(locked)}."]
+    pictures = [picture for picture in ask.pictures if picture.mode in MODES] if ask.review else []
     if ask.review:
-        parts += ["", "This is a second look at your skin as nexdeck draws it" + (" (the picture shows the stage with invented data)." if ask.image else ".")]
+        shown = " and ".join(f"{picture.mode} mode" for picture in pictures)
+        parts += ["", "This is a second look at your skin as nexdeck draws it" + (f" (the pictures show the stage with invented data: {shown}, in this order)." if pictures else ".")]
         if ask.audit:
             parts += ["The stage found:", *(f"- {finding}" for finding in ask.audit[:MAX_AUDIT])]
-        parts += ["Improve the skin once where it does not yet look like the request or reads badly, or hand it in unchanged."]
+        parts += ["Improve the skin once where it does not yet look like the request or reads badly in either mode, or hand it in unchanged."]
     message: dict[str, Any] = {"role": "user", "text": "\n".join(parts)}
-    if ask.review and ask.image:
-        message["images"] = [{"media_type": ask.image_type, "data": ask.image}]
+    if pictures:
+        message["images"] = [{"media_type": picture.media_type, "data": picture.data} for picture in pictures]
     return guide(), [message]
 
 
@@ -166,6 +189,15 @@ def candidate(turn: providers.Turn) -> Any:
         return json.loads(found.group(1) if found else turn.text)
     except (json.JSONDecodeError, TypeError):
         return None
+
+
+def summary(turn: providers.Turn) -> str:
+    """What the provider says it made: the summary it handed in with the skin, else its words beside it."""
+    for call in turn.calls:
+        said = call.get("input", {}).get("summary") if call.get("name") == "submit_skin" else None
+        if isinstance(said, str) and said.strip():
+            return said.strip()
+    return turn.text.strip()
 
 
 def kept(ask: Ask, proposed: Any) -> dict[str, Any] | None:
@@ -208,17 +240,19 @@ async def generate(ask: Ask, config: dict[str, Any], key: str) -> Outcome:
     skin: dict[str, Any] | None = None
     problems: list[dict[str, Any]] = []
     text = ""
+    counted = [0, 0]
     for _round in range(2):
         turn = await card_ai._turn(config, key, system, transcript, tools)
-        text = turn.text.strip()
+        counted = [counted[0] + turn.tokens_in, counted[1] + turn.tokens_out]
+        text = summary(turn)
         skin = kept(ask, candidate(turn))
         problems = problems_of(skin)
         if not problems:
-            return Outcome(True, skin or {}, text, [])
+            return Outcome(True, skin or {}, text, [], *counted)
         feedback = _feedback(problems)
         transcript.append({"role": "assistant", "text": turn.text, "calls": turn.calls, "provider": config["provider"], "raw": turn.raw})
         if turn.calls:
             transcript.append({"role": "tool", "results": [{"id": call["id"], "content": feedback, "is_error": True} for call in turn.calls]})
         else:
             transcript.append({"role": "user", "text": feedback})
-    return Outcome(False, skin or {}, text, problems)
+    return Outcome(False, skin or {}, text, problems, *counted)

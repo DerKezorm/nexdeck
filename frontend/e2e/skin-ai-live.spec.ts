@@ -3,7 +3,7 @@
  * request to /api/v1/skins/ai never leaves the browser (page.route), so nothing
  * reaches Anthropic. What is checked is nexdeck's part: what the editor sends
  * (the request, the skin, the locks; on the second round a picture of the
- * stage), that the stage wears each answer, and that each answer is one step
+ * stage in dark and in light mode), that the stage wears each answer, and that each answer is one step
  * back with undo.
  */
 import { readFileSync } from 'node:fs'
@@ -60,9 +60,13 @@ test('the AI makes a skin, looks at the stage once and improves it, and each ans
 
     expect(asked[0]).toMatchObject({ prompt: 'Like a game console', locked: ['tokens'] })
     expect(asked[0].review).toBeFalsy()
-    // Claude sees: the second round carries a picture of the stage, drawn in this browser.
-    expect(asked[1]).toMatchObject({ review: true, image_type: 'image/jpeg' })
-    expect(String(asked[1].image).length).toBeGreaterThan(1000)
+    // Claude sees: the second round carries a picture of the stage in each mode, drawn in this browser, and the stage is left in its own.
+    expect(asked[1]).toMatchObject({ review: true })
+    const pictures = asked[1].pictures as { mode: string; data: string; media_type: string }[]
+    expect(pictures.map(({ mode, media_type }) => [mode, media_type])).toEqual([['dark', 'image/jpeg'], ['light', 'image/jpeg']])
+    expect(pictures.every(({ data }) => data.length > 1000)).toBe(true)
+    expect(pictures[0].data).not.toBe(pictures[1].data)
+    await expect(stage.locator('html')).toHaveAttribute('data-theme', 'dark')
 
     await page.getByRole('button', { name: 'Undo' }).click()
     await page.getByRole('tab', { name: 'The skin' }).click()

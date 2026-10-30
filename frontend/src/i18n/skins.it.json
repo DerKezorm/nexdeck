@@ -174,7 +174,7 @@
       "cancel": "Ferma",
       "making": "L’assistente sta creando lo skin …",
       "lookingNow": "L’assistente guarda il palco …",
-      "looking": "Il palco viene mostrato all’assistente.",
+      "looking": "Il palco viene mostrato all’assistente, scuro e chiaro.",
       "checking": "Il palco ha trovato {{count}} cose che dice all’assistente.",
       "improved": "Migliorato dopo uno sguardo al palco.",
       "unchanged": "Dopo uno sguardo al palco resta com’è.",

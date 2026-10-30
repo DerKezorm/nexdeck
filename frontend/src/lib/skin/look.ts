@@ -72,6 +72,41 @@ export function audit(root: Document, parts: Parts): string[] {
   return found
 }
 
+export const MODES = ['dark', 'light'] as const
+export type Mode = (typeof MODES)[number]
+export interface Seen {
+  findings: string[]
+  pictures: { mode: Mode; image: string }[]
+}
+
+/**
+ * The stage in dark and then in light mode, each told and drawn, and then as it
+ * was. A skin is worn in both: the first real run set its cards dark in css,
+ * read well on the dark stage and not at all on the light one, and a look at
+ * the mode on show never told. Transitions are stilled meanwhile, or a colour
+ * would be read halfway between the two modes.
+ */
+export async function seeBothModes(root: Document, parts: Parts, picture: boolean, draw: (root: Document) => Promise<string> = capture): Promise<Seen> {
+  const html = root.documentElement
+  const was = html.getAttribute('data-theme')
+  const still = html.hasAttribute('data-stage-still')
+  html.setAttribute('data-stage-still', '')
+  const seen: Seen = { findings: [], pictures: [] }
+  try {
+    for (const mode of MODES) {
+      html.setAttribute('data-theme', mode)
+      seen.findings.push(...audit(root, parts).map((finding) => `${mode}: ${finding}`))
+      const image = picture ? await draw(root) : ''
+      if (image) seen.pictures.push({ mode, image })
+    }
+  } finally {
+    if (was === null) html.removeAttribute('data-theme')
+    else html.setAttribute('data-theme', was)
+    if (!still) html.removeAttribute('data-stage-still')
+  }
+  return seen
+}
+
 /** A style sheet in which `:root` means the element standing in for <html> (inside an SVG the root is the SVG). */
 export function rootless(sheet: string): string {
   return sheet.replace(/:root\b/g, '[data-capture-root]')

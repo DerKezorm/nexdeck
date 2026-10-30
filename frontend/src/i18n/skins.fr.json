@@ -174,7 +174,7 @@
       "cancel": "Arrêter",
       "making": "L’assistant crée le skin …",
       "lookingNow": "L’assistant regarde la scène …",
-      "looking": "La scène est montrée à l’assistant.",
+      "looking": "La scène est montrée à l’assistant, en sombre et en clair.",
       "checking": "La scène a trouvé {{count}} points qu’elle signale à l’assistant.",
       "improved": "Corrigé après un regard sur la scène.",
       "unchanged": "Après un regard sur la scène, il reste tel quel.",

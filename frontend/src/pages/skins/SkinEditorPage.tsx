@@ -20,6 +20,7 @@ import { Spinner, Switch, Toast } from '../../components/ui'
 import type { Appearance } from '../../lib/appearance'
 import { useSkinTexts } from '../../lib/skin/texts'
 import { keepDraft, keptDraft, useDraft, type SkinDoc } from '../../lib/skin/draft'
+import type { Seen } from '../../lib/skin/look'
 import type { Parts } from '../../lib/skin/partAt'
 import { wear, type CompiledSkin } from '../../lib/skin/wear'
 import { FilePanels } from './FilePanels'
@@ -137,7 +138,7 @@ function Editor({ initial, saved, schema, base }: { initial: SkinDoc; saved: str
   }, [text])
 
   // The stage: told when it is there, and picks come back from it.
-  const looks = useRef(new Map<number, (seen: { findings: string[]; image: string }) => void>())
+  const looks = useRef(new Map<number, (seen: Seen) => void>())
   const lookAtStage: LookAtStage = (picture) =>
     new Promise((resolve) => {
       const id = Date.now() + Math.random()
@@ -145,8 +146,8 @@ function Editor({ initial, saved, schema, base }: { initial: SkinDoc; saved: str
       frame.current?.contentWindow?.postMessage({ type: LOOK_MESSAGE, id, picture, parts: schema.parts }, window.location.origin)
       // A stage that does not answer in time is not waited for: the first answer stands.
       window.setTimeout(() => {
-        if (looks.current.delete(id)) resolve({ findings: [], image: '' })
-      }, 15_000)
+        if (looks.current.delete(id)) resolve({ findings: [], pictures: [] })
+      }, 20_000)
     })
   useEffect(() => {
     const waiting = looks.current
@@ -156,7 +157,7 @@ function Editor({ initial, saved, schema, base }: { initial: SkinDoc; saved: str
       if (event.data?.type === PICK_MESSAGE && typeof event.data.part === 'string') setSelected(event.data.part)
       if (event.data?.type === LOOKED_MESSAGE) {
         const resolve = waiting.get(event.data.id)
-        if (resolve && waiting.delete(event.data.id)) resolve({ findings: event.data.findings ?? [], image: event.data.image ?? '' })
+        if (resolve && waiting.delete(event.data.id)) resolve({ findings: event.data.findings ?? [], pictures: event.data.pictures ?? [] })
       }
     }
     window.addEventListener('message', listen)

@@ -17,7 +17,7 @@ import { Dialog, Select, Switch } from '../../components/ui'
 import { DEMO_DATA, DEMO_LAYOUTS, DEMO_SERIES, DEMO_VIEWS } from '../../demo/board'
 import { setLanguage, storedLanguage } from '../../i18n'
 import { applyAppearance, type Appearance } from '../../lib/appearance'
-import { audit, capture } from '../../lib/skin/look'
+import { seeBothModes } from '../../lib/skin/look'
 import { elementsOf, partAt, type Parts } from '../../lib/skin/partAt'
 
 export const STAGE_MESSAGE = 'nexdeck-skin-stage'
@@ -72,9 +72,9 @@ export function SkinStage() {
         const marked = [...document.querySelectorAll('[data-stage-pick]')]
         marked.forEach((element) => element.removeAttribute('data-stage-pick'))
         mark('data-stage-hover', [])
-        void (picture ? capture(document) : Promise.resolve('')).then((image) => {
+        void seeBothModes(document, parts, picture).then(({ findings, pictures }) => {
           marked.forEach((element) => element.setAttribute('data-stage-pick', ''))
-          window.parent.postMessage({ type: LOOKED_MESSAGE, id, findings: audit(document, parts), image }, window.location.origin)
+          window.parent.postMessage({ type: LOOKED_MESSAGE, id, findings, pictures }, window.location.origin)
         })
       }
     }

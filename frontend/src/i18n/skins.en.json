@@ -174,7 +174,7 @@
       "cancel": "Stop",
       "making": "The assistant is making the skin …",
       "lookingNow": "The assistant looks at the stage …",
-      "looking": "Showing the assistant the stage.",
+      "looking": "Showing the assistant the stage, dark and light.",
       "checking": "The stage found {{count}} things to tell the assistant.",
       "improved": "Improved after a look at the stage.",
       "unchanged": "After a look at the stage it stays as it is.",

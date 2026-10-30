@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next'
 
 import { ApiError, del, post } from '../../api/client'
 import type { Draft, SkinDoc } from '../../lib/skin/draft'
+import type { Seen } from '../../lib/skin/look'
 
 /** The sections of a skin file a lock holds, as the server knows them (backend/app/skins/ai.py SECTIONS). */
 export const LOCKABLE = ['tokens', 'options', 'sprites', 'frames', 'desk', 'decorations', 'status', 'parts', 'sounds', 'switches', 'css'] as const
@@ -27,7 +28,8 @@ interface Said {
   text: string
 }
 
-export type LookAtStage = (picture: boolean) => Promise<{ findings: string[]; image: string }>
+/** The stage in dark and in light mode: what it found, and a picture of each where the provider sees one. */
+export type LookAtStage = (picture: boolean) => Promise<Seen>
 
 /** How long the stage needs to wear a new skin: the server checks it a moment after the change, then the stage draws it. */
 const SETTLE_MS = 1500
@@ -57,9 +59,10 @@ export function AiTab({ doc, draft, locked, onLocked, sees, look }: { doc: SkinD
       setWorking('looking')
       await new Promise((resolve) => window.setTimeout(resolve, SETTLE_MS))
       const seen = await look(sees)
-      if (!seen.image && seen.findings.length === 0) return
-      tell({ who: 'note', text: seen.image ? t('skinEditor.ai.looking') : t('skinEditor.ai.checking', { count: seen.findings.length }) })
-      const second = await post<Answer>('/skins/ai', { prompt: request, skin: first.skin, locked, review: true, image: seen.image, image_type: 'image/jpeg', audit: seen.findings })
+      if (seen.pictures.length === 0 && seen.findings.length === 0) return
+      tell({ who: 'note', text: seen.pictures.length > 0 ? t('skinEditor.ai.looking') : t('skinEditor.ai.checking', { count: seen.findings.length }) })
+      const pictures = seen.pictures.map(({ mode, image }) => ({ mode, data: image, media_type: 'image/jpeg' }))
+      const second = await post<Answer>('/skins/ai', { prompt: request, skin: first.skin, locked, review: true, pictures, audit: seen.findings })
       if (second.ok && JSON.stringify(second.skin) !== JSON.stringify(first.skin)) {
         draft.set(second.skin)
         tell({ who: 'ai', text: second.text || t('skinEditor.ai.improved') })

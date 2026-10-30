@@ -174,7 +174,7 @@
       "cancel": "Detener",
       "making": "El asistente está creando el skin …",
       "lookingNow": "El asistente mira el escenario …",
-      "looking": "Se le muestra el escenario al asistente.",
+      "looking": "Se le muestra el escenario al asistente, oscuro y claro.",
       "checking": "El escenario encontró {{count}} cosas que le dice al asistente.",
       "improved": "Mejorado tras mirar el escenario.",
       "unchanged": "Tras mirar el escenario se queda como está.",
