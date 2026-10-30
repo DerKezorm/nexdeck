@@ -36,14 +36,6 @@ export const LANGUAGES: Record<string, string> = {
   ru: 'Русский',
 }
 
-/** Languages translated by machine and not yet read through by a speaker: their name says so wherever one is chosen. */
-export const BETA: ReadonlySet<string> = new Set(['nl', 'pl', 'pt', 'ru'])
-
-/** The name of a language as the pickers show it, with Beta after the ones not yet read through. */
-export function languageLabel(code: string): string {
-  return BETA.has(code) ? `${LANGUAGES[code]} (Beta)` : (LANGUAGES[code] ?? code)
-}
-
 const loaders: Record<string, () => Promise<{ default: Record<string, unknown> }>> = {
   de: () => import('./de.json'),
   es: () => import('./es.json'),

@@ -8,7 +8,7 @@ import { Avatar } from '../../components/Avatar'
 import { TwoFactorCard } from '../../components/TwoFactorCard'
 import { ThemePlanField } from '../../components/ThemePlanField'
 import { Confirm, Field, PasswordInput, Select, Switch, Toast } from '../../components/ui'
-import { accountPair, languageLabel, LANGUAGES } from '../../i18n'
+import { accountPair, LANGUAGES } from '../../i18n'
 import { useAuth } from '../../stores/auth'
 import { oidcErrorKey } from '../../vendor/nexoidc/oidc'
 import { SettingsCard } from './SettingsCard'
@@ -48,7 +48,7 @@ export function ProfileSettings() {
   if (!user) return null
   const mismatch = confirm.length > 0 && confirm !== next
   const pair = accountPair(user.language_pair)
-  const languageOptions = Object.keys(LANGUAGES).map((value) => ({ value, label: languageLabel(value) }))
+  const languageOptions = Object.entries(LANGUAGES).map(([value, label]) => ({ value, label }))
   /** One button changed; taking the other button's language swaps the two. */
   const choosePair = (index: 0 | 1, code: string) => {
     const other = pair[1 - index]
@@ -156,7 +156,7 @@ export function ProfileSettings() {
           <SkinChooser forAccount value={user.skin ?? {}} onChange={(skin) => void update({ skin })} />
         </div>
         <div className="grid sm:grid-cols-3 gap-3">
-          {/* Two columns wide: a name like "Português (Brasil) (Beta)" did not fit in one; on a phone the two stand one above the other. */}
+          {/* Two columns wide: a name like "Português (Brasil)" did not fit in one; on a phone the two stand one above the other. */}
           <div className="sm:col-span-2">
             <Field label={t('settings.profile.barLanguages')} htmlFor="p-pair-1" help={t('settings.profile.barLanguagesHelp')}>
               <div id="p-pair" className="flex flex-col sm:flex-row gap-2">

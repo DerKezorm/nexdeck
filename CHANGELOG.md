@@ -7,7 +7,7 @@ project uses semantic versioning.
 
 ### Added
 
-- **Dutch, Polish, Brazilian Portuguese and Russian** (beta). The whole interface, the card editor, the skins, the assistant and what the services report, in four more languages; each is marked Beta wherever a language is chosen until a speaker has read it through. Polish and Russian count in all their plural forms.
+- **Dutch, Polish, Brazilian Portuguese and Russian.** The whole interface, the card editor, the skins, the assistant and what the services report, in four more languages. Polish and Russian count in all their plural forms. A word that reads wrong is worth an issue.
 
 ### Changed
 
@@ -16,7 +16,7 @@ project uses semantic versioning.
 
 ### Fixed
 
-- The two languages of the top bar under Profile and the role of a user under Users had no room for longer names, such as "Português (Brasil) (Beta)" or "Администратор".
+- The two languages of the top bar under Profile and the role of a user under Users had no room for longer names, such as "Português (Brasil)" or "Администратор".
 
 ## 1.1.1 (2026-10-30)
 

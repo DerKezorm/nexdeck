@@ -7,7 +7,7 @@ import type { User } from '../api/types'
 import { BackgroundLayer } from '../components/BackgroundLayer'
 import { Logo } from '../components/Logo'
 import { Field, PasswordInput, Select, Switch } from '../components/ui'
-import { languageLabel, LANGUAGES, setLanguage } from '../i18n'
+import { LANGUAGES, setLanguage } from '../i18n'
 import { applyTheme, useAuth } from '../stores/auth'
 
 /** The first start: administrator, language, look, and a demo or a real Docker host. */
@@ -92,7 +92,7 @@ export function SetupPage() {
                   setLocale(value)
                   void setLanguage(value)
                 }}
-                options={Object.keys(LANGUAGES).map((value) => ({ value, label: languageLabel(value) }))}
+                options={Object.entries(LANGUAGES).map(([value, label]) => ({ value, label }))}
               />
             </Field>
             <Field label={t('settings.profile.theme')}>
