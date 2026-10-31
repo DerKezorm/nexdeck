@@ -618,6 +618,7 @@ def test_only_confirmed_adapters_are_out_of_beta() -> None:
     nginx ignition 2.47.0 on 2026-10-08, on a production instance;
     Uptime Kuma 2026-10-24 on a real instance, 1.23.17, the status pages against 1.23.17 and 2.x;
     the FRITZ!Box 2026-10-27 against a 6591 Cable as a bridge, with and without a user;
+    Calagopus 2026-10-31 against a fresh all-in-one panel 1.2.7, both cards and both buttons;
     an adapter leaves it only by being confirmed, never by default."""
     confirmed = {adapter.kind for adapter in all_adapters() if not adapter.beta and adapter.needs_integration}
     # iCal and the JSON API talk to no particular product; they were never beta. Nor is a custom card: whoever wrote it
@@ -629,7 +630,7 @@ def test_only_confirmed_adapters_are_out_of_beta() -> None:
         "shlink", "sonarr", "speedtest", "syncthing", "synology", "tautulli", "tdarr", "technitium", "traefik", "transmission", "unifi", "unmanic", "vikunja", "wgeasy", "wger",
         "backrest", "blocky", "bookorbit", "gatus", "ghostfolio", "homebox", "komodo", "netalertx", "netdata", "ollama", "openwebui", "photoprism", "pocketid", "sportarr", "tandoor", "tubearchivist", "wallos", "watchtower", "wud", "zabbix", "truenas", "nexmail", "nexpulse", "netbird", "nextrmnl", "arcane", "dockhand", "elasticsearch", "urbackup", "openwrt", "kubernetes",
         "minecraft", "octoprint", "rtorrent", "freshrss", "linkding", "openmediavault", "patchmon", "imap", "nexbeat",
-        "mailpit", "realdebrid", "readmeabook", "nexlore", "nexsift", "reclaimerr", "m3ueditor", "nginxignition", "uptimekuma", "fritzbox", "custom"}
+        "mailpit", "realdebrid", "readmeabook", "nexlore", "nexsift", "reclaimerr", "m3ueditor", "nginxignition", "uptimekuma", "fritzbox", "calagopus", "custom"}
 
 
 #: Routers whose changing addresses deliberately write nothing, with the reason.

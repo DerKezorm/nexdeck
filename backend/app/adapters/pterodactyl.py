@@ -53,6 +53,11 @@ class PterodactylAdapter(Adapter):
     description = "The game servers of a Pterodactyl account: which run, how much they use, and buttons to start and stop them."
     icon = "pterodactyl"
     docs_url = "https://dashflo.net/docs/api/pterodactyl/v1/"
+    #: What differs in a panel that takes the same cards and buttons (``calagopus.py``).
+    headers = HEADERS
+    key_hint = "Check the URL; it is the address of the panel, and the key has to be a client key (ptlc_)."
+    power_field = "signal"
+    power_hint = "The account may not control this server, or it is suspended."
     #: Built from the documentation and not run against a panel; it stays beta until somebody confirms it on one.
     beta = True
     fields = (
@@ -92,12 +97,11 @@ class PterodactylAdapter(Adapter):
                    cache: float = 15) -> Any:
         response = await ctx.request(
             "GET", f"{base_url(config)}/api/client{path}", params=params,
-            headers={**HEADERS, "Authorization": f"Bearer {config.get('api_key') or ''}"},
+            headers={**self.headers, "Authorization": f"Bearer {config.get('api_key') or ''}"},
             verify=not config.get("insecure"), cache_seconds=cache,
         )
         if response.status_code >= 400:
-            raise AdapterError(f"The panel answered with HTTP {response.status_code}.", code="http_error",
-                               hint="Check the URL; it is the address of the panel, and the key has to be a client key (ptlc_).")
+            raise AdapterError(f"The panel answered with HTTP {response.status_code}.", code="http_error", hint=self.key_hint)
         try:
             return response.json()
         except ValueError as error:
@@ -195,16 +199,18 @@ class PterodactylAdapter(Adapter):
     async def action(self, widget_kind: str, action_id: str, params: dict[str, Any], config: dict[str, Any],
                      options: dict[str, Any], ctx: Context) -> str:
         if action_id not in ("start", "stop"):
-            raise AdapterError("Pterodactyl has no such action.", code="no_such_action")
+            raise AdapterError(f"{self.label} has no such action.", code="no_such_action")
         identifier = path_segment(params.get("id"), "The server")
         response = await ctx.request(
             "POST", f"{base_url(config)}/api/client/servers/{identifier}/power",
-            headers={**HEADERS, "Authorization": f"Bearer {config.get('api_key') or ''}"},
-            json_body={"signal": action_id}, verify=not config.get("insecure"), auth_errors=False,
+            headers={**self.headers, "Authorization": f"Bearer {config.get('api_key') or ''}"},
+            json_body={self.power_field: action_id}, verify=not config.get("insecure"), auth_errors=False,
         )
         if response.status_code in (401, 403):
-            raise AdapterError("The panel refused the power signal.", code="not_allowed",
-                               hint="The account may not control this server, or it is suspended.")
+            raise AdapterError("The panel refused the power signal.", code="not_allowed", hint=self.power_hint)
+        if response.status_code == 409:
+            raise AdapterError("The server cannot do that right now.", code="server_busy",
+                               hint="It is being installed, moved or restored, or it is suspended.")
         if response.status_code >= 400:
             raise AdapterError(f"The panel answered with HTTP {response.status_code}.", code="http_error")
         ctx.forget_answers()

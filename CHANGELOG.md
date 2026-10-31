@@ -7,6 +7,7 @@ project uses semantic versioning.
 
 ### Added
 
+- **Calagopus.** The game servers of an account: how many run, each one with its state, memory and processor use, and buttons to start and stop it, the same cards as Pterodactyl.
 - **Dutch, Polish, Brazilian Portuguese, Russian, Ukrainian, Japanese and Simplified Chinese.** The whole interface, the card editor, the skins, the assistant and what the services report, in seven more languages. Polish, Russian and Ukrainian count in all their plural forms. A word that reads wrong is worth an issue.
 
 ### Changed

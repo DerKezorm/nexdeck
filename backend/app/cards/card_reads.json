@@ -207,6 +207,15 @@
    ]
   }
  ],
+ "calagopus": [
+  {
+   "path": "/api/client/servers?page=1&per_page=100&other=false",
+   "widgets": [
+    "overview",
+    "servers"
+   ]
+  }
+ ],
  "changedetection": [
   {
    "path": "/api/v1/watch?tag={tag}",

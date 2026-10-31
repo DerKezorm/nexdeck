@@ -122,6 +122,14 @@ async def test_a_power_signal_the_panel_refuses_says_why(ctx: Context) -> None:
 
 
 @respx.mock
+async def test_a_power_signal_while_the_server_is_busy_says_so(ctx: Context) -> None:
+    respx.post(f"{API}/servers/a1b2c3d4/power").mock(return_value=httpx.Response(409, json={"errors": [{"code": "ConflictHttpException"}]}))
+    with pytest.raises(AdapterError) as failure:
+        await get_adapter("pterodactyl").action("servers", "start", {"id": "a1b2c3d4"}, CONFIG, {}, ctx)
+    assert failure.value.code == "server_busy"
+
+
+@respx.mock
 async def test_the_connection_test_counts_the_servers(ctx: Context) -> None:
     served()
     respx.get(API, params={"per_page": "1"}).mock(return_value=httpx.Response(200, json={
