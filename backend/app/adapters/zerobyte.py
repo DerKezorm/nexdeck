@@ -252,10 +252,10 @@ class ZerobyteAdapter(Adapter):
     def _backups(rows: list[dict[str, Any]], limit: int) -> WidgetData:
         ranked = sorted(rows, key=lambda one: (ORDER.get(one["state"], 9), str(one["row"]["title"]).lower()))
         failed = sum(1 for one in rows if one["state"] == "bad")
-        stale = any(one["row"].get("stale") for one in rows)
+        warned = any(one["state"] == "warn" for one in rows)
         known = any(one["state"] != "unknown" for one in rows)
         return WidgetData(
-            status="bad" if failed else "warn" if stale else "ok" if known else "unknown",
+            status="bad" if failed else "warn" if warned else "ok" if known else "unknown",
             items=[one["row"] for one in ranked][:limit],
             secondary=[{"label": "Failed", "value": failed}],
             meta={"empty": "No backup schedules yet."},
@@ -266,17 +266,21 @@ class ZerobyteAdapter(Adapter):
     def _summary(rows: list[dict[str, Any]], now: float | None = None) -> WidgetData:
         failed = sum(1 for one in rows if one["state"] == "bad")
         stale = sum(1 for one in rows if one["row"].get("stale"))
+        # Yellow is either a run that ended in a warning or a good one that is too old; the latter has its own line.
+        warned = sum(1 for one in rows if one["state"] == "warn") - stale
         fine = sum(1 for one in rows if one["state"] == "ok")
         running = sum(1 for one in rows if one["status"] == "in_progress")
         paused = sum(1 for one in rows if not one["enabled"])
         newest = max((one["good"] for one in rows if one["good"]), default=None)
         secondary: list[dict[str, Any]] = [{"label": "Failed", "value": failed}, {"label": "Running", "value": running}, {"label": "Paused", "value": paused}]
+        if warned:
+            secondary.append({"label": "Warning", "value": warned})
         if stale:
             secondary.append({"label": backup_age.WORD, "value": stale})
         if newest:
             secondary.append({"label": "Last backup", "value": ago(newest, now=now)})
         return WidgetData(
-            status="bad" if failed else "warn" if stale else "ok" if fine else "unknown",
+            status="bad" if failed else "warn" if stale or warned else "ok" if fine else "unknown",
             primary={"label": "Backups fine", "value": fine, "unit": f"/ {len(rows)}"},
             secondary=secondary,
             metrics={"failed": float(failed)},

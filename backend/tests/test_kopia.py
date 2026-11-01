@@ -104,6 +104,26 @@ async def test_running_waiting_never_and_errors(ctx: Context) -> None:
 
 
 @respx.mock
+async def test_a_snapshot_with_errors_turns_both_cards_yellow(ctx: Context) -> None:
+    _server([GOOD, source("/d", "nas", "2026-09-11T08:00:00Z", errors=3)], [])
+    adapter = get_adapter("kopia")
+    assert (await adapter.fetch("sources", CONFIG, {"limit": 10}, ctx)).status == "warn"
+    summary = await adapter.fetch("summary", CONFIG, {}, ctx)
+    assert summary.status == "warn" and summary.primary == {"label": "Sources fine", "value": 1, "unit": "/ 2"}
+    assert summary.secondary[0] == {"label": "Warning", "value": 1}
+
+
+@respx.mock
+async def test_a_snapshot_that_runs_says_nothing_against_the_card(ctx: Context) -> None:
+    _server([GOOD, source("/a", "nas", "2026-09-11T08:00:00Z", status="UPLOADING", errors=3)], [])
+    adapter = get_adapter("kopia")
+    sources = await adapter.fetch("sources", CONFIG, {"limit": 10}, ctx)
+    assert sources.items[0]["status"] == "warn" and sources.status == "ok"
+    summary = await adapter.fetch("summary", CONFIG, {}, ctx)
+    assert summary.status == "ok" and [line["label"] for line in summary.secondary] == ["Last snapshot"]
+
+
+@respx.mock
 async def test_the_summary(ctx: Context) -> None:
     _server([GOOD, VANISHED, ELSEWHERE], [FAILED])
     data = await get_adapter("kopia").fetch("summary", CONFIG, {}, ctx)

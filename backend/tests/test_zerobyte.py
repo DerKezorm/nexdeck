@@ -109,6 +109,32 @@ def test_the_summary_counts_every_kind() -> None:
     assert data.status == "bad" and data.metrics == {"failed": 2.0}
 
 
+def test_a_warning_turns_both_cards_yellow_and_the_summary_counts_it() -> None:
+    """Issue #60: the row was yellow and the card stayed green."""
+    good = next(one for one in BACKUPS if one["name"] == "Documents")
+    warned = {**good, "name": "Warned", "shortId": "warned", "lastBackupStatus": "warning", "lastBackupError": "some files could not be read"}
+    rows = ZerobyteAdapter._rows([warned], 0, NOW)
+    listed = ZerobyteAdapter._backups(rows, 10)
+    assert listed.status == "warn" and listed.items[0]["subtitle"].startswith("Warning · some files could not be read · ")
+    summary = ZerobyteAdapter._summary(rows, NOW)
+    assert summary.status == "warn" and summary.primary == {"label": "Backups fine", "value": 0, "unit": "/ 1"}
+    assert {line["label"]: line["value"] for line in summary.secondary}["Warning"] == 1
+    # A good schedule beside it hides nothing, and a failed one outranks it.
+    beside = ZerobyteAdapter._rows([good, warned], 0, NOW)
+    assert ZerobyteAdapter._backups(beside, 10).status == "warn" and ZerobyteAdapter._summary(beside, NOW).status == "warn"
+    assert ZerobyteAdapter._backups(ZerobyteAdapter._rows([*BACKUPS, warned], 0, NOW), 10).status == "bad"
+    # Paused or not, the run went wrong the same way.
+    paused = ZerobyteAdapter._rows([{**warned, "enabled": False}], 0, NOW)
+    assert ZerobyteAdapter._backups(paused, 10).status == "warn" and ZerobyteAdapter._summary(paused, NOW).status == "warn"
+
+
+def test_a_backup_that_is_too_old_is_not_counted_as_a_warning_as_well() -> None:
+    documents = [one for one in BACKUPS if one["name"] == "Documents"]
+    summary = ZerobyteAdapter._summary(ZerobyteAdapter._rows(documents, 26 * HOUR, NOW + 30 * HOUR), NOW + 30 * HOUR)
+    labels = {line["label"]: line["value"] for line in summary.secondary}
+    assert summary.status == "warn" and labels["Too old"] == 1 and "Warning" not in labels
+
+
 def test_the_repositories_with_their_state_and_size() -> None:
     data = ZerobyteAdapter._repositories(REPOSITORIES, 10, NOW)
     [row] = data.items

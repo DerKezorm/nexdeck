@@ -256,9 +256,9 @@ class BackrestAdapter(Adapter):
         rows.sort(key=lambda row: (ORDER.get(row["status"], 9), row["title"].lower()))
         failed = sum(1 for row in rows if row["status"] == "bad")
         known = any(row["status"] != "unknown" for row in rows)
-        stale_rows = any(row.get("stale") for row in rows)
+        warned = any(row["status"] == "warn" for row in rows)
         return WidgetData(
-            status="bad" if failed else "warn" if stale_rows else "ok" if known else "unknown",
+            status="bad" if failed else "warn" if warned else "ok" if known else "unknown",
             items=rows[:limit],
             secondary=[{"label": "Failed", "value": failed}],
             meta={"empty": "No backup plans yet."},
@@ -269,6 +269,7 @@ class BackrestAdapter(Adapter):
     def _summary(plans: list[dict[str, Any]], now: float | None = None, stale: float = 0.0) -> WidgetData:
         latest = [_latest(plan)[0] for plan in plans]
         failed = latest.count("STATUS_ERROR")
+        warned = latest.count("STATUS_WARNING")
         old = sum(1 for plan, status in zip(plans, latest, strict=True)
                   if status == "STATUS_SUCCESS" and backup_age.too_old(_last_good(plan), stale, now))
         fine = latest.count("STATUS_SUCCESS") - old
@@ -276,10 +277,12 @@ class BackrestAdapter(Adapter):
         secondary: list[dict[str, Any]] = []
         if failed:
             secondary.append({"label": "Failed", "value": failed})
+        if warned:
+            secondary.append({"label": "Warning", "value": warned})
         if newest:
             secondary.append({"label": "Last backup", "value": ago(newest, now=now)})
         return WidgetData(
-            status="bad" if failed else "warn" if old else "ok" if fine else "unknown",
+            status="bad" if failed else "warn" if old or warned else "ok" if fine else "unknown",
             primary={"label": "Plans fine", "value": fine, "unit": f"/ {len(plans)}"},
             secondary=secondary,
             metrics={"failed": float(failed)},

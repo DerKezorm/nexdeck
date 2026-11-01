@@ -174,9 +174,10 @@ class KopiaAdapter(Adapter):
             good = _moment(last.get("endTime"))
             task = latest_task.get((str(where.get("userName")), str(where.get("host")), str(where.get("path"))), {})
             errors = int(((last.get("stats") or {}).get("errorCount")) or 0)
+            running = source.get("status") == "UPLOADING" or task.get("status") == "RUNNING"
             if task.get("status") == "FAILED" and _moment(task.get("endTime") or task.get("startTime")) > good:
                 state, word, reason = "bad", "Failed", str(task.get("errorMessage") or "")
-            elif source.get("status") == "UPLOADING" or task.get("status") == "RUNNING":
+            elif running:
                 state, word, reason = "warn", "Running", ""
             elif source.get("status") in ("PENDING", "PAUSED"):
                 # ⚠️ Measured: a source of another host is REMOTE, which is not
@@ -189,7 +190,8 @@ class KopiaAdapter(Adapter):
             else:
                 state, word, reason = "ok", "", ""
             place = f"{where.get('userName')}@{where.get('host')}" if several_hosts else ""
-            rows.append({"state": state, "good": good, "row": {
+            # A snapshot that runs is yellow in its row and says nothing against the card.
+            rows.append({"state": state, "good": good, "flawed": state == "warn" and not running, "row": {
                 "title": str(where.get("path") or "?"),
                 "subtitle": " · ".join(part for part in (word, reason[:120], place) if part),
                 "status": state,
@@ -202,15 +204,18 @@ class KopiaAdapter(Adapter):
     def _summary(rows: list[dict[str, Any]]) -> WidgetData:
         failed = sum(1 for one in rows if one["state"] == "bad")
         stale = sum(1 for one in rows if one["row"].get("stale"))
+        flawed = sum(1 for one in rows if one.get("flawed"))
         fine = sum(1 for one in rows if one["state"] == "ok")
         newest = max((one["good"] for one in rows), default=0.0)
         secondary: list[dict[str, Any]] = []
         if failed:
             secondary.append({"label": "Failed", "value": failed})
+        if flawed:
+            secondary.append({"label": "Warning", "value": flawed})
         if newest:
             secondary.append({"label": "Last snapshot", "value": ago(newest)})
         return WidgetData(
-            status="bad" if failed else "warn" if stale else "ok" if rows else "unknown",
+            status="bad" if failed else "warn" if stale or flawed else "ok" if rows else "unknown",
             primary={"label": "Sources fine", "value": fine, "unit": f"/ {len(rows)}"},
             secondary=secondary,
             metrics={"failed": float(failed)},
@@ -221,9 +226,9 @@ class KopiaAdapter(Adapter):
         order = {"bad": 0, "warn": 1, "unknown": 2, "ok": 3}
         ranked = sorted(rows, key=lambda one: (order.get(one["state"], 9), one["row"]["title"]))
         failed = sum(1 for one in rows if one["state"] == "bad")
-        stale = any(one["row"].get("stale") for one in rows)
+        warned = any(one["row"].get("stale") or one.get("flawed") for one in rows)
         return WidgetData(
-            status="bad" if failed else "warn" if stale else "ok",
+            status="bad" if failed else "warn" if warned else "ok",
             items=[one["row"] for one in ranked][: int(options.get("limit") or 10)],
             secondary=[{"label": "Failed", "value": failed}],
             meta={"empty": "No snapshot sources yet."},

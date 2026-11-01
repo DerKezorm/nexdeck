@@ -18,6 +18,7 @@ project uses semantic versioning.
 ### Fixed
 
 - The two languages of the top bar under Profile and the role of a user under Users had no room for longer names, such as "Português (Brasil)" or "Администратор".
+- **A backup that ended in a warning turns its card yellow.** The cards of Zerobyte and Backrest, and Kopia's for a snapshot with errors, showed the warning in the row and stayed green themselves, and the summary cards now count these runs. As with every card, the colour shows with Show findings on.
 
 ## 1.1.1 (2026-10-30)
 

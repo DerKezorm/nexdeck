@@ -96,6 +96,28 @@ def test_the_summary() -> None:
     assert data.status == "bad" and data.metrics == {"failed": 1.0}
 
 
+def test_a_warning_turns_both_cards_yellow_and_the_summary_counts_it() -> None:
+    good, failed = DASHBOARD["planSummaries"][0], DASHBOARD["planSummaries"][1]
+    warned = {"id": "warned", "recentBackups": {"flowId": ["9"], "timestampMs": ["1789164247490"], "durationMs": ["1392"],
+                                                "status": ["STATUS_WARNING"], "bytesAdded": ["0"]}}
+    alone = BackrestAdapter._plans([warned], {"warned": "some files could not be read"}, 10, now=NOW)
+    assert alone.status == "warn" and alone.items[0]["subtitle"] == "Warning · some files could not be read"
+    summary = BackrestAdapter._summary([warned], now=NOW)
+    assert summary.status == "warn" and summary.secondary == [{"label": "Warning", "value": 1}]
+    assert summary.primary == {"label": "Plans fine", "value": 0, "unit": "/ 1"}
+    # A good plan beside it hides nothing, and a failed one outranks it.
+    assert BackrestAdapter._plans([good, warned], {}, 10, now=NOW).status == "warn"
+    assert BackrestAdapter._summary([good, warned], now=NOW).status == "warn"
+    assert BackrestAdapter._plans([failed, warned], {}, 10, now=NOW).status == "bad"
+    assert BackrestAdapter._summary([failed, warned], now=NOW).status == "bad"
+
+
+def test_a_cancelled_run_is_no_warning() -> None:
+    cancelled = {"id": "cancelled", "recentBackups": {"flowId": ["9"], "timestampMs": ["1789164247490"], "durationMs": ["1392"],
+                                                      "status": ["STATUS_USER_CANCELLED"], "bytesAdded": ["0"]}}
+    assert BackrestAdapter._plans([DASHBOARD["planSummaries"][0], cancelled], {}, 10, now=NOW).status == "ok"
+
+
 @respx.mock
 async def test_a_backrest_without_plans(ctx: Context) -> None:
     """⚠️ Measured: before the first plan the dashboard carries its paths and nothing else."""
