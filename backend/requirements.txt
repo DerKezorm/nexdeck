@@ -52,7 +52,7 @@ pyzipper==0.4.0
 # event loop. SNMPv3 encryption goes through cryptography, already above.
 # Both checked against OSV on 22.09.2026: no advisories.
 pysnmp==7.1.29
-pyasn1==0.6.4
+pyasn1==0.6.5
 
 # Custom cards pick values out of a service's answer with JMESPath (pure Python, no
 # dependencies; the language can read and compare and cannot run anything).
