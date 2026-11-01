@@ -40,10 +40,11 @@ BASE = "https://svc.example.com"
 #: The most a card of one kind may add: a page of paths, not a copy of the API.
 LONGEST = 300
 
-#: A value that says when it was written (a day, a moment, seconds since 1970): it changes with every run, and a card
-#: cannot send one, its path being fixed. A request that needs it is not offered: without it nexcrate's calendar answers
-#: 422 (found in a real run on 1.0.0), and offering such a path to the editor or the card help only sets them up to fail.
-WHEN = re.compile(r"^(\d{4}-\d{2}-\d{2}([T ][\d:.]+(Z|[+-]\d{2}:?\d{2})?)?|\d{10}(\d{3})?)$")
+#: A value that says when it was written (a month, a day, a moment, seconds since 1970): it changes with every run, and
+#: a card cannot send one, its path being fixed. A request that needs it is not offered: without it nexcrate's calendar
+#: answers 422 (found in a real run on 1.0.0), and offering such a path to the editor or the card help only sets them up
+#: to fail. ⚠️ In the path as well: Actual Budget's month stood in the file and turned the test red on the first of the month.
+WHEN = re.compile(r"^(\d{4}-\d{2}(-\d{2}([T ][\d:.]+(Z|[+-]\d{2}:?\d{2})?)?)?|\d{10}(\d{3})?)$")
 #: Options a card needs before it asks anything, for the kinds whose cards stop at "nothing is set" or "not owner/name";
 #: the marker is written as the place given in :data:`PLACES`.
 OPTIONS: dict[str, dict[str, Any]] = {"github": {"repos": "Zkowner/Zkrepo"}}
@@ -170,7 +171,7 @@ def _entry(url: str, base: str, secrets: list[str], places: dict[str, str], name
         return None
     lowered = {name.lower() for name in names}
     every = parse_qsl(parts.query, keep_blank_values=True)
-    if any(WHEN.match(value) for _name, value in every):
+    if any(WHEN.match(value) for value in (*parts.path.split("/"), *(value for _name, value in every))):
         return None
     pairs = [(name, value) for name, value in every if not is_credential_name(name) and name.lower() not in lowered]
     path = parts.path[len(prefix):] or "/"

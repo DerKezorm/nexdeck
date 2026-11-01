@@ -52,6 +52,12 @@ def test_lesen_l2_the_file_is_what_the_code_gives_now(made) -> None:
     assert card_reads.TARGET.read_text(encoding="utf-8") == module.render(found), "same content, other spelling: make the file again"
 
 
+def test_lesen_l2_no_address_carries_a_month_or_a_day(made) -> None:
+    """A card's path is fixed, so a date in it goes out of date; and the list would change with the calendar."""
+    _, found = made
+    assert not [one["path"] for reads in found.values() for one in reads if re.search(r"[/=]\d{4}-\d{2}", one["path"])]
+
+
 def test_lesen_l2_the_list_is_made_by_asking_not_typed(made) -> None:
     """Sonarr's queue is on the list because its card asks for it: an adapter whose card asks another path changes the answer."""
     _, found = made

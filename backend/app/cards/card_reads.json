@@ -1,13 +1,6 @@
 {
  "actualbudget": [
   {
-   "path": "/v1/budgets/{sync_id}/months/2026-10",
-   "widgets": [
-    "month",
-    "categories"
-   ]
-  },
-  {
    "path": "/v1/budgets/{sync_id}/accounts?include_balances=true",
    "widgets": [
     "accounts"
