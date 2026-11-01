@@ -44,7 +44,9 @@ ANSWERS: dict[str, Any] = {
 
 def made(text: str = GLANCE, answers: Any = None, **keywords: Any) -> WidgetData:
     definition = load.load_definition(text).definition
-    return present(definition, pipeline.run(definition, {"sys": ANSWERS if answers is None else answers}), **keywords)
+    # ⚠️ Not the 50 ms of a real card: late in the whole run a garbage collection on its big heap fell into them (the
+    # list of fifty rows, twice on CI). Those 50 ms are tested in test_cards_pipeline.py with a clock that moves.
+    return present(definition, pipeline.run(definition, {"sys": ANSWERS if answers is None else answers}, budget_ms=1000), **keywords)
 
 
 def tree(text: str = GLANCE, answers: Any = None, **keywords: Any) -> list[dict[str, Any]]:
