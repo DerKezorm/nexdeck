@@ -21,6 +21,8 @@ import respx
 from app.adapters import get_adapter
 from app.adapters.base import AdapterError, AuthFailed, Context
 from app.adapters.maltrail import day_counts, parse_line, severity_of
+from app.cards import source
+from app.cards.schema import Request
 
 MT = "http://maltrail.example.com:8338"
 CONFIG = {"url": MT, "username": "nexdeck", "password": "made-up password"}
@@ -176,6 +178,16 @@ async def test_a_wrong_password_is_not_tried_again_on_every_refresh(ctx: Context
         with pytest.raises(AuthFailed):
             await get_adapter("maltrail").fetch("history", CONFIG, {"days": "7"}, ctx)
     assert signin.call_count == 1
+
+
+@respx.mock
+async def test_a_custom_card_reads_with_the_session_of_the_connection(ctx: Context) -> None:
+    """A card's path goes out with the cookie the kind's own sign-in opened, after the server first said 401."""
+    respx.post(f"{MT}/login").mock(return_value=httpx.Response(200, text="Login success", headers=SESSION))
+    respx.get(f"{MT}/counts").mock(side_effect=_guarded({}, json_body=True))
+    sensors = respx.get(f"{MT}/sensors").mock(side_effect=_guarded({"probe": {}}, json_body=True))
+    await source.fetch_source(get_adapter("maltrail"), CONFIG, ctx, Request(id="probe", path="/sensors"))
+    assert sensors.calls.last.response.status_code == 200 and _signed_in(sensors.calls.last.request)
 
 
 @respx.mock

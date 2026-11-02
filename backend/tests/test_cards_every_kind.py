@@ -53,6 +53,7 @@ SIGNS_IN: dict[str, str] = {
     "keycloak": "token in a header, from a POST with the client's credentials",
     "lemmy": "token in a header, from a POST",
     "wazuh": "token in a header, from a POST with Basic",
+    "maltrail": "cookie in a header, from a POST, and only once the server answers 401",
 }
 
 #: The path a card asks, for a kind that lets a card ask only one address (``raw_read_commands``).
