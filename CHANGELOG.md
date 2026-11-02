@@ -3,7 +3,7 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
-## Unreleased
+## 1.2.0 (2026-11-02)
 
 ### Added
 

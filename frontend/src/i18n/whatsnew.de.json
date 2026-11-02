@@ -1932,6 +1932,30 @@
       "small": [
         "Das Feld zum Hereinholen eines Skins erklärt sich nur noch einmal."
       ]
+    },
+    "1.2.0": {
+      "lead": "nexdeck spricht sieben Sprachen mehr, liest Maltrail und Calagopus, und ein Backup, das mit einer Warnung endete, zeigt das auf seiner Karte.",
+      "sections": [
+        {
+          "title": "Sieben Sprachen mehr",
+          "body": "Niederländisch, Polnisch, brasilianisches Portugiesisch, Russisch, Ukrainisch, Japanisch und vereinfachtes Chinesisch: die ganze Oberfläche, der Karteneditor, die Skins, der Assistent und was die Dienste melden. Polnisch, Russisch und Ukrainisch zählen in allen ihren Pluralformen. Ein Wort, das falsch klingt, ist ein Issue wert."
+        },
+        {
+          "title": "Maltrail",
+          "body": "Was die Sensoren von Maltrail heute im Netz gefunden haben und wie viele der Ereignisse ernst sind, die neuesten Funde mit ihrer Herkunft und die Ereignisse der letzten Tage. nexdeck meldet sich an wie Maltrails eigene Seite, bei alten und neuen Versionen. Vorerst eine Beta."
+        },
+        {
+          "title": "Calagopus",
+          "body": "Die Spieleserver eines Calagopus-Kontos: wie viele laufen, jeder mit Zustand, Speicher und Prozessorlast, und Knöpfe zum Starten und Stoppen."
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Zerobyte, Backrest und Kopia färben ihre Karte gelb, wenn ein Backup mit einer Warnung oder mit Fehlern endete, und die Übersichtskarten zählen diese Läufe.",
+        "TrueNAS System zeichnet in der Zeilenansicht den Verlauf seines Speichers.",
+        "Die Zahlenmuster einer Sprache kommen mit dieser Sprache, rund 13 kB weniger beim ersten Laden.",
+        "Längere Sprachnamen und Rollen passen unter Profil und Benutzer."
+      ]
     }
   }
 }
