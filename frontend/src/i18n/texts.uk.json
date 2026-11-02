@@ -1491,7 +1491,13 @@
     "Unread replies": "Непрочитані відповіді",
     "The service does not say which version it runs.": "Сервіс не повідомляє, яку версію він виконує.",
     "The service did not answer within twenty seconds.": "Сервіс не відповів протягом двадцяти секунд.",
-    "A picture of this card is not shown: its path asks the service to do something, and a card only reads.": "Зображення цієї картки не показується: її шлях просить сервіс щось зробити, а картка лише читає."
+    "A picture of this card is not shown: its path asks the service to do something, and a card only reads.": "Зображення цієї картки не показується: її шлях просить сервіс щось зробити, а картка лише читає.",
+    "Events today": "Події сьогодні",
+    "Medium": "Середній",
+    "Low": "Низький",
+    "Last event": "Остання подія",
+    "Nothing found today.": "Сьогодні нічого не знайдено.",
+    "No events in these days.": "Немає подій за ці дні."
   },
   "adapter": {
     "Team > Service users > a user > Access tokens. A service user with the User role reads every peer and can change nothing.": "Team > Service users > користувач > Access tokens. Service user із роллю User читає кожного піра й нічого не може змінити.",
@@ -4155,6 +4161,18 @@
     "Use the address the redirect leads to as the connection's address.": "Використайте адресу, куди веде переспрямування, як адресу підключення.",
     "Write each space as %20.": "Запишіть кожен пробіл як %20.",
     "Write example answers, or take them over from a probe.": "Напишіть приклади відповідей або візьміть їх із перевірки.",
-    "Write the path of the request, such as /api/v3/queue.": "Напишіть шлях запиту, наприклад /api/v3/queue."
+    "Write the path of the request, such as /api/v3/queue.": "Напишіть шлях запиту, наприклад /api/v3/queue.",
+    "What Maltrail's sensors found on the network today, the latest findings, and the days before.": "Що датчики Maltrail знайшли сьогодні в мережі, останні знахідки та попередні дні.",
+    "The address of the Maltrail server, port 8338 by default.": "Адреса сервера Maltrail, типово порт 8338.",
+    "A user from USERS in maltrail.conf. Not needed when USERS is empty.": "Користувач із USERS у maltrail.conf. Не потрібен, якщо USERS порожній.",
+    "A user of its own for nexdeck is best: add a line to USERS in maltrail.conf and restart the server.": "Найкраще окремий користувач для nexdeck: додайте рядок до USERS у maltrail.conf і перезапустіть сервер.",
+    "The password admin is shipped with is accepted only from the Maltrail server itself.": "Пароль, з яким постачається admin, приймається лише з самого сервера Maltrail.",
+    "How many events today, how many of them serious, and when the last one came.": "Скільки подій сьогодні, скільки з них серйозних і коли надійшла остання.",
+    "Latest findings": "Останні знахідки",
+    "The newest events of the day: what, from where, and when.": "Найновіші події дня: що, звідки і коли.",
+    "At least": "Щонайменше",
+    "Medium and high": "Середні та високі",
+    "High only": "Лише високі",
+    "Events per day.": "Події за день."
   }
 }

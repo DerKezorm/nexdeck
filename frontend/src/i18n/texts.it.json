@@ -2661,7 +2661,19 @@
     "Use the address the redirect leads to as the connection's address.": "Usa l'indirizzo a cui porta il reindirizzamento come indirizzo dell'integrazione.",
     "Write each space as %20.": "Scrivi ogni spazio come %20.",
     "Write example answers, or take them over from a probe.": "Scrivi risposte di esempio o prendile da una prova.",
-    "Write the path of the request, such as /api/v3/queue.": "Scrivi il percorso della richiesta, come /api/v3/queue."
+    "Write the path of the request, such as /api/v3/queue.": "Scrivi il percorso della richiesta, come /api/v3/queue.",
+    "What Maltrail's sensors found on the network today, the latest findings, and the days before.": "Cosa hanno trovato oggi in rete i sensori di Maltrail, i ritrovamenti più recenti e i giorni precedenti.",
+    "The address of the Maltrail server, port 8338 by default.": "L'indirizzo del server Maltrail, porta 8338 di default.",
+    "A user from USERS in maltrail.conf. Not needed when USERS is empty.": "Un utente di USERS in maltrail.conf. Non serve se USERS è vuoto.",
+    "A user of its own for nexdeck is best: add a line to USERS in maltrail.conf and restart the server.": "Meglio un utente apposta per nexdeck: aggiungi una riga a USERS in maltrail.conf e riavvia il server.",
+    "The password admin is shipped with is accepted only from the Maltrail server itself.": "La password con cui viene fornito admin è accettata solo dal server Maltrail stesso.",
+    "How many events today, how many of them serious, and when the last one came.": "Quanti eventi oggi, quanti di questi gravi e quando è arrivato l'ultimo.",
+    "Latest findings": "Ritrovamenti recenti",
+    "The newest events of the day: what, from where, and when.": "Gli eventi più recenti del giorno: cosa, da dove e quando.",
+    "At least": "Almeno",
+    "Medium and high": "Medio e alto",
+    "High only": "Solo alto",
+    "Events per day.": "Eventi al giorno."
   },
   "labels": {
     "Private resources": "Risorse private",
@@ -4155,6 +4167,12 @@
     "Unread replies": "Risposte non lette",
     "The service does not say which version it runs.": "Il servizio non indica quale versione esegue.",
     "The service did not answer within twenty seconds.": "Il servizio non ha risposto entro venti secondi.",
-    "A picture of this card is not shown: its path asks the service to do something, and a card only reads.": "Un'immagine di questa scheda non viene mostrata: il suo percorso fa agire il servizio, e una scheda legge soltanto."
+    "A picture of this card is not shown: its path asks the service to do something, and a card only reads.": "Un'immagine di questa scheda non viene mostrata: il suo percorso fa agire il servizio, e una scheda legge soltanto.",
+    "Events today": "Eventi oggi",
+    "Medium": "Medio",
+    "Low": "Basso",
+    "Last event": "Ultimo evento",
+    "Nothing found today.": "Niente trovato oggi.",
+    "No events in these days.": "Nessun evento in questi giorni."
   }
 }

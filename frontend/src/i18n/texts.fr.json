@@ -2661,7 +2661,19 @@
     "Use the address the redirect leads to as the connection's address.": "Utilise l'adresse vers laquelle mène la redirection comme adresse de l'intégration.",
     "Write each space as %20.": "Écris chaque espace sous la forme %20.",
     "Write example answers, or take them over from a probe.": "Écris des réponses d'exemple ou reprends-les d'un essai.",
-    "Write the path of the request, such as /api/v3/queue.": "Écris le chemin de la requête, par exemple /api/v3/queue."
+    "Write the path of the request, such as /api/v3/queue.": "Écris le chemin de la requête, par exemple /api/v3/queue.",
+    "What Maltrail's sensors found on the network today, the latest findings, and the days before.": "Ce que les capteurs de Maltrail ont trouvé aujourd'hui sur le réseau, les dernières découvertes et les jours précédents.",
+    "The address of the Maltrail server, port 8338 by default.": "L'adresse du serveur Maltrail, port 8338 par défaut.",
+    "A user from USERS in maltrail.conf. Not needed when USERS is empty.": "Un utilisateur de USERS dans maltrail.conf. Inutile si USERS est vide.",
+    "A user of its own for nexdeck is best: add a line to USERS in maltrail.conf and restart the server.": "Le mieux est un utilisateur dédié à nexdeck : ajoutez une ligne à USERS dans maltrail.conf et redémarrez le serveur.",
+    "The password admin is shipped with is accepted only from the Maltrail server itself.": "Le mot de passe livré avec admin n'est accepté que depuis le serveur Maltrail lui-même.",
+    "How many events today, how many of them serious, and when the last one came.": "Combien d'événements aujourd'hui, combien de graves, et quand est arrivé le dernier.",
+    "Latest findings": "Dernières découvertes",
+    "The newest events of the day: what, from where, and when.": "Les événements les plus récents du jour : quoi, d'où et quand.",
+    "At least": "Au moins",
+    "Medium and high": "Moyen et élevé",
+    "High only": "Élevé uniquement",
+    "Events per day.": "Événements par jour."
   },
   "labels": {
     "Private resources": "Ressources privées",
@@ -4155,6 +4167,12 @@
     "Unread replies": "Réponses non lues",
     "The service does not say which version it runs.": "Le service n'indique pas la version qu'il exécute.",
     "The service did not answer within twenty seconds.": "Le service n'a pas répondu en vingt secondes.",
-    "A picture of this card is not shown: its path asks the service to do something, and a card only reads.": "Une image de cette carte n’est pas affichée : son chemin fait agir le service, et une carte ne fait que lire."
+    "A picture of this card is not shown: its path asks the service to do something, and a card only reads.": "Une image de cette carte n’est pas affichée : son chemin fait agir le service, et une carte ne fait que lire.",
+    "Events today": "Événements aujourd'hui",
+    "Medium": "Moyen",
+    "Low": "Faible",
+    "Last event": "Dernier événement",
+    "Nothing found today.": "Rien trouvé aujourd'hui.",
+    "No events in these days.": "Aucun événement ces jours-ci."
   }
 }

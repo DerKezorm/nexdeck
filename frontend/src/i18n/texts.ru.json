@@ -2661,7 +2661,19 @@
     "Use the address the redirect leads to as the connection's address.": "Используйте адрес, на который ведёт перенаправление, как адрес подключения.",
     "Write each space as %20.": "Записывайте каждый пробел как %20.",
     "Write example answers, or take them over from a probe.": "Напишите примеры ответов или возьмите их из пробы.",
-    "Write the path of the request, such as /api/v3/queue.": "Напишите путь запроса, например /api/v3/queue."
+    "Write the path of the request, such as /api/v3/queue.": "Напишите путь запроса, например /api/v3/queue.",
+    "What Maltrail's sensors found on the network today, the latest findings, and the days before.": "Что датчики Maltrail нашли сегодня в сети, последние находки и предыдущие дни.",
+    "The address of the Maltrail server, port 8338 by default.": "Адрес сервера Maltrail, по умолчанию порт 8338.",
+    "A user from USERS in maltrail.conf. Not needed when USERS is empty.": "Пользователь из USERS в maltrail.conf. Не нужен, если USERS пуст.",
+    "A user of its own for nexdeck is best: add a line to USERS in maltrail.conf and restart the server.": "Лучше всего отдельный пользователь для nexdeck: добавьте строку в USERS в maltrail.conf и перезапустите сервер.",
+    "The password admin is shipped with is accepted only from the Maltrail server itself.": "Пароль, с которым поставляется admin, принимается только с самого сервера Maltrail.",
+    "How many events today, how many of them serious, and when the last one came.": "Сколько событий сегодня, сколько из них серьёзных и когда пришло последнее.",
+    "Latest findings": "Последние находки",
+    "The newest events of the day: what, from where, and when.": "Самые новые события дня: что, откуда и когда.",
+    "At least": "Не ниже",
+    "Medium and high": "Средние и высокие",
+    "High only": "Только высокие",
+    "Events per day.": "События за день."
   },
   "labels": {
     "Private resources": "Частные ресурсы",
@@ -4155,6 +4167,12 @@
     "Unread replies": "Непрочитанные ответы",
     "The service does not say which version it runs.": "Сервис не сообщает, какую версию он запускает.",
     "The service did not answer within twenty seconds.": "Сервис не ответил в течение двадцати секунд.",
-    "A picture of this card is not shown: its path asks the service to do something, and a card only reads.": "Изображение этой карточки не показано: его путь просит сервис что-то сделать, а карточка только читает."
+    "A picture of this card is not shown: its path asks the service to do something, and a card only reads.": "Изображение этой карточки не показано: его путь просит сервис что-то сделать, а карточка только читает.",
+    "Events today": "События сегодня",
+    "Medium": "Средний",
+    "Low": "Низкий",
+    "Last event": "Последнее событие",
+    "Nothing found today.": "Сегодня ничего не найдено.",
+    "No events in these days.": "Нет событий за эти дни."
   }
 }

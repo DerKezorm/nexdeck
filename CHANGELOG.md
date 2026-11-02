@@ -7,6 +7,7 @@ project uses semantic versioning.
 
 ### Added
 
+- **Maltrail.** What its sensors found on the network today, how many of the events are serious and when the last one came, the newest findings with where they came from, and the events of the last days. It signs in like Maltrail's own page, with the old digest of every release and the PBKDF2 proof of the code after 3.5 (#61).
 - **Calagopus.** The game servers of an account: how many run, each one with its state, memory and processor use, and buttons to start and stop it, the same cards as Pterodactyl.
 - **Dutch, Polish, Brazilian Portuguese, Russian, Ukrainian, Japanese and Simplified Chinese.** The whole interface, the card editor, the skins, the assistant and what the services report, in seven more languages. Polish, Russian and Ukrainian count in all their plural forms. A word that reads wrong is worth an issue.
 

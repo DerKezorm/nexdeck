@@ -119,6 +119,7 @@ GAPS: dict[str, str] = {
     "ical": "the address of the connection is the calendar file itself, there is nothing under it to ask",
     "kodi": POST + " (JSON-RPC)",
     "komodo": POST,
+    "maltrail": DATED,
     "nzbget": POST + " (JSON-RPC)",
     "openmediavault": POST + " (JSON-RPC)",
     "openwrt": POST + " (ubus)",

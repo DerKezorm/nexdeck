@@ -2661,7 +2661,19 @@
     "Use the address the redirect leads to as the connection's address.": "リダイレクト先のアドレスを、接続のアドレスとして使用してください。",
     "Write each space as %20.": "スペースは%20と書いてください。",
     "Write example answers, or take them over from a probe.": "サンプルの応答を書くか、プローブから引き継いでください。",
-    "Write the path of the request, such as /api/v3/queue.": "/api/v3/queueのように、リクエストのパスを書いてください。"
+    "Write the path of the request, such as /api/v3/queue.": "/api/v3/queueのように、リクエストのパスを書いてください。",
+    "What Maltrail's sensors found on the network today, the latest findings, and the days before.": "Maltrail のセンサーが今日ネットワークで見つけたもの、最新の検出、そしてそれ以前の日々。",
+    "The address of the Maltrail server, port 8338 by default.": "Maltrail サーバーのアドレス。既定ではポート 8338。",
+    "A user from USERS in maltrail.conf. Not needed when USERS is empty.": "maltrail.conf の USERS にいるユーザー。USERS が空なら不要です。",
+    "A user of its own for nexdeck is best: add a line to USERS in maltrail.conf and restart the server.": "nexdeck 専用のユーザーがおすすめです。maltrail.conf の USERS に 1 行追加し、サーバーを再起動してください。",
+    "The password admin is shipped with is accepted only from the Maltrail server itself.": "admin の出荷時のパスワードは Maltrail サーバー自身からしか受け付けられません。",
+    "How many events today, how many of them serious, and when the last one came.": "今日のイベント数、そのうち深刻なものの数、最後のイベントの時刻。",
+    "Latest findings": "最新の検出",
+    "The newest events of the day: what, from where, and when.": "今日の最新イベント：何が、どこから、いつ。",
+    "At least": "最低レベル",
+    "Medium and high": "中と高",
+    "High only": "高のみ",
+    "Events per day.": "1 日あたりのイベント。"
   },
   "labels": {
     "Private resources": "プライベートリソース",
@@ -4155,6 +4167,12 @@
     "Unread replies": "未読の返信",
     "The service does not say which version it runs.": "サービスは、実行中のバージョンを示していません。",
     "The service did not answer within twenty seconds.": "サービスが20秒以内に応答しませんでした。",
-    "A picture of this card is not shown: its path asks the service to do something, and a card only reads.": "このカードの画像は表示されません。そのパスはサービスに操作を求めており、カードは読み取りのみを行うためです。"
+    "A picture of this card is not shown: its path asks the service to do something, and a card only reads.": "このカードの画像は表示されません。そのパスはサービスに操作を求めており、カードは読み取りのみを行うためです。",
+    "Events today": "今日のイベント",
+    "Medium": "中",
+    "Low": "低",
+    "Last event": "最後のイベント",
+    "Nothing found today.": "今日は何も見つかっていません。",
+    "No events in these days.": "この期間にイベントはありません。"
   }
 }
