@@ -2665,7 +2665,20 @@
     "start": "Rozpocznij konserwację",
     "move": "Zmień koniec",
     "end": "Zakończ teraz",
-    "failed": "To się nie udało: {{reason}}"
+    "failed": "To się nie udało: {{reason}}",
+    "weekly": "Co tydzień",
+    "weeklyExplain": "Dla kopii zapasowych, aktualizacji i restartów, które się powtarzają: konserwacja zaczyna się sama o tej godzinie, według zegara tej przeglądarki.",
+    "weeklyNone": "Nic jeszcze nie zaplanowano.",
+    "weeklyLine": "{{days}}, od {{from}} do {{to}}",
+    "everyDay": "Codziennie",
+    "weeklyNext": "Następna: {{when}}",
+    "weeklyAdd": "Zaplanuj cotygodniową konserwację",
+    "weeklyDays": "Dni",
+    "weeklyFrom": "Od",
+    "weeklyLength": "Przez",
+    "weeklySave": "Dodaj do planu",
+    "weeklyDrop": "Usuń",
+    "weeklyRemove": "Usuń {{line}}"
   },
   "chronicle": {
     "title": "Kronika",

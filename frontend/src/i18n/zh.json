@@ -2549,7 +2549,20 @@
     "start": "开始维护",
     "move": "更改结束时间",
     "end": "立即结束",
-    "failed": "没有成功：{{reason}}"
+    "failed": "没有成功：{{reason}}",
+    "weekly": "每周",
+    "weeklyExplain": "用于会重复的备份、更新和重启：维护会按此浏览器的时钟在这个时间自动开始。",
+    "weeklyNone": "尚无计划。",
+    "weeklyLine": "{{days}}，{{from}} 至 {{to}}",
+    "everyDay": "每天",
+    "weeklyNext": "下次：{{when}}",
+    "weeklyAdd": "计划每周维护",
+    "weeklyDays": "日期",
+    "weeklyFrom": "开始",
+    "weeklyLength": "时长",
+    "weeklySave": "加入计划",
+    "weeklyDrop": "移除",
+    "weeklyRemove": "移除 {{line}}"
   },
   "chronicle": {
     "title": "事件记录",

@@ -2549,7 +2549,20 @@
     "start": "メンテナンスを開始",
     "move": "終了時刻を変更",
     "end": "今すぐ終了",
-    "failed": "うまくいきませんでした: {{reason}}"
+    "failed": "うまくいきませんでした: {{reason}}",
+    "weekly": "毎週",
+    "weeklyExplain": "繰り返し行うバックアップ、更新、再起動のために：このブラウザーの時計で、この時刻にメンテナンスが自動で始まります。",
+    "weeklyNone": "まだ予定はありません。",
+    "weeklyLine": "{{days}}、{{from}}〜{{to}}",
+    "everyDay": "毎日",
+    "weeklyNext": "次回：{{when}}",
+    "weeklyAdd": "毎週のメンテナンスを予定する",
+    "weeklyDays": "曜日",
+    "weeklyFrom": "開始",
+    "weeklyLength": "期間",
+    "weeklySave": "予定に追加",
+    "weeklyDrop": "削除",
+    "weeklyRemove": "{{line}} を削除"
   },
   "chronicle": {
     "title": "年代記",

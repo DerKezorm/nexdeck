@@ -5,6 +5,10 @@ project uses semantic versioning.
 
 ## Unreleased
 
+### Added
+
+- **Maintenance every week.** For backups, updates and restarts that come back, the maintenance dialog of a card plans a window on chosen days, from a time, for one to 24 hours. Shortly before each start nexdeck puts the connection or the app tile into maintenance by itself, so nothing about it is told, no outage is opened and the availability bars draw the time grey, just as with maintenance set by hand. "End now" ends this week's window and leaves the plan. The time is the clock of the browser it was set in, and stays the same across summer time. `POST /api/v1/maintenance/plans`.
+
 ### Fixed
 
 - **A stopped game server is red on its row.** The Servers cards of Pterodactyl and Calagopus showed a server that is offline with a green dot. It is red now and stays at the end of the list, and as before it leaves the colour of the card alone, since a server switched off on purpose is nothing to alarm about.

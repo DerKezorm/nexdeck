@@ -644,6 +644,37 @@ class Maintenance(Base):
     ends_at: Mapped[datetime] = mapped_column(Utc(), index=True)
     created_by: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     created_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
+    #: The weekly plan this stretch came from; empty for one set by hand. Kept when the plan goes.
+    plan_id: Mapped[int | None] = mapped_column(
+        ForeignKey("maintenance_plans.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+
+
+class MaintenancePlan(Base):
+    """Maintenance that comes back every week: on these days, from this time, for so long.
+
+    It never holds anything back itself. Shortly before each start it writes
+    an ordinary ``Maintenance`` stretch, so the bell, the channels, the
+    outages and the availability bars treat it like one set by hand, and the
+    bars keep it after the plan is changed or gone.
+    """
+
+    __tablename__ = "maintenance_plans"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    integration_id: Mapped[int | None] = mapped_column(
+        ForeignKey("integrations.id", ondelete="CASCADE"), nullable=True, index=True
+    )
+    widget_id: Mapped[int | None] = mapped_column(ForeignKey("widgets.id", ondelete="CASCADE"), nullable=True, index=True)
+    #: Weekdays, Monday 0 to Sunday 6.
+    days: Mapped[list[int]] = mapped_column(JSON, default=list)
+    #: The start on the clock, "03:00", in ``zone``.
+    starts: Mapped[str] = mapped_column(String(5))
+    minutes: Mapped[int] = mapped_column(Integer)
+    #: The time zone of the browser it was set in, so 03:00 stays 03:00 for the person who set it.
+    zone: Mapped[str] = mapped_column(String(64), default="")
+    created_by: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(Utc(), default=utcnow)
 
 
 class Event(Base):

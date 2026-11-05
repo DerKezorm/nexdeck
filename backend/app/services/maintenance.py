@@ -101,22 +101,39 @@ def until_by_card(db: Session, widgets: list[Widget], now: datetime | None = Non
 
 def view(db: Session, row: Maintenance, now: datetime | None = None) -> dict[str, Any]:
     moment = _now(now)
-    name = ""
-    if row.integration_id is not None:
-        integration = db.get(Integration, row.integration_id)
-        name = integration.name if integration is not None else ""
-    elif row.widget_id is not None:
-        widget = db.get(Widget, row.widget_id)
-        name = (widget.title or "App tile") if widget is not None else ""
     return {
         "id": row.id,
         "integration_id": row.integration_id,
         "widget_id": row.widget_id,
-        "name": name,
+        "name": target_name(db, integration_id=row.integration_id, widget_id=row.widget_id),
         "starts_at": row.starts_at.isoformat(),
         "ends_at": row.ends_at.isoformat(),
         "active": row.starts_at <= moment < row.ends_at,
+        "plan_id": row.plan_id,
     }
+
+
+def check_target(db: Session, *, integration_id: int | None, widget_id: int | None) -> None:
+    """A connection, or an app tile, that exists: what a stretch or a plan can be for."""
+    if (integration_id is None) == (widget_id is None):
+        raise Refused("bad_target", "Name either a connection or an app tile.")
+    if integration_id is not None and db.get(Integration, integration_id) is None:
+        raise Refused("not_found", "No such connection.")
+    if widget_id is not None:
+        widget = db.get(Widget, widget_id)
+        # Only an app tile stands on its own; any other card is in maintenance with its connection.
+        if widget is None or widget.kind != "core.app":
+            raise Refused("not_an_app", "Only an app tile has a maintenance of its own; other cards follow their connection.")
+
+
+def target_name(db: Session, *, integration_id: int | None, widget_id: int | None) -> str:
+    if integration_id is not None:
+        integration = db.get(Integration, integration_id)
+        return integration.name if integration is not None else ""
+    if widget_id is not None:
+        widget = db.get(Widget, widget_id)
+        return (widget.title or "App tile") if widget is not None else ""
+    return ""
 
 
 def start(db: Session, *, integration_id: int | None, widget_id: int | None, ends_at: datetime,
@@ -131,13 +148,7 @@ def start(db: Session, *, integration_id: int | None, widget_id: int | None, end
         raise Refused("ends_in_the_past", "The end has to lie in the future.")
     if ends_at - moment > LONGEST:
         raise Refused("too_long", "Maintenance lasts a week at most. A connection that is away for longer can be switched off.")
-    if integration_id is not None and db.get(Integration, integration_id) is None:
-        raise Refused("not_found", "No such connection.")
-    if widget_id is not None:
-        widget = db.get(Widget, widget_id)
-        # Only an app tile stands on its own; any other card is in maintenance with its connection.
-        if widget is None or widget.kind != "core.app":
-            raise Refused("not_an_app", "Only an app tile has a maintenance of its own; other cards follow their connection.")
+    check_target(db, integration_id=integration_id, widget_id=widget_id)
     running = covering(db, integration_id=integration_id, widget_id=widget_id, now=moment)
     if running is not None and running.integration_id == integration_id and running.widget_id == widget_id:
         running.ends_at = ends_at

@@ -2549,7 +2549,20 @@
     "start": "Iniciar manutenção",
     "move": "Alterar o fim",
     "end": "Encerrar agora",
-    "failed": "Não funcionou: {{reason}}"
+    "failed": "Não funcionou: {{reason}}",
+    "weekly": "Toda semana",
+    "weeklyExplain": "Para backups, atualizações e reinicializações que se repetem: a manutenção começa sozinha neste horário, pelo relógio deste navegador.",
+    "weeklyNone": "Nada planejado ainda.",
+    "weeklyLine": "{{days}}, das {{from}} às {{to}}",
+    "everyDay": "Todos os dias",
+    "weeklyNext": "Próxima: {{when}}",
+    "weeklyAdd": "Planejar manutenção semanal",
+    "weeklyDays": "Dias",
+    "weeklyFrom": "A partir de",
+    "weeklyLength": "Por",
+    "weeklySave": "Adicionar ao plano",
+    "weeklyDrop": "Remover",
+    "weeklyRemove": "Remover {{line}}"
   },
   "chronicle": {
     "title": "Crônica",

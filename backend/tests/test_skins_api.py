@@ -234,7 +234,7 @@ def test_migration_32_adds_the_table_and_a_column_an_older_version_can_insert_ar
         connection.execute(text("CREATE TABLE schema_version (version INTEGER NOT NULL)"))
         connection.execute(text("INSERT INTO schema_version (version) VALUES (31)"))
     migrations.migrate()
-    assert migrations.schema_version() == 32
+    assert migrations.schema_version() == migrations.MIGRATIONS[-1][0]
     with engine.begin() as connection:
         assert {"key", "text", "compiled", "engine", "shop_ref"} <= {row[1] for row in connection.execute(text("PRAGMA table_info(skins)"))}
         # 1.0 writes accounts without the column it does not know: the database fills it in.

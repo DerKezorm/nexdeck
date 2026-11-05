@@ -2549,7 +2549,20 @@
     "start": "Wartung beginnen",
     "move": "Ende ändern",
     "end": "Jetzt beenden",
-    "failed": "Das hat nicht geklappt: {{reason}}"
+    "failed": "Das hat nicht geklappt: {{reason}}",
+    "weekly": "Jede Woche",
+    "weeklyExplain": "Für Sicherungen, Updates und Neustarts, die wiederkommen: Die Wartung beginnt zu dieser Zeit von selbst, nach der Uhr dieses Browsers.",
+    "weeklyNone": "Noch nichts geplant.",
+    "weeklyLine": "{{days}}, {{from}} bis {{to}}",
+    "everyDay": "Jeden Tag",
+    "weeklyNext": "Nächste: {{when}}",
+    "weeklyAdd": "Wöchentliche Wartung planen",
+    "weeklyDays": "Tage",
+    "weeklyFrom": "Ab",
+    "weeklyLength": "Für",
+    "weeklySave": "In den Plan",
+    "weeklyDrop": "Entfernen",
+    "weeklyRemove": "{{line}} entfernen"
   },
   "chronicle": {
     "title": "Chronik",

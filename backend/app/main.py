@@ -75,7 +75,16 @@ from .routers import (
 )
 from .routers import journal as journal_router
 from .security import prune_sessions
-from .services import backup, history, journal, oidc_store, provisioning, report, retention
+from .services import (
+    backup,
+    history,
+    journal,
+    maintenance_plans,
+    oidc_store,
+    provisioning,
+    report,
+    retention,
+)
 from .services import channels as channel_service
 from .services import favicons as favicon_service
 from .services import icons as icon_service
@@ -192,12 +201,14 @@ async def lifespan(app: FastAPI):
     housekeeping = asyncio.create_task(_housekeeping(), name="housekeeping")
     provisioning_task = asyncio.create_task(provisioning.watch(), name="provisioning")
     rounds = asyncio.create_task(report.rounds(), name="rounds")
+    plan_rounds = asyncio.create_task(maintenance_plans.rounds(), name="maintenance-plans")
     logger.info("nexdeck %s ready.", __version__)
     try:
         yield
     finally:
         housekeeping.cancel()
         rounds.cancel()
+        plan_rounds.cancel()
         provisioning_task.cancel()
         await hass_listener.stop()
         await health_service.stop()

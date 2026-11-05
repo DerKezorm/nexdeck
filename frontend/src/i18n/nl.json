@@ -2549,7 +2549,20 @@
     "start": "Onderhoud starten",
     "move": "Het einde wijzigen",
     "end": "Nu beëindigen",
-    "failed": "Dat is niet gelukt: {{reason}}"
+    "failed": "Dat is niet gelukt: {{reason}}",
+    "weekly": "Elke week",
+    "weeklyExplain": "Voor back-ups, updates en herstarts die terugkomen: het onderhoud begint vanzelf op dit tijdstip, volgens de klok van deze browser.",
+    "weeklyNone": "Nog niets gepland.",
+    "weeklyLine": "{{days}}, {{from}} tot {{to}}",
+    "everyDay": "Elke dag",
+    "weeklyNext": "Volgende: {{when}}",
+    "weeklyAdd": "Wekelijks onderhoud plannen",
+    "weeklyDays": "Dagen",
+    "weeklyFrom": "Vanaf",
+    "weeklyLength": "Duur",
+    "weeklySave": "Aan het plan toevoegen",
+    "weeklyDrop": "Verwijderen",
+    "weeklyRemove": "{{line}} verwijderen"
   },
   "chronicle": {
     "title": "Kroniek",

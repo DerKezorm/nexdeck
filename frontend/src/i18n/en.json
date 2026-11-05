@@ -2549,7 +2549,20 @@
     "start": "Start maintenance",
     "move": "Change the end",
     "end": "End now",
-    "failed": "That did not work: {{reason}}"
+    "failed": "That did not work: {{reason}}",
+    "weekly": "Every week",
+    "weeklyExplain": "For backups, updates and restarts that come back: maintenance begins by itself at this time, on the clock of this browser.",
+    "weeklyNone": "Nothing planned yet.",
+    "weeklyLine": "{{days}}, {{from}} to {{to}}",
+    "everyDay": "Every day",
+    "weeklyNext": "Next: {{when}}",
+    "weeklyAdd": "Plan weekly maintenance",
+    "weeklyDays": "Days",
+    "weeklyFrom": "From",
+    "weeklyLength": "For",
+    "weeklySave": "Add to the plan",
+    "weeklyDrop": "Remove",
+    "weeklyRemove": "Remove {{line}}"
   },
   "chronicle": {
     "title": "Chronicle",

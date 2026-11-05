@@ -290,6 +290,11 @@ def _skins(connection: Connection) -> None:
     _add_column(connection, "users", "skin", "JSON NOT NULL DEFAULT '{}'")
 
 
+def _maintenance_plans(connection: Connection) -> None:
+    Base.metadata.tables["maintenance_plans"].create(connection, checkfirst=True)
+    _add_column(connection, "maintenance", "plan_id", "INTEGER REFERENCES maintenance_plans(id) ON DELETE SET NULL")
+
+
 MIGRATIONS: list[tuple[int, str, Callable[[Connection], None]]] = [
     # (version, description, function). Version 1 is create_all.
     (2, "Nexview widgets get the bundled Nexview logo", _nexview_logo),
@@ -324,6 +329,7 @@ MIGRATIONS: list[tuple[int, str, Callable[[Connection], None]]] = [
     (31, "An administrator can stay signed in to GitHub to share cards", _github_logins_table),
     # ⚠️ The number is settled when skins come to main: a fix there may take 32 first (notes/skins-konzept).
     (32, "Skins, and a skin of one's own for every account", _skins),
+    (33, "Maintenance can come back every week", _maintenance_plans),
 ]
 
 
