@@ -1956,6 +1956,19 @@
         "Die Zahlenmuster einer Sprache kommen mit dieser Sprache, rund 13 kB weniger beim ersten Laden.",
         "Längere Sprachnamen und Rollen passen unter Profil und Benutzer."
       ]
+    },
+    "1.3.0": {
+      "lead": "Wartung kann jede Woche wiederkommen, und ein gestoppter Spieleserver ist rot.",
+      "sections": [
+        {
+          "title": "Wartung jede Woche",
+          "body": "Für Sicherungen, Updates und Neustarts, die wiederkommen, plant der Wartungsdialog einer Karte jetzt ein Fenster an gewählten Tagen, ab einer Uhrzeit, für eine bis 24 Stunden. Kurz vor jedem Start setzt nexdeck die Anbindung oder die App-Kachel selbst in Wartung: Nichts darüber wird gemeldet, kein Ausfall wird eröffnet, und die Verfügbarkeitsbalken zeichnen die Zeit grau. „Jetzt beenden“ beendet das Fenster dieser Woche, der Plan bleibt. Die Uhrzeit folgt der Uhr des Browsers, in dem sie eingestellt wurde, auch über die Sommerzeit."
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Ein gestoppter Server auf den Server-Karten von Pterodactyl und Calagopus hat einen roten Punkt und steht am Ende der Liste. Die Karte selbst behält ihre Farbe."
+      ]
     }
   }
 }

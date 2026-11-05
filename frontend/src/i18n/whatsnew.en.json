@@ -1956,6 +1956,19 @@
         "The phrases with numbers of a language arrive with that language, about 13 kB less on the first load.",
         "Longer language names and roles fit under Profile and Users."
       ]
+    },
+    "1.3.0": {
+      "lead": "Maintenance can come back every week, and a stopped game server shows up red.",
+      "sections": [
+        {
+          "title": "Maintenance every week",
+          "body": "For backups, updates and restarts that come back, the maintenance dialog of a card now plans a window on chosen days, from a time, for one to 24 hours. Shortly before each start nexdeck puts the connection or the app tile into maintenance by itself: nothing about it is told, no outage is opened, and the availability bars draw the time grey. \"End now\" ends this week's window and leaves the plan. The time follows the clock of the browser it was set in, across summer time as well."
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "A stopped server on the Servers cards of Pterodactyl and Calagopus has a red dot and stands at the end of the list. The card itself keeps its colour."
+      ]
     }
   }
 }
