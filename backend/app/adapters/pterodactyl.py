@@ -183,13 +183,15 @@ class PterodactylAdapter(Adapter):
             items.append({
                 "title": str(server.get("name") or identifier or "?"),
                 "subtitle": " · ".join(parts),
-                "status": "warn" if state in ("suspended", "starting", "stopping") else "unknown" if state is None else status_from_percent(share) if share is not None else "ok",
+                # A stopped server is red on its row, like a stopped container, but stays at the end of the list
+                # and leaves the card's own colour alone: a game server switched off on purpose is nothing to alarm about.
+                "status": "bad" if state == "offline" else "warn" if state in ("suspended", "starting", "stopping") else "unknown" if state is None else status_from_percent(share) if share is not None else "ok",
                 "value": "Suspended" if state == "suspended" else STATES.get(str(state), "Unknown"),
                 "actions": actions,
             })
         order = {"bad": 0, "warn": 1, "ok": 2, "unknown": 3}
-        items.sort(key=lambda row: (order[row["status"]], row["value"] == "Offline", row["title"].casefold()))
-        states = {row["status"] for row in items}
+        items.sort(key=lambda row: (row["value"] == "Offline", order[row["status"]], row["title"].casefold()))
+        states = {row["status"] for row in items if row["value"] != "Offline"}
         return WidgetData(
             status="bad" if "bad" in states else "warn" if "warn" in states else "ok",
             items=items[: int(options.get("limit") or 12)],

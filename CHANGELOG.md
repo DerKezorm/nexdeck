@@ -3,6 +3,12 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## Unreleased
+
+### Fixed
+
+- **A stopped game server is red on its row.** The Servers cards of Pterodactyl and Calagopus showed a server that is offline with a green dot. It is red now and stays at the end of the list, and as before it leaves the colour of the card alone, since a server switched off on purpose is nothing to alarm about.
+
 ## 1.2.0 (2026-11-02)
 
 ### Added

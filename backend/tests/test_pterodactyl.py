@@ -78,6 +78,26 @@ async def test_the_servers_card_gives_use_and_the_button_that_fits_the_state(ctx
 
 
 @respx.mock
+async def test_a_stopped_server_is_red_on_its_row_last_in_the_list_and_leaves_the_card_alone(ctx: Context) -> None:
+    served()
+    data = await get_adapter("pterodactyl").fetch("servers", CONFIG, {}, ctx)
+    assert [(row["title"], row["status"]) for row in data.items] == [("Old test", "warn"), ("Survival", "ok"), ("Modded", "bad")]
+    assert data.status == "warn"  # from the suspended one, not the stopped one
+
+
+@respx.mock
+async def test_a_card_with_only_running_and_stopped_servers_stays_green(ctx: Context) -> None:
+    respx.get(API, params={"per_page": "100"}).mock(return_value=httpx.Response(200, json={
+        "object": "list", "data": [server("a1b2c3d4", "Survival"), server("e5f6a7b8", "Modded")],
+        "meta": {"pagination": {"total": 2, "count": 2, "per_page": 100, "current_page": 1, "total_pages": 1}}}))
+    respx.get(f"{API}/servers/a1b2c3d4/resources").mock(return_value=httpx.Response(200, json=stats("running", 3 * 1024 ** 3, 41.6, 7_200_000)))
+    respx.get(f"{API}/servers/e5f6a7b8/resources").mock(return_value=httpx.Response(200, json=stats("offline")))
+    data = await get_adapter("pterodactyl").fetch("servers", CONFIG, {}, ctx)
+    assert [(row["title"], row["status"], row["value"]) for row in data.items] == [("Survival", "ok", "Running"), ("Modded", "bad", "Offline")]
+    assert data.status == "ok"
+
+
+@respx.mock
 async def test_a_server_near_its_memory_limit_is_red(ctx: Context) -> None:
     served()
     respx.get(f"{API}/servers/a1b2c3d4/resources").mock(return_value=httpx.Response(200, json=stats("running", int(3.9 * 1024 ** 3), 90, 1000)))

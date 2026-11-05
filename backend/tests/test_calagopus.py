@@ -92,6 +92,8 @@ async def test_the_servers_card_gives_use_and_the_button_that_fits_the_state(ctx
     assert (stop.id, stop.confirm, stop.danger, stop.params) == ("stop", True, True, {"id": SURVIVAL})
     [start] = rows["Modded"]["actions"]
     assert (start.id, start.confirm, start.danger, start.params) == ("start", True, False, {"id": MODDED})
+    assert (rows["Modded"]["status"], rows["Modded"]["value"]) == ("bad", "Offline")  # issue #59: it was green
+    assert data.items[-1]["title"] == "Modded"
     assert rows["Old test"]["actions"] == [] and rows["Old test"]["value"] == "Suspended"
 
 
