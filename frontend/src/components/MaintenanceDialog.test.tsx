@@ -107,16 +107,18 @@ describe('maintenance', () => {
   })
 
   it('lists the weekly maintenance of the connection and removes one', async () => {
-    plans.push({ id: 30, integration_id: 7, widget_id: null, name: 'Movies', days: [2, 6], starts: '03:00', minutes: 120, zone: 'UTC', next_starts_at: new Date().toISOString(), next_ends_at: null })
+    // A zone that is never the one of the machine running the test, so the line names it wherever it runs.
+    const elsewhere = Intl.DateTimeFormat().resolvedOptions().timeZone === 'Pacific/Chatham' ? 'Atlantic/Azores' : 'Pacific/Chatham'
+    plans.push({ id: 30, integration_id: 7, widget_id: null, name: 'Movies', days: [2, 6], starts: '03:00', minutes: 120, zone: elsewhere, next_starts_at: new Date().toISOString(), next_ends_at: null })
     card(QUEUE)
     fireEvent.click(screen.getByRole('button', { name: 'Maintenance' }))
     const weekly = await screen.findByTestId('maintenance-weekly')
-    expect(await screen.findByText('Wed, Sun, 03:00 AM to 05:00 AM (UTC)')).toBeTruthy()
+    expect(await screen.findByText(`Wed, Sun, 03:00 AM to 05:00 AM (${elsewhere})`)).toBeTruthy()
     expect(sent).toContainEqual({ method: 'GET', path: '/maintenance/plans?integration_id=7' })
     expect(weekly.textContent).toContain('Next:')
-    await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Remove Wed, Sun, 03:00 AM to 05:00 AM (UTC)' })))
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: `Remove Wed, Sun, 03:00 AM to 05:00 AM (${elsewhere})` })))
     expect(sent).toContainEqual({ method: 'DELETE', path: '/maintenance/plans/30' })
-    expect(screen.queryByText('Wed, Sun, 03:00 AM to 05:00 AM (UTC)')).toBeNull()
+    expect(screen.queryByText(`Wed, Sun, 03:00 AM to 05:00 AM (${elsewhere})`)).toBeNull()
     expect(weekly.textContent).toContain('Nothing planned yet.')
   })
 
