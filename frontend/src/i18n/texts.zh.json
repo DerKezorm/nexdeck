@@ -187,7 +187,7 @@
     "Colour": "颜色",
     "Combined CPU and memory of all running containers.": "所有运行中容器的 CPU 和内存合计。",
     "Config > General > API Key": "Config > General > API Key",
-    "Connected clients, access points and switches, WAN traffic.": "已连接的客户端、接入点和交换机，以及 WAN 流量。",
+    "Connected clients, access points and switches, WAN traffic, the gateway's speed tests.": "已连接的客户端、接入点和交换机，WAN 流量，以及网关的测速。",
     "Connected devices, folders, uptime and the version.": "已连接的设备、文件夹、运行时间和版本。",
     "Connection": "连接",
     "Connection state, external address, uptime and what is going over the line.": "连接状态、外部地址、运行时间，以及线路上正在传输的内容。",
@@ -2673,7 +2673,18 @@
     "At least": "至少",
     "Medium and high": "中和高",
     "High only": "仅高",
-    "Events per day.": "每天的事件。"
+    "Events per day.": "每天的事件。",
+    "Download, upload and latency of the newest speed test the gateway ran, on its schedule or by hand.": "网关最近一次测速（按计划或手动）的下载、上传和延迟。",
+    "Every WAN": "所有 WAN",
+    "Speed test history": "测速历史",
+    "The gateway's speed tests over a period, download and upload, as a line or as bars.": "一段时间内网关的测速，下载和上传，以折线或柱状显示。",
+    "Which internet line, on a gateway with more than one.": "网关有多条线路时，选择哪一条互联网线路。",
+    "Wrap long text": "长文本换行",
+    "Long text breaks onto further lines instead of being cut short.": "长文本会延续到下一行，而不是被截断。",
+    "WAN": "WAN",
+    "WAN 1": "WAN 1",
+    "WAN 2": "WAN 2",
+    "WAN 3": "WAN 3"
   },
   "labels": {
     "Private resources": "私有资源",
@@ -4173,6 +4184,8 @@
     "Low": "低",
     "Last event": "最后一个事件",
     "Nothing found today.": "今天没有发现任何内容。",
-    "No events in these days.": "这些天没有事件。"
+    "No events in these days.": "这些天没有事件。",
+    "No speed test on this console yet": "此控制台上还没有测速",
+    "The last speed test measured nothing": "上一次测速没有测到任何结果"
   }
 }

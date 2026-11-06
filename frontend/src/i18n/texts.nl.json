@@ -187,7 +187,7 @@
     "Colour": "Kleur",
     "Combined CPU and memory of all running containers.": "Gezamenlijke CPU en geheugen van alle actieve containers.",
     "Config > General > API Key": "Config > General > API Key",
-    "Connected clients, access points and switches, WAN traffic.": "Verbonden clients, access points en switches, WAN-verkeer.",
+    "Connected clients, access points and switches, WAN traffic, the gateway's speed tests.": "Verbonden clients, access points en switches, WAN-verkeer, de snelheidstests van de gateway.",
     "Connected devices, folders, uptime and the version.": "Verbonden apparaten, mappen, uptime en de versie.",
     "Connection": "Verbinding",
     "Connection state, external address, uptime and what is going over the line.": "Verbindingsstatus, extern adres, uptime en wat er over de lijn gaat.",
@@ -2673,7 +2673,18 @@
     "At least": "Minstens",
     "Medium and high": "Middel en hoog",
     "High only": "Alleen hoog",
-    "Events per day.": "Gebeurtenissen per dag."
+    "Events per day.": "Gebeurtenissen per dag.",
+    "Download, upload and latency of the newest speed test the gateway ran, on its schedule or by hand.": "Download, upload en latentie van de nieuwste snelheidstest van de gateway, volgens schema of met de hand.",
+    "Every WAN": "Elke WAN",
+    "Speed test history": "Geschiedenis van snelheidstests",
+    "The gateway's speed tests over a period, download and upload, as a line or as bars.": "De snelheidstests van de gateway over een periode, download en upload, als lijn of als staven.",
+    "Which internet line, on a gateway with more than one.": "Welke internetlijn, bij een gateway met meer dan één.",
+    "Wrap long text": "Lange tekst laten doorlopen",
+    "Long text breaks onto further lines instead of being cut short.": "Lange tekst loopt door op volgende regels in plaats van te worden afgekapt.",
+    "WAN": "WAN",
+    "WAN 1": "WAN 1",
+    "WAN 2": "WAN 2",
+    "WAN 3": "WAN 3"
   },
   "labels": {
     "Private resources": "Privé-resources",
@@ -4173,6 +4184,8 @@
     "Low": "Laag",
     "Last event": "Laatste gebeurtenis",
     "Nothing found today.": "Vandaag niets gevonden.",
-    "No events in these days.": "Geen gebeurtenissen in deze dagen."
+    "No events in these days.": "Geen gebeurtenissen in deze dagen.",
+    "No speed test on this console yet": "Nog geen snelheidstest op deze console",
+    "The last speed test measured nothing": "De laatste snelheidstest heeft niets gemeten"
   }
 }

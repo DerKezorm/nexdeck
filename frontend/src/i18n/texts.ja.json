@@ -187,7 +187,7 @@
     "Colour": "色",
     "Combined CPU and memory of all running containers.": "実行中のすべてのコンテナのCPUとメモリの合計。",
     "Config > General > API Key": "Config > General > API Key",
-    "Connected clients, access points and switches, WAN traffic.": "接続中のクライアント、アクセスポイント、スイッチ、WANトラフィック。",
+    "Connected clients, access points and switches, WAN traffic, the gateway's speed tests.": "接続中のクライアント、アクセスポイント、スイッチ、WANトラフィック、ゲートウェイのスピードテスト。",
     "Connected devices, folders, uptime and the version.": "接続中のデバイス、フォルダー、稼働時間、バージョン。",
     "Connection": "接続",
     "Connection state, external address, uptime and what is going over the line.": "接続状態、外部アドレス、稼働時間、回線を流れている量。",
@@ -2673,7 +2673,18 @@
     "At least": "最低レベル",
     "Medium and high": "中と高",
     "High only": "高のみ",
-    "Events per day.": "1 日あたりのイベント。"
+    "Events per day.": "1 日あたりのイベント。",
+    "Download, upload and latency of the newest speed test the gateway ran, on its schedule or by hand.": "ゲートウェイが実行した最新のスピードテスト（スケジュールまたは手動）のダウンロード、アップロード、レイテンシ。",
+    "Every WAN": "すべてのWAN",
+    "Speed test history": "スピードテストの履歴",
+    "The gateway's speed tests over a period, download and upload, as a line or as bars.": "期間内のゲートウェイのスピードテスト。ダウンロードとアップロードを線または棒で表示します。",
+    "Which internet line, on a gateway with more than one.": "複数の回線を持つゲートウェイで、どのインターネット回線か。",
+    "Wrap long text": "長いテキストを折り返す",
+    "Long text breaks onto further lines instead of being cut short.": "長いテキストを省略せず、次の行に続けて表示します。",
+    "WAN": "WAN",
+    "WAN 1": "WAN 1",
+    "WAN 2": "WAN 2",
+    "WAN 3": "WAN 3"
   },
   "labels": {
     "Private resources": "プライベートリソース",
@@ -4173,6 +4184,8 @@
     "Low": "低",
     "Last event": "最後のイベント",
     "Nothing found today.": "今日は何も見つかっていません。",
-    "No events in these days.": "この期間にイベントはありません。"
+    "No events in these days.": "この期間にイベントはありません。",
+    "No speed test on this console yet": "このコンソールにはまだスピードテストがありません",
+    "The last speed test measured nothing": "最後のスピードテストは何も測定しませんでした"
   }
 }

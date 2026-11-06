@@ -25,11 +25,15 @@ from .base import (
     Unreachable,
     WidgetData,
     WidgetType,
+    ago,
+    as_gauge,
     base_url,
     duration_short,
+    gauge_fields,
     join_parts,
     measured,
     outbound_client,
+    timeline,
 )
 
 #: Devices whose statistics are loaded for the list; more would mean a request per device.
@@ -71,6 +75,136 @@ def _speed(speed: int, top: int) -> str:
     return read(speed) if not top or speed >= top else f"{read(speed)} of {read(top)}"
 
 
+#: Which internet line a speed test card reads, by the network group the console files a run under.
+WAN_FIELD = Field("wan", "WAN", type="select", default="",
+                  options=(("", "Every WAN"), ("WAN", "WAN 1"), ("WAN2", "WAN 2"), ("WAN3", "WAN 3")),
+                  help="Which internet line, on a gateway with more than one.")
+#: How far back the history of speed tests is asked for when the console only knows the old report.
+SPEEDTEST_DAYS = 90
+
+
+def _speedtest(row: dict[str, Any]) -> dict[str, Any] | None:
+    """One run of the console's speed test, in one shape whichever way it came.
+
+    Measured on 06.11.2026 against a Dream Machine SE (Network 9): the new
+    list ``/v2/api/site/<site>/speedtest`` sends ``download_mbps``,
+    ``upload_mbps``, ``latency_ms``, ``time`` in milliseconds and
+    ``wan_networkgroup`` ("WAN", "WAN2"); the old report
+    ``stat/report/archive.speedtest`` sends the same run as ``xput_download``,
+    ``xput_upload``, ``latency`` and ``interface_name`` only.
+
+    ⚠️ A run that measured nothing either way did not measure: it is kept as
+    a run with no numbers, a gap on the line, never as a line that fell to 0.
+    """
+    try:
+        at = float(row["time"]) / 1000
+    except (KeyError, TypeError, ValueError):
+        return None
+
+    def number(*names: str) -> float | None:
+        for name in names:
+            value = row.get(name)
+            if isinstance(value, (int, float)) and not isinstance(value, bool):
+                return float(value)
+        return None
+
+    down = number("download_mbps", "xput_download")
+    up = number("upload_mbps", "xput_upload")
+    ping = number("latency_ms", "latency")
+    failed = not down and not up
+    return {
+        "at": at,
+        "down": None if failed else down,
+        "up": None if failed else up,
+        "ping": None if failed else ping,
+        "wan": str(row.get("wan_networkgroup") or ""),
+        "interface": str(row.get("interface_name") or ""),
+    }
+
+
+def _wan_label(run: dict[str, Any]) -> str:
+    """ "WAN2" reads as "WAN 2" and the first line "WAN" as "WAN 1", as in the card's own choice."""
+    wan = run["wan"]
+    if wan == "WAN":
+        return "WAN 1"
+    return f"WAN {wan[3:]}" if wan.startswith("WAN") and wan[3:].isdigit() else (wan or run["interface"] or "WAN")
+
+
+def speedtest_card(runs: list[dict[str, Any]], options: dict[str, Any], now: float | None = None) -> WidgetData:
+    """The newest speed test of the chosen line: download big, upload, latency and its age beside it."""
+    wanted = str(options.get("wan") or "")
+    mine = sorted((run for run in runs if not wanted or run["wan"] == wanted), key=lambda run: run["at"])
+    if not mine:
+        return WidgetData(status="unknown", primary={"label": "Download", "value": None, "unit": ""},
+                          secondary=[{"label": "Last test", "value": "No test yet"}],
+                          meta={"empty": "No speed test on this console yet"})
+    good = next((run for run in reversed(mine) if run["down"] is not None), None)
+    newest = mine[-1]
+    lines = {run["wan"] for run in runs if run["wan"]}
+    if good is None:
+        return WidgetData(status="warn", primary={"label": "Download", "value": None, "unit": ""},
+                          secondary=[{"label": "Last test", "value": "Failed"}, {"label": "Tested", "value": ago(newest["at"], now=now) or "?"}],
+                          meta={"status_reason": "The last speed test measured nothing"})
+    secondary: list[dict[str, Any]] = [
+        {"label": "Upload", "metric": "upload", "value": good["up"], "unit": "Mbps"},
+        {"label": "Ping", "value": None if good["ping"] is None else round(good["ping"]), "unit": "ms"},
+        {"label": "Tested", "value": ago(good["at"], now=now) or "?"},
+    ]
+    if len(lines) > 1 and not wanted:
+        # Two lines and no choice made: the card says which one this run was on.
+        secondary.append({"label": "WAN", "value": _wan_label(good)})
+    status = "ok"
+    if newest is not good:
+        secondary.append({"label": "Last test", "value": "Failed"})
+        status = "warn"
+    card = WidgetData(
+        status=status,
+        primary={"label": "Download", "metric": "download", "value": good["down"], "unit": "Mbps"},
+        secondary=secondary,
+        metrics=measured({"download": good["down"], "upload": good["up"], "ping": good["ping"]}),
+        meta={"status_reason": "The last speed test measured nothing"} if status == "warn" else {},
+    )
+    return as_gauge(card, options)
+
+
+def speedtest_history(runs: list[dict[str, Any]], options: dict[str, Any], now: float | None = None) -> WidgetData:
+    """Download and upload over a period, one line each per internet line.
+
+    ⚠️ Two lines are never one series. A gateway with fibre on WAN 1 and LTE
+    on WAN 2 measures 900 and 40 Mbit/s, and drawn as one line that would be
+    a connection collapsing every time the other one was tested.
+    """
+    days = max(1, int(options.get("days") or 7))
+    cutoff = (now if now is not None else time.time()) - days * 86400
+    wanted = str(options.get("wan") or "")
+    inside = sorted((run for run in runs if run["at"] >= cutoff and (not wanted or run["wan"] == wanted)), key=lambda run: run["at"])
+    if not inside:
+        return WidgetData(status="unknown", meta={"empty": "No measurement in this period"})
+    show = str(options.get("show") or "both")
+    groups = sorted({run["wan"] for run in inside})
+    several = len(groups) > 1
+    lines = []
+    for group in groups:
+        theirs = [run for run in inside if run["wan"] == group]
+        suffix = f" · {_wan_label(theirs[0])}" if several else ""
+        key = f"_{group.lower()}" if several else ""
+        if show in ("both", "download"):
+            lines.append((f"download{key}", f"Download{suffix}", [(run["at"], run["down"]) for run in theirs]))
+        if show in ("both", "upload"):
+            lines.append((f"upload{key}", f"Upload{suffix}", [(run["at"], run["up"]) for run in theirs]))
+    good = next((run for run in reversed(inside) if run["down"] is not None), None)
+    down, up = (good["down"], good["up"]) if good else (None, None)
+    return WidgetData(
+        primary={"label": "Download", "metric": "download", "value": down, "unit": "Mbps"},
+        secondary=[
+            {"label": "Upload", "metric": "upload", "value": up, "unit": "Mbps"},
+            {"label": "Measurements", "value": len(inside)},
+        ],
+        metrics=measured({"download": down, "upload": up}),
+        meta=timeline(*lines, unit="Mbps", shape=str(options.get("shape") or "line")),
+    )
+
+
 def _poe(poe: dict[str, Any]) -> str:
     """What the port is giving out, in the words the console uses."""
     standard = str(poe.get("standard") or "").strip()
@@ -86,7 +220,7 @@ class UnifiAdapter(Adapter):
     beta = False
     label = "UniFi Network"
     category = "network"
-    description = "Connected clients, access points and switches, WAN traffic."
+    description = "Connected clients, access points and switches, WAN traffic, the gateway's speed tests."
     icon = "unifi"
     docs_url = "https://developer.ui.com/site-manager-api/"
     fields = (
@@ -116,6 +250,26 @@ class UnifiAdapter(Adapter):
             parts=(("speed", "Speed"), ("poe", "Power over ethernet")),
         ),
         WidgetType(kind="wifi", label="WLANs", description="Every wireless network with its VLAN, security, bands and the access points that carry it.", renderer="list", default_size=(3, 2), refresh_seconds=300),
+        # The console's own speed test (Settings, Internet, Speed test), read
+        # back rather than run: nothing on a second container (#64).
+        WidgetType(kind="speedtest", label="Speed test",
+                   description="Download, upload and latency of the newest speed test the gateway ran, on its schedule or by hand.",
+                   renderer="value", default_size=(2, 2), refresh_seconds=300, metrics=("download", "upload", "ping"),
+                   options=(WAN_FIELD, *gauge_fields("What your line is supposed to deliver, in Mbps.", "1000"))),
+        WidgetType(
+            kind="speedtest_history", label="Speed test history",
+            description="The gateway's speed tests over a period, download and upload, as a line or as bars.",
+            renderer="timeline", default_size=(4, 3), min_size=(3, 2), refresh_seconds=900,
+            options=(
+                WAN_FIELD,
+                Field("days", "Period", type="select", default="7",
+                      options=(("1", "24 hours"), ("7", "7 days"), ("30", "30 days"), ("90", "90 days"))),
+                Field("shape", "Shape", type="select", default="line",
+                      options=(("line", "A line"), ("bars", "Bars"))),
+                Field("show", "Show", type="select", default="both",
+                      options=(("both", "Download and upload"), ("download", "Download only"), ("upload", "Upload only"))),
+            ),
+        ),
     )
 
     # -- shared ----------------------------------------------------------------
@@ -159,6 +313,10 @@ class UnifiAdapter(Adapter):
         return f"UniFi answers, {len(health)} subsystems reported."
 
     async def fetch(self, widget_kind: str, config: dict[str, Any], options: dict[str, Any], ctx: Context) -> WidgetData:
+        if widget_kind in ("speedtest", "speedtest_history"):
+            runs = await self._speedtests(config, ctx)
+            now = time.time()
+            return speedtest_card(runs, options, now=now) if widget_kind == "speedtest" else speedtest_history(runs, options, now=now)
         if self._uses_api_key(config):
             return await self._fetch_api(widget_kind, config, options, ctx)
         self._require_account(config)
@@ -550,6 +708,65 @@ class UnifiAdapter(Adapter):
         """The dot says why it is yellow or red: how many devices are not answering."""
         return {"status_reason": f"{offline} device(s) offline"} if offline else {}
 
+    # -- speed tests (#64) -------------------------------------------------------
+
+    async def _console_request(self, config: dict[str, Any], ctx: Context, method: str, path: str,
+                               body: dict[str, Any] | None = None, retry: bool = True) -> httpx.Response:
+        """One request to the Network application's own paths, with whichever way in the connection has."""
+        client = self._client(config, ctx)
+        if self._uses_api_key(config):
+            headers = {"X-API-KEY": str(config.get("api_key", "")).strip(), "Accept": "application/json"}
+        else:
+            headers = {"x-csrf-token": ctx.cache.get("unifi_csrf", ""), "Accept": "application/json"}
+        try:
+            response = await client.request(method, f"{self._prefix(config)}{path}", headers=headers, json=body)
+        except httpx.HTTPError as error:
+            raise Unreachable(f"The UniFi console could not be reached: {error.__class__.__name__}.") from error
+        if response.status_code in (401, 403):
+            if not self._uses_api_key(config) and retry:
+                await self._login(config, ctx)
+                return await self._console_request(config, ctx, method, path, body, retry=False)
+            raise AuthFailed("The UniFi console rejected the API key." if self._uses_api_key(config)
+                             else "The UniFi controller rejected the user name or password.")
+        return response
+
+    async def _speedtests(self, config: dict[str, Any], ctx: Context) -> list[dict[str, Any]]:
+        """Every speed test the console keeps, oldest first.
+
+        The list the Network application itself reads is
+        ``/v2/api/site/<site>/speedtest``, a plain GET. It takes the API key
+        as well as an account (measured on Network 9, 06.11.2026: the eight
+        runs of three months, both lines). A controller without it answers
+        404, and then the old report ``stat/report/archive.speedtest`` is
+        asked; it wants a POST, but only reads.
+        """
+        if not self._uses_api_key(config):
+            self._require_account(config)
+        hit = ctx.cache.get("unifi_speedtests")
+        if hit and hit[0] > time.monotonic():
+            return list(hit[1])
+        site = str(config.get("site") or "default").strip()
+        response = await self._console_request(config, ctx, "GET", f"/v2/api/site/{site}/speedtest")
+        if response.status_code == 404:
+            now = int(time.time() * 1000)
+            response = await self._console_request(
+                config, ctx, "POST", f"/api/s/{site}/stat/report/archive.speedtest",
+                {"attrs": ["xput_download", "xput_upload", "latency", "time", "interface_name"],
+                 "start": now - SPEEDTEST_DAYS * 86_400_000, "end": now},
+            )
+        if response.status_code >= 400:
+            raise AdapterError(f"The UniFi console answered with HTTP {response.status_code}.", code="http_error",
+                               hint="The site name has to be the internal one, usually default.")
+        try:
+            payload = response.json()
+        except ValueError as error:
+            raise AdapterError("The UniFi console did not answer with JSON.", code="not_json",
+                               hint="Use https:// and the console's own address, without a port.") from error
+        rows = payload.get("data") if isinstance(payload, dict) else payload
+        runs = sorted((run for row in rows or [] if isinstance(row, dict) and (run := _speedtest(row))), key=lambda run: run["at"])
+        ctx.cache["unifi_speedtests"] = (time.monotonic() + 60, runs)
+        return list(runs)
+
     # -- classic cookie API (local account) -------------------------------------
 
     async def _login(self, config: dict[str, Any], ctx: Context) -> None:
@@ -731,6 +948,23 @@ class UnifiAdapter(Adapter):
         return WidgetData(status=status, items=items, meta={**self._offline_meta(offline), "empty": calm})
 
     def demo(self, widget_kind: str, options: dict[str, Any], tick: int) -> WidgetData:
+        if widget_kind in ("speedtest", "speedtest_history"):
+            # Every six hours on WAN 1, once a day on the backup line.
+            now = time.time()
+            runs = []
+            for step in range(4 * 90):
+                at = now - 3600 - step * 21600
+                runs.append({"at": at, "down": fake.walk(f"unifi-st-down{step}", tick, 820, 960, period=900),
+                             "up": fake.walk(f"unifi-st-up{step}", tick, 38, 50, period=900),
+                             "ping": fake.walk(f"unifi-st-ping{step}", tick, 9, 16, period=900), "wan": "WAN", "interface": "eth8"})
+                if step % 4 == 0:
+                    runs.append({"at": at - 60, "down": fake.walk(f"unifi-st-lte{step}", tick, 40, 90, period=900),
+                                 "up": fake.walk(f"unifi-st-lteup{step}", tick, 15, 30, period=900),
+                                 "ping": fake.walk(f"unifi-st-lteping{step}", tick, 30, 45, period=900), "wan": "WAN2", "interface": "eth6"})
+            runs.sort(key=lambda run: run["at"])
+            if widget_kind == "speedtest":
+                return speedtest_card(runs, options, now=now)
+            return speedtest_history(runs, {"wan": "WAN", **{key: value for key, value in options.items() if value not in (None, "")}}, now=now)
         if widget_kind == "map":
             garden_down = fake.flicker("unifi-map-garden", tick, 0.25)
             devices = [

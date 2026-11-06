@@ -1497,7 +1497,9 @@
     "Low": "Низький",
     "Last event": "Остання подія",
     "Nothing found today.": "Сьогодні нічого не знайдено.",
-    "No events in these days.": "Немає подій за ці дні."
+    "No events in these days.": "Немає подій за ці дні.",
+    "No speed test on this console yet": "На цій консолі ще немає тестів швидкості",
+    "The last speed test measured nothing": "Останній тест швидкості нічого не виміряв"
   },
   "adapter": {
     "Team > Service users > a user > Access tokens. A service user with the User role reads every peer and can change nothing.": "Team > Service users > користувач > Access tokens. Service user із роллю User читає кожного піра й нічого не може змінити.",
@@ -1687,7 +1689,7 @@
     "Colour": "Колір",
     "Combined CPU and memory of all running containers.": "Загальні CPU і пам'ять усіх запущених контейнерів.",
     "Config > General > API Key": "Config > General > API Key",
-    "Connected clients, access points and switches, WAN traffic.": "Підключені клієнти, точки доступу й комутатори, трафік WAN.",
+    "Connected clients, access points and switches, WAN traffic, the gateway's speed tests.": "Підключені клієнти, точки доступу й комутатори, трафік WAN, тести швидкості шлюзу.",
     "Connected devices, folders, uptime and the version.": "Підключені пристрої, папки, час роботи й версія.",
     "Connection": "Підключення",
     "Connection state, external address, uptime and what is going over the line.": "Стан підключення, зовнішня адреса, час роботи й те, що йде по лінії.",
@@ -4173,6 +4175,17 @@
     "At least": "Щонайменше",
     "Medium and high": "Середні та високі",
     "High only": "Лише високі",
-    "Events per day.": "Події за день."
+    "Events per day.": "Події за день.",
+    "Download, upload and latency of the newest speed test the gateway ran, on its schedule or by hand.": "Завантаження, вивантаження й затримка останнього тесту швидкості шлюзу, за розкладом або вручну.",
+    "Every WAN": "Усі WAN",
+    "Speed test history": "Історія тестів швидкості",
+    "The gateway's speed tests over a period, download and upload, as a line or as bars.": "Тести швидкості шлюзу за період, завантаження й вивантаження, лінією або стовпцями.",
+    "Which internet line, on a gateway with more than one.": "Яка інтернет-лінія, якщо шлюз має кілька.",
+    "Wrap long text": "Переносити довгий текст",
+    "Long text breaks onto further lines instead of being cut short.": "Довгий текст продовжується на наступних рядках, а не обрізається.",
+    "WAN": "WAN",
+    "WAN 1": "WAN 1",
+    "WAN 2": "WAN 2",
+    "WAN 3": "WAN 3"
   }
 }

@@ -187,7 +187,7 @@
     "Colour": "Cor",
     "Combined CPU and memory of all running containers.": "CPU e memória combinadas de todos os contêineres em execução.",
     "Config > General > API Key": "Config > General > API Key",
-    "Connected clients, access points and switches, WAN traffic.": "Clientes conectados, pontos de acesso e switches, tráfego da WAN.",
+    "Connected clients, access points and switches, WAN traffic, the gateway's speed tests.": "Clientes conectados, pontos de acesso e switches, tráfego da WAN, os testes de velocidade do gateway.",
     "Connected devices, folders, uptime and the version.": "Dispositivos conectados, pastas, uptime e a versão.",
     "Connection": "Conexão",
     "Connection state, external address, uptime and what is going over the line.": "Estado da conexão, endereço externo, uptime e o que passa pela linha.",
@@ -2673,7 +2673,18 @@
     "At least": "No mínimo",
     "Medium and high": "Médio e alto",
     "High only": "Só alto",
-    "Events per day.": "Eventos por dia."
+    "Events per day.": "Eventos por dia.",
+    "Download, upload and latency of the newest speed test the gateway ran, on its schedule or by hand.": "Download, upload e latência do teste de velocidade mais recente do gateway, agendado ou feito à mão.",
+    "Every WAN": "Todas as WAN",
+    "Speed test history": "Histórico de testes de velocidade",
+    "The gateway's speed tests over a period, download and upload, as a line or as bars.": "Os testes de velocidade do gateway em um período, download e upload, como linha ou barras.",
+    "Which internet line, on a gateway with more than one.": "Qual linha de internet, em um gateway com mais de uma.",
+    "Wrap long text": "Quebrar texto longo",
+    "Long text breaks onto further lines instead of being cut short.": "Texto longo continua nas linhas seguintes em vez de ser cortado.",
+    "WAN": "WAN",
+    "WAN 1": "WAN 1",
+    "WAN 2": "WAN 2",
+    "WAN 3": "WAN 3"
   },
   "labels": {
     "Private resources": "Recursos privados",
@@ -4173,6 +4184,8 @@
     "Low": "Baixo",
     "Last event": "Último evento",
     "Nothing found today.": "Nada encontrado hoje.",
-    "No events in these days.": "Nenhum evento nesses dias."
+    "No events in these days.": "Nenhum evento nesses dias.",
+    "No speed test on this console yet": "Ainda não há teste de velocidade nesta console",
+    "The last speed test measured nothing": "O último teste de velocidade não mediu nada"
   }
 }

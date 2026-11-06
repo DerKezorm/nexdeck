@@ -187,7 +187,7 @@
     "Colour": "Цвет",
     "Combined CPU and memory of all running containers.": "Суммарные CPU и память всех запущенных контейнеров.",
     "Config > General > API Key": "Config > General > API Key",
-    "Connected clients, access points and switches, WAN traffic.": "Подключённые клиенты, точки доступа, коммутаторы и трафик WAN.",
+    "Connected clients, access points and switches, WAN traffic, the gateway's speed tests.": "Подключённые клиенты, точки доступа, коммутаторы, трафик WAN и тесты скорости шлюза.",
     "Connected devices, folders, uptime and the version.": "Подключённые устройства, папки, время работы и версия.",
     "Connection": "Подключение",
     "Connection state, external address, uptime and what is going over the line.": "Состояние подключения, внешний адрес, время работы и что идёт по линии.",
@@ -2673,7 +2673,18 @@
     "At least": "Не ниже",
     "Medium and high": "Средние и высокие",
     "High only": "Только высокие",
-    "Events per day.": "События за день."
+    "Events per day.": "События за день.",
+    "Download, upload and latency of the newest speed test the gateway ran, on its schedule or by hand.": "Загрузка, отдача и задержка последнего теста скорости шлюза, по расписанию или вручную.",
+    "Every WAN": "Все WAN",
+    "Speed test history": "История тестов скорости",
+    "The gateway's speed tests over a period, download and upload, as a line or as bars.": "Тесты скорости шлюза за период, загрузка и отдача, линией или столбцами.",
+    "Which internet line, on a gateway with more than one.": "Какая интернет-линия, если у шлюза их несколько.",
+    "Wrap long text": "Переносить длинный текст",
+    "Long text breaks onto further lines instead of being cut short.": "Длинный текст продолжается на следующих строках, а не обрезается.",
+    "WAN": "WAN",
+    "WAN 1": "WAN 1",
+    "WAN 2": "WAN 2",
+    "WAN 3": "WAN 3"
   },
   "labels": {
     "Private resources": "Частные ресурсы",
@@ -4173,6 +4184,8 @@
     "Low": "Низкий",
     "Last event": "Последнее событие",
     "Nothing found today.": "Сегодня ничего не найдено.",
-    "No events in these days.": "Нет событий за эти дни."
+    "No events in these days.": "Нет событий за эти дни.",
+    "No speed test on this console yet": "На этой консоли ещё нет тестов скорости",
+    "The last speed test measured nothing": "Последний тест скорости ничего не измерил"
   }
 }

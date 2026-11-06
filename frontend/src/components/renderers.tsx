@@ -425,6 +425,8 @@ export function ValueCard({ data, series, onAction, canAct }: RenderProps) {
   const metric = Object.keys(recordedMetrics(data))[0]
   const points = metric ? series?.[metric] : undefined
   const hasFooter = Boolean(data?.secondary?.length || data?.actions?.length)
+  // A card that asks for it breaks a long text onto further lines instead of ending it in "…" (#63).
+  const wrap = Boolean(data?.meta?.wrap)
   return (
     <div className="flex-1 flex flex-col min-h-0 relative">
       {worthDrawing(points) && (
@@ -432,10 +434,11 @@ export function ValueCard({ data, series, onAction, canAct }: RenderProps) {
           <Sparkline values={points} height={60} className="!h-full" />
         </div>
       )}
-      <div className="flex-1 flex flex-col justify-center px-3 min-h-0 relative">
+      <div className={`flex-1 flex flex-col ${wrap ? 'justify-center-safe' : 'justify-center'} px-3 min-h-0 relative`}>
         {/* A number rolls to its new reading; a word rises in, as it always did. */}
         <div
-          className={`num value-number leading-none font-semibold tracking-tight ${typeof primary?.value === 'number' ? '' : 'rise'}`}
+          className={`num value-number ${wrap ? 'value-wrap leading-tight' : 'leading-none'} font-semibold tracking-tight ${typeof primary?.value === 'number' ? '' : 'rise'}`}
+          data-wrap={wrap || undefined}
           style={{ '--chars': valueWidth(primary?.display ?? primary?.value, primary?.unit) } as CSSProperties}
           key={typeof primary?.value === 'number' ? 'number' : String(primary?.value)}
         >
@@ -895,6 +898,9 @@ export function ListCard({ widget, data, onAction, canAct, series }: RenderProps
   if (!items.length && !data?.error) return <Empty>{data?.meta?.empty ? L(String(data.meta.empty)) : t(isCustom(data) ? 'card.nothingHere' : 'card.nothing')}</Empty>
   // A custom card's subtitle is the author's own and was written out already.
   const subtitleOf = (item: Record<string, unknown>): string => (custom ? String(item.subtitle ?? '') : wordedSubtitle(item, t, i18n.language))
+  // A card that asks for it breaks long titles, subtitles and values onto further lines (#63).
+  const wrap = Boolean(data?.meta?.wrap)
+  const cut = wrap ? 'whitespace-normal [overflow-wrap:anywhere]' : 'truncate'
   return (
     <div className="flex-1 min-h-0 flex flex-col">
       {data?.meta?.headline && data.primary ? (
@@ -913,7 +919,9 @@ export function ListCard({ widget, data, onAction, canAct, series }: RenderProps
           const memory = typeof item.memory_percent === 'number' ? item.memory_percent : null
           const [title, subtitle] = listRow(disguise, widget.kind, item, item.worded ? L(String(item.title ?? '')) : String(item.title ?? ''), item.subtitle ? subtitleOf(item) : '')
           return (
-            <li key={String(item.id ?? index)} className="group/row flex items-center gap-2.5 px-1.5 py-1.5 rounded-lg hover:bg-surface-hover">
+            // ⚠️ A wrapped row can be taller than the card: centred, its dot
+            // and its value sat halfway down and out of sight.
+            <li key={String(item.id ?? index)} className={`group/row flex ${wrap ? 'items-start [&>.dot]:mt-1.5' : 'items-center'} gap-2.5 px-1.5 py-1.5 rounded-lg hover:bg-surface-hover`}>
               {item.art ? (
                 // A cover beside the row, for lists of titles: requests,
                 // recently added. Small, and the dot moves onto its corner so
@@ -939,10 +947,10 @@ export function ListCard({ widget, data, onAction, canAct, series }: RenderProps
                       a fault: an unread mail is not a yellow one. */}
                   {/* A title is a name as it stands, unless the row says it is
                       nexdeck's own wording: a finding, a kind of media. */}
-                  <span className={`text-[13px] truncate ${item.emphasis ? 'font-semibold' : 'font-medium'}`} title={custom ? title : undefined}>{title}</span>
+                  <span className={`text-[13px] ${cut} ${item.emphasis ? 'font-semibold' : 'font-medium'}`} title={custom ? title : undefined}>{title}</span>
                   {typeof item.cpu === 'number' && <span className="num text-[10px] text-muted">{item.cpu.toFixed(0)}%</span>}
                 </div>
-                {subtitle ? <div className="text-[11px] text-muted truncate" title={custom ? subtitle : undefined}>{subtitle}</div> : null}
+                {subtitle ? <div className={`text-[11px] text-muted ${cut}`} title={custom ? subtitle : undefined}>{subtitle}</div> : null}
                 {Array.isArray(item.bars) && item.bars.length > 0 && (
                   <AvailabilityBars
                     bars={item.bars as (number | null)[]}
@@ -977,7 +985,7 @@ export function ListCard({ widget, data, onAction, canAct, series }: RenderProps
               {/* With its unit where the row names one: a storage row said "41.6" and meant per cent. A row that
                   writes its number out (display: "10.5 GB", "1 / 5") keeps the number for the bars (#57). */}
               {item.value !== undefined && item.value !== '' && (
-                <span className="num text-xs text-muted whitespace-nowrap">
+                <span className={`num text-xs text-muted ${wrap ? 'max-w-[50%] text-right [overflow-wrap:anywhere]' : 'whitespace-nowrap'}`}>
                   {typeof item.display === 'string'
                     ? disguise.free(L(item.display))
                     : item.unit
