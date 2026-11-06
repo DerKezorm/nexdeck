@@ -201,6 +201,7 @@ export function IntegrationsSettings() {
 function IntegrationSheet({ adapters, integration, kind, prefill, onClose, onSaved }: { adapters: AdapterSpec[]; integration: Integration | null; kind: string; prefill?: Record<string, unknown> | null; onClose: () => void; onSaved: () => void }) {
   const admin = useAuth((s) => s.user?.role === 'admin')
   const { t } = useTranslation()
+  const queryClient = useQueryClient()
   const adapter = adapters.find((a) => a.kind === kind)
   const [name, setName] = useState(integration?.name ?? adapter?.label ?? '')
   const [config, setConfig] = useState<Record<string, unknown>>(
@@ -212,6 +213,29 @@ function IntegrationSheet({ adapters, integration, kind, prefill, onClose, onSav
   const [result, setResult] = useState<TestResult | null>(null)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  const [mfaConfirmOpen, setMfaConfirmOpen] = useState(false)
+  const [mfaCode, setMfaCode] = useState('')
+  const [mfaBusy, setMfaBusy] = useState(false)
+  const [mfaMessage, setMfaMessage] = useState('')
+  const [mfaError, setMfaError] = useState('')
+  const [mfaEnrolled, setMfaEnrolled] = useState(
+    Boolean(integration?.config?.device_id)
+  )
+  const synologyIdentityChanged = Boolean(
+    integration && adapter?.kind === 'synology' && (
+      ['url', 'username'].some((key) =>
+        String(config[key] ?? '').trim() !==
+        String(integration.config[key] ?? '').trim()
+      ) ||
+      (
+        config.password !== undefined &&
+        config.password !== null &&
+        config.password !== '' &&
+        config.password !== '********' &&
+        config.password !== integration.config.password
+      )
+    )
+  )
   if (!adapter) return null
 
   const test = async () => {
@@ -225,6 +249,48 @@ function IntegrationSheet({ adapters, integration, kind, prefill, onClose, onSav
       setBusy(false)
     }
   }
+  const enrolMfa = async () => {
+    if (!integration || synologyIdentityChanged || !/^[0-9]{6}$/.test(mfaCode)) return
+    setMfaBusy(true)
+    setMfaMessage('')
+    setMfaError('')
+    try {
+      await post(`/integrations/${integration.id}/mfa/enrol`, { otp: mfaCode })
+      setMfaEnrolled(true)
+      setMfaMessage('Synology trusted device enrolled successfully.')
+      await queryClient.invalidateQueries({ queryKey: ['integrations'] })
+    } catch (failure) {
+      setMfaError(failure instanceof ApiError ? failure.message : t('errors.network'))
+    } finally {
+      setMfaCode('')
+      setMfaBusy(false)
+    }
+  }
+
+  const unenrolMfa = async () => {
+    if (!integration || !mfaEnrolled || mfaBusy || busy) return
+    setMfaConfirmOpen(false)
+    setMfaBusy(true)
+    setMfaMessage('')
+    setMfaError('')
+    try {
+      await post(`/integrations/${integration.id}/mfa/unenrol`, {})
+      setMfaEnrolled(false)
+      setMfaCode('')
+      setConfig((current) => {
+        const updated = { ...current }
+        delete updated.device_id
+        return updated
+      })
+      setMfaMessage('Synology trusted device removed. A new MFA code is required to re-enrol.')
+      await queryClient.invalidateQueries({ queryKey: ['integrations'] })
+    } catch (failure) {
+      setMfaError(failure instanceof ApiError ? failure.message : t('errors.network'))
+    } finally {
+      setMfaBusy(false)
+    }
+  }
+
   const save = async () => {
     setBusy(true)
     setError('')
@@ -291,7 +357,67 @@ function IntegrationSheet({ adapters, integration, kind, prefill, onClose, onSav
       <Switch checked={adminOnly} onChange={setAdminOnly} label={t('settings.integrations.adminOnly')} description={t('settings.integrations.adminOnlyHelp')} />
       {/* ⚠️ A field that belongs to the other choice is not on screen: a
           community next to an SNMPv3 user reads as "fill in both". */}
-      {!demo && adapter.fields.filter((field) => shownField(field, adapter.fields, config)).map((field) => <FieldInput key={field.name} spec={field} value={config[field.name]} onChange={(value) => setConfig((c) => ({ ...c, [field.name]: value }))} onFill={(values) => setConfig((c) => ({ ...c, ...values }))} values={config} />)}
+      {!demo && adapter.fields.filter((field) => !(adapter.kind === 'synology' && field.name === 'device_id') && shownField(field, adapter.fields, config)).map((field) => <FieldInput key={field.name} spec={field} value={config[field.name]} onChange={(value) => setConfig((c) => ({ ...c, [field.name]: value }))} onFill={(values) => setConfig((c) => ({ ...c, ...values }))} values={config} />)}
+      {integration && adapter.kind === 'synology' && admin && !demo && (
+        <section className="rounded-xl border border-line p-4 mt-4 mb-4">
+          <div className="flex items-center justify-between gap-3 mb-2">
+            <h3 className="font-semibold text-sm">Synology trusted device</h3>
+            <span className="chip text-xs">
+              {synologyIdentityChanged ? 'Save changes first' : mfaEnrolled ? 'Enrolled' : 'Not enrolled'}
+            </span>
+          </div>
+          <p className="text-sm text-muted mb-3">
+            Enter a six-digit code from Synology Secure SignIn to register
+            this NexDeck connection as a trusted device.
+          </p>
+          <label htmlFor="synology-mfa-code" className="text-sm font-medium block mb-1">
+            Authentication code
+          </label>
+          <input
+            id="synology-mfa-code"
+            className="input"
+            type="text"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            maxLength={6}
+            pattern="[0-9]{6}"
+            value={mfaCode}
+            onChange={(event) => setMfaCode(event.target.value.replace(/[^0-9]/g, '').slice(0, 6))}
+            disabled={mfaBusy || busy}
+            placeholder="Six-digit code"
+          />
+          <button
+            type="button"
+            className="btn btn-accent mt-3"
+            disabled={mfaBusy || busy || synologyIdentityChanged || !/^[0-9]{6}$/.test(mfaCode)}
+            onClick={() => void enrolMfa()}
+          >
+            {mfaBusy ? 'Enrolling…' : mfaEnrolled ? 'Re-enrol trusted device' : 'Enrol trusted device'}
+          </button>
+          {mfaEnrolled && (
+            <button
+              type="button"
+              className="btn btn-danger mt-3 ml-2"
+              disabled={mfaBusy || busy}
+              onClick={() => setMfaConfirmOpen(true)}
+            >
+              Un-enrol trusted device
+            </button>
+          )}
+          {mfaMessage && <p role="status" className="text-sm text-ok mt-2">{mfaMessage}</p>}
+          {mfaError && <p role="alert" className="text-sm text-bad mt-2">{mfaError}</p>}
+        </section>
+      )}
+      <Confirm
+        open={mfaConfirmOpen}
+        title="Un-enrol Synology trusted device?"
+        body="This removes NexDeck's stored trusted-device credential and clears its connection cache. Your NAS address, username and password will be preserved. You will need a new six-digit MFA code to enrol again."
+        danger
+        confirmLabel="Un-enrol"
+        confirmDisabled={mfaBusy || busy}
+        onCancel={() => setMfaConfirmOpen(false)}
+        onConfirm={() => void unenrolMfa()}
+      />
       <Switch checked={enabled} onChange={setEnabled} label={t('settings.integrations.enabled')} />
       {result && (
         // ⚠️ Passed with a hint is yellow, not green: the hint says the cards
