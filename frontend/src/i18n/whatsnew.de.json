@@ -1969,6 +1969,19 @@
       "small": [
         "Ein gestoppter Server auf den Server-Karten von Pterodactyl und Calagopus hat einen roten Punkt und steht am Ende der Liste. Die Karte selbst behält ihre Farbe."
       ]
+    },
+    "1.4.0": {
+      "lead": "Die eigenen Speedtests von UniFi auf dem Board, und JSON-API-Karten, die langen Text umbrechen.",
+      "sections": [
+        {
+          "title": "Speedtests aus UniFi",
+          "body": "Zwei neue UniFi-Karten lesen die Speedtests, die dein Gateway selbst macht, nach Zeitplan oder von Hand. Ein zweiter Container ist dafür nicht mehr nötig. „Speed test“ zeigt Download, Upload, Ping und wie lange es her ist; „Speed test history“ zeichnet sie über einen Tag, eine Woche, einen oder drei Monate, als Linie oder als Balken. Hat das Gateway mehr als eine Internetleitung, bekommt jede ihre eigene Linie, und eine Karte kann sich auf eine beschränken."
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Beide JSON-API-Karten haben den Schalter „Langen Text umbrechen“: Ein langer Wert und Titel, Untertitel und Werte einer Liste gehen in weiteren Zeilen weiter, statt mit „…“ zu enden."
+      ]
     }
   }
 }

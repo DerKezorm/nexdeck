@@ -1969,6 +1969,19 @@
       "small": [
         "A stopped server on the Servers cards of Pterodactyl and Calagopus has a red dot and stands at the end of the list. The card itself keeps its colour."
       ]
+    },
+    "1.4.0": {
+      "lead": "UniFi's own speed tests on the board, and JSON API cards that wrap long text.",
+      "sections": [
+        {
+          "title": "Speed tests from UniFi",
+          "body": "Two new UniFi cards read back the speed tests your gateway runs itself, on its schedule or by hand, so no second container is needed for them. Speed test shows download, upload, ping and how long ago; Speed test history draws them over a day, a week, a month or three, as a line or as bars. On a gateway with more than one internet line each line is drawn on its own, and a card can keep to one of them."
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "Both JSON API cards have a switch \"Wrap long text\": a long value, and the titles, subtitles and values of a list, go on over further lines instead of ending in \"…\"."
+      ]
     }
   }
 }
