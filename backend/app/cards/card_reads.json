@@ -3209,6 +3209,13 @@
     "switch",
     "wifi"
    ]
+  },
+  {
+   "path": "/proxy/network/v2/api/site/{site}/speedtest",
+   "widgets": [
+    "speedtest",
+    "speedtest_history"
+   ]
   }
  ],
  "unmanic": [
