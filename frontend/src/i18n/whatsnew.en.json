@@ -1982,6 +1982,19 @@
       "small": [
         "Both JSON API cards have a switch \"Wrap long text\": a long value, and the titles, subtitles and values of a list, go on over further lines instead of ending in \"…\"."
       ]
+    },
+    "1.5.0": {
+      "lead": "nextasks on the board: what is due today, what is late, what is yours, and one list.",
+      "sections": [
+        {
+          "title": "nextasks, in beta",
+          "body": "Four new cards for the tasks of a family or a small group. Today in nextasks counts what is overdue, due today and due in the next 7 days, red with anything overdue and yellow when many are due today. Due tasks lists them, overdue first, each opening in nextasks. Assigned to me counts your open tasks and shows the first, and Task list shows the open tasks of one list, such as the shopping list. A read token from My account > Connections is enough."
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "The cards count days in the time zone of your nextasks account, leave out spaces you have hidden there, and never show notes, attachments or tags."
+      ]
     }
   }
 }
