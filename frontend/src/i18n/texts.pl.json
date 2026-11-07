@@ -1882,6 +1882,17 @@
     "One board as a picture, large and fetched again every few seconds. Clicking it opens the board in nexcanvas.": "Jedna tablica jako obraz, duży i pobierany ponownie co kilka sekund. Kliknięcie otwiera tablicę w nexcanvas.",
     "The diary of a family in nexdiary, as numbers only: whether today is written, the streak, the month, and when the next time capsule opens.": "Dziennik rodziny w nexdiary, tylko jako liczby: czy dzisiaj jest zapisane, seria, miesiąc i kiedy otwiera się następna kapsuła czasu.",
     "My account > Connections in nexdiary, after the operator has switched on API tokens. It starts with nxa_ and only reads.": "My account > Connections w nexdiary, po włączeniu przez operatora tokenów API. Zaczyna się od nxa_ i tylko czyta.",
+    "The tasks of a family or a small group in nextasks: what is overdue, due today and coming up, what is assigned to you, and the open tasks of one list.": "Zadania rodziny lub małej grupy w nextasks: co jest po terminie, na dziś i wkrótce, co jest przypisane do ciebie, oraz otwarte zadania jednej listy.",
+    "My account > Connections in nextasks, after the operator has switched on API tokens under Settings > Server > API. It starts with ntk_; Read is enough, and it sees only the spaces picked for it.": "My account > Connections w nextasks, po włączeniu przez operatora tokenów API w Settings > Server > API. Zaczyna się od ntk_; wystarczy Read, a token widzi tylko wybrane dla niego przestrzenie.",
+    "Today in nextasks": "Dziś w nextasks",
+    "How many tasks are overdue, due today and due in the next 7 days. Red when something is overdue, yellow when many are due today.": "Ile zadań jest po terminie, na dziś i na najbliższe 7 dni. Czerwone, gdy coś jest po terminie, żółte, gdy na dziś jest dużo.",
+    "Yellow from (due today)": "Żółte od (na dziś)",
+    "Yellow when at least this many tasks are due today. 0 switches this off.": "Żółte, gdy na dziś jest co najmniej tyle zadań. 0 to wyłącza.",
+    "The next tasks with a due date, overdue first, then today and the next 7 days, each opening in nextasks. Red when something is overdue.": "Najbliższe zadania z terminem, najpierw po terminie, potem dziś i najbliższe 7 dni, każde otwiera się w nextasks. Czerwone, gdy coś jest po terminie.",
+    "Assigned to me": "Przypisane do mnie",
+    "How many open tasks are assigned to the token's account, and the first of them, soonest due first.": "Ile otwartych zadań jest przypisanych do konta tokenu, i pierwsze z nich, od najwcześniejszego terminu.",
+    "Task list": "Lista zadań",
+    "The open tasks of one list, such as the shopping list, in the order nextasks shows them.": "Otwarte zadania jednej listy, na przykład listy zakupów, w kolejności, w jakiej pokazuje je nextasks.",
     "Diary": "Dziennik",
     "Whether today has been written, the streak, and the entries and notes of this month. Numbers only, never a word of the diary.": "Czy dzisiaj napisano, seria oraz wpisy i notatki tego miesiąca. Tylko liczby, nigdy ani słowa dziennika.",
     "Time capsule": "Kapsuła czasu",
@@ -4186,6 +4197,11 @@
     "Nothing found today.": "Dziś nic nie znaleziono.",
     "No events in these days.": "Brak zdarzeń w tych dniach.",
     "No speed test on this console yet": "Na tej konsoli nie ma jeszcze testu szybkości",
-    "The last speed test measured nothing": "Ostatni test szybkości niczego nie zmierzył"
+    "The last speed test measured nothing": "Ostatni test szybkości niczego nie zmierzył",
+    "Next 7 days": "Najbliższe 7 dni",
+    "Nothing is assigned to you.": "Nic nie jest do ciebie przypisane.",
+    "Nothing is open in this list.": "Na tej liście nic nie jest otwarte.",
+    "Pick a list in the card's settings.": "Wybierz listę w ustawieniach karty.",
+    "nextasks has no such list, or the token may not see it.": "nextasks nie ma takiej listy lub token nie może jej widzieć."
   }
 }

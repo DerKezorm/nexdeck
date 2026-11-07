@@ -1,6 +1,6 @@
 """What the read APIs of the nexapps family have in common.
 
-nexcanvas, nexbrand, nexpaper and nexdiary answer a program the same way: a
+nexcanvas, nexbrand, nexpaper, nexdiary and nextasks answer a program the same way: a
 credential in ``Authorization: Bearer``, never in the address; a request that
 carries an ``Origin`` header refused (browsers send one, programs do not); an
 operator's switch that is off until somebody opens it; a wrong or withdrawn
@@ -9,7 +9,7 @@ This turns those refusals into sentences that say what to do, once, so four
 adapters do not word them four ways.
 
 The codes differ a little: nexpaper calls its credential a key and answers
-``key_invalid``, the other three answer ``token_invalid``. Anything that is
+``key_invalid``, the others answer ``token_invalid``. Anything that is
 401 and not one of the named cases is a credential that does not hold.
 """
 
@@ -61,9 +61,10 @@ class NexappApi:
     secret = "api_key"
     #: What only this app's ``/me`` answers with, and what only its siblings' do. The four answer ``/me`` alike
     #: and two share the token prefix ``nxa_``, so without this a nexcanvas token at a nexdiary card passed the
-    #: test and drew a streak of nought (found against real instances on 11.10.2026).
+    #: test and drew a streak of nought (found against real instances on 11.10.2026). nextasks answers with
+    #: ``spaces`` as nexcanvas does, and with ``features``, which nexcanvas does not.
     own_fields: tuple[str, ...] = ()
-    sibling_fields: tuple[str, ...] = ("spaces", "clients", "scope")
+    sibling_fields: tuple[str, ...] = ("spaces", "clients", "scope", "features")
 
     async def _me(self, config: dict[str, Any], ctx: Context) -> dict[str, Any]:
         """``/me``, refused when the address answers as another app of the family."""

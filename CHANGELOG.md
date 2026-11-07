@@ -3,6 +3,12 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## Unreleased
+
+### Added
+
+- **nextasks, in beta.** Four cards for the tasks of a family or a small group: Today in nextasks counts what is overdue, due today and due in the next 7 days (red with anything overdue, yellow from five due today); Due tasks lists them, overdue first, each opening in nextasks; Assigned to me counts the open tasks of the token's account and lists the first; Task list shows the open tasks of one list, such as the shopping list. A read token is enough, days are counted in the account's time zone, and spaces the account has hidden stay off the cards. Notes, attachments and tags never reach a card.
+
 ## 1.4.0 (2026-11-06)
 
 ### Added

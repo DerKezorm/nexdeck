@@ -1882,6 +1882,17 @@
     "One board as a picture, large and fetched again every few seconds. Clicking it opens the board in nexcanvas.": "Одна доска картинкой, крупно и обновляется каждые несколько секунд. Щелчок открывает доску в nexcanvas.",
     "The diary of a family in nexdiary, as numbers only: whether today is written, the streak, the month, and when the next time capsule opens.": "Дневник семьи в nexdiary, только числами: написан ли сегодняшний день, серия, месяц и когда откроется следующая капсула времени.",
     "My account > Connections in nexdiary, after the operator has switched on API tokens. It starts with nxa_ and only reads.": "My account > Connections в nexdiary, после того как оператор включил API-токены. Начинается с nxa_ и только читает.",
+    "The tasks of a family or a small group in nextasks: what is overdue, due today and coming up, what is assigned to you, and the open tasks of one list.": "Задачи семьи или небольшой группы в nextasks: что просрочено, на сегодня и скоро, что назначено вам, и открытые задачи одного списка.",
+    "My account > Connections in nextasks, after the operator has switched on API tokens under Settings > Server > API. It starts with ntk_; Read is enough, and it sees only the spaces picked for it.": "My account > Connections в nextasks, после того как оператор включил API-токены в Settings > Server > API. Начинается с ntk_; достаточно Read, и токен видит только выбранные для него пространства.",
+    "Today in nextasks": "Сегодня в nextasks",
+    "How many tasks are overdue, due today and due in the next 7 days. Red when something is overdue, yellow when many are due today.": "Сколько задач просрочено, на сегодня и на ближайшие 7 дней. Красная, если что-то просрочено, жёлтая, если на сегодня много.",
+    "Yellow from (due today)": "Жёлтая от (на сегодня)",
+    "Yellow when at least this many tasks are due today. 0 switches this off.": "Жёлтая, если на сегодня хотя бы столько задач. 0 отключает.",
+    "The next tasks with a due date, overdue first, then today and the next 7 days, each opening in nextasks. Red when something is overdue.": "Ближайшие задачи со сроком: сначала просроченные, затем на сегодня и на ближайшие 7 дней, каждая открывается в nextasks. Красная, если что-то просрочено.",
+    "Assigned to me": "Назначено мне",
+    "How many open tasks are assigned to the token's account, and the first of them, soonest due first.": "Сколько открытых задач назначено учётной записи токена, и первые из них, с ближайшим сроком первыми.",
+    "Task list": "Список задач",
+    "The open tasks of one list, such as the shopping list, in the order nextasks shows them.": "Открытые задачи одного списка, например списка покупок, в том порядке, в каком их показывает nextasks.",
     "Diary": "Дневник",
     "Whether today has been written, the streak, and the entries and notes of this month. Numbers only, never a word of the diary.": "Написан ли сегодняшний день, серия и записи и заметки этого месяца. Только числа, ни слова из дневника.",
     "Time capsule": "Капсула времени",
@@ -4186,6 +4197,11 @@
     "Nothing found today.": "Сегодня ничего не найдено.",
     "No events in these days.": "Нет событий за эти дни.",
     "No speed test on this console yet": "На этой консоли ещё нет тестов скорости",
-    "The last speed test measured nothing": "Последний тест скорости ничего не измерил"
+    "The last speed test measured nothing": "Последний тест скорости ничего не измерил",
+    "Next 7 days": "Ближайшие 7 дней",
+    "Nothing is assigned to you.": "Вам ничего не назначено.",
+    "Nothing is open in this list.": "В этом списке ничего не открыто.",
+    "Pick a list in the card's settings.": "Выберите список в настройках карточки.",
+    "nextasks has no such list, or the token may not see it.": "В nextasks нет такого списка, или токену нельзя его видеть."
   }
 }

@@ -1865,6 +1865,40 @@
    ]
   }
  ],
+ "nextasks": [
+  {
+   "path": "/api/v1/dashboard?limit=20",
+   "widgets": [
+    "today",
+    "due",
+    "assigned"
+   ]
+  },
+  {
+   "path": "/api/v1/tasks?assigned=me&state=open&limit=100",
+   "widgets": [
+    "assigned"
+   ]
+  },
+  {
+   "path": "/api/v1/lists",
+   "widgets": [
+    "assigned"
+   ]
+  },
+  {
+   "path": "/api/v1/tasks?list_id={list_id}&state=open&limit=100",
+   "widgets": [
+    "list"
+   ]
+  },
+  {
+   "path": "/api/v1/me",
+   "widgets": [
+    "list"
+   ]
+  }
+ ],
  "nextcloud": [
   {
    "path": "/ocs/v2.php/apps/serverinfo/api/v1/info?format=json",

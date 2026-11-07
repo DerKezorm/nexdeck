@@ -1882,6 +1882,17 @@
     "One board as a picture, large and fetched again every few seconds. Clicking it opens the board in nexcanvas.": "Eén bord als afbeelding, groot en om de paar seconden opnieuw opgehaald. Klik erop en het bord opent in nexcanvas.",
     "The diary of a family in nexdiary, as numbers only: whether today is written, the streak, the month, and when the next time capsule opens.": "Het dagboek van een gezin in nexdiary, alleen als getallen: of er vandaag geschreven is, de reeks, de maand, en wanneer de volgende tijdcapsule opengaat.",
     "My account > Connections in nexdiary, after the operator has switched on API tokens. It starts with nxa_ and only reads.": "My account > Connections in nexdiary, nadat de operator API-tokens heeft aangezet. Het begint met nxa_ en leest alleen.",
+    "The tasks of a family or a small group in nextasks: what is overdue, due today and coming up, what is assigned to you, and the open tasks of one list.": "De taken van een gezin of kleine groep in nextasks: wat te laat is, vandaag aan de beurt en binnenkort, wat aan jou is toegewezen, en de open taken van één lijst.",
+    "My account > Connections in nextasks, after the operator has switched on API tokens under Settings > Server > API. It starts with ntk_; Read is enough, and it sees only the spaces picked for it.": "My account > Connections in nextasks, nadat de operator API-tokens heeft aangezet onder Settings > Server > API. Het begint met ntk_; Read is genoeg, en het ziet alleen de ruimtes die ervoor gekozen zijn.",
+    "Today in nextasks": "Vandaag in nextasks",
+    "How many tasks are overdue, due today and due in the next 7 days. Red when something is overdue, yellow when many are due today.": "Hoeveel taken te laat zijn, vandaag aan de beurt en in de komende 7 dagen. Rood als iets te laat is, geel als er vandaag veel aan de beurt zijn.",
+    "Yellow from (due today)": "Geel vanaf (vandaag aan de beurt)",
+    "Yellow when at least this many tasks are due today. 0 switches this off.": "Geel als vandaag minstens zoveel taken aan de beurt zijn. 0 zet dit uit.",
+    "The next tasks with a due date, overdue first, then today and the next 7 days, each opening in nextasks. Red when something is overdue.": "De volgende taken met een datum, te late eerst, dan vandaag en de komende 7 dagen, elk opent in nextasks. Rood als iets te laat is.",
+    "Assigned to me": "Aan mij toegewezen",
+    "How many open tasks are assigned to the token's account, and the first of them, soonest due first.": "Hoeveel open taken aan het account van het token zijn toegewezen, en de eerste daarvan, de vroegst aan de beurt eerst.",
+    "Task list": "Takenlijst",
+    "The open tasks of one list, such as the shopping list, in the order nextasks shows them.": "De open taken van één lijst, zoals de boodschappenlijst, in de volgorde waarin nextasks ze toont.",
     "Diary": "Dagboek",
     "Whether today has been written, the streak, and the entries and notes of this month. Numbers only, never a word of the diary.": "Of er vandaag geschreven is, de reeks, en de items en notities van deze maand. Alleen getallen, nooit een woord uit het dagboek.",
     "Time capsule": "Tijdcapsule",
@@ -4186,6 +4197,11 @@
     "Nothing found today.": "Vandaag niets gevonden.",
     "No events in these days.": "Geen gebeurtenissen in deze dagen.",
     "No speed test on this console yet": "Nog geen snelheidstest op deze console",
-    "The last speed test measured nothing": "De laatste snelheidstest heeft niets gemeten"
+    "The last speed test measured nothing": "De laatste snelheidstest heeft niets gemeten",
+    "Next 7 days": "Komende 7 dagen",
+    "Nothing is assigned to you.": "Er is niets aan je toegewezen.",
+    "Nothing is open in this list.": "In deze lijst staat niets open.",
+    "Pick a list in the card's settings.": "Kies een lijst in de instellingen van de kaart.",
+    "nextasks has no such list, or the token may not see it.": "nextasks heeft zo'n lijst niet, of het token mag hem niet zien."
   }
 }

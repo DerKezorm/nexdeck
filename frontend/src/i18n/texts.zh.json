@@ -1882,6 +1882,17 @@
     "One board as a picture, large and fetched again every few seconds. Clicking it opens the board in nexcanvas.": "一个看板以大图显示，每隔几秒重新获取。点击它会在 nexcanvas 中打开该看板。",
     "The diary of a family in nexdiary, as numbers only: whether today is written, the streak, the month, and when the next time capsule opens.": "nexdiary 中一个家庭的日记，仅显示数字：今天是否已写、连续天数、本月，以及下一个时间胶囊何时开启。",
     "My account > Connections in nexdiary, after the operator has switched on API tokens. It starts with nxa_ and only reads.": "nexdiary 中的 My account > Connections，需运营者先开启 API token。以 nxa_ 开头，只能读取。",
+    "The tasks of a family or a small group in nextasks: what is overdue, due today and coming up, what is assigned to you, and the open tasks of one list.": "nextasks 中一个家庭或小团体的任务：哪些已逾期、今天到期和即将到期，哪些分配给你，以及某个列表中未完成的任务。",
+    "My account > Connections in nextasks, after the operator has switched on API tokens under Settings > Server > API. It starts with ntk_; Read is enough, and it sees only the spaces picked for it.": "nextasks 中的 My account > Connections，需运营者先在 Settings > Server > API 中开启 API token。以 ntk_ 开头；Read 就够了，它只能看到为它选定的空间。",
+    "Today in nextasks": "nextasks 今日",
+    "How many tasks are overdue, due today and due in the next 7 days. Red when something is overdue, yellow when many are due today.": "有多少任务已逾期、今天到期以及在未来 7 天内到期。有逾期时变红，今天到期的很多时变黄。",
+    "Yellow from (due today)": "达到多少今日到期变黄",
+    "Yellow when at least this many tasks are due today. 0 switches this off.": "今天到期的任务至少达到这个数量时变黄。0 表示关闭。",
+    "The next tasks with a due date, overdue first, then today and the next 7 days, each opening in nextasks. Red when something is overdue.": "接下来有到期日的任务，逾期的在前，然后是今天和未来 7 天，每项都在 nextasks 中打开。有逾期时变红。",
+    "Assigned to me": "分配给我",
+    "How many open tasks are assigned to the token's account, and the first of them, soonest due first.": "分配给该 token 所属账户的未完成任务有多少，以及其中最先到期的几项。",
+    "Task list": "任务列表",
+    "The open tasks of one list, such as the shopping list, in the order nextasks shows them.": "某个列表（例如购物清单）中未完成的任务，按 nextasks 显示的顺序。",
     "Diary": "日记",
     "Whether today has been written, the streak, and the entries and notes of this month. Numbers only, never a word of the diary.": "今天是否已写、连续天数，以及本月的条目和笔记。仅有数字，绝不含日记中的只言片语。",
     "Time capsule": "时间胶囊",
@@ -4186,6 +4197,11 @@
     "Nothing found today.": "今天没有发现任何内容。",
     "No events in these days.": "这些天没有事件。",
     "No speed test on this console yet": "此控制台上还没有测速",
-    "The last speed test measured nothing": "上一次测速没有测到任何结果"
+    "The last speed test measured nothing": "上一次测速没有测到任何结果",
+    "Next 7 days": "未来 7 天",
+    "Nothing is assigned to you.": "没有分配给你的任务。",
+    "Nothing is open in this list.": "这个列表里没有未完成的任务。",
+    "Pick a list in the card's settings.": "请在卡片设置中选择一个列表。",
+    "nextasks has no such list, or the token may not see it.": "nextasks 没有这个列表，或者 token 无权查看它。"
   }
 }

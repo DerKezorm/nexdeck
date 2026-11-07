@@ -47,8 +47,8 @@ LONGEST = 300
 WHEN = re.compile(r"^(\d{4}-\d{2}(-\d{2}([T ][\d:.]+(Z|[+-]\d{2}:?\d{2})?)?)?|\d{10}(\d{3})?)$")
 #: Options a card needs before it asks anything, for the kinds whose cards stop at "nothing is set" or "not owner/name";
 #: the marker is written as the place given in :data:`PLACES`.
-OPTIONS: dict[str, dict[str, Any]] = {"github": {"repos": "Zkowner/Zkrepo"}}
-PLACES: dict[str, str] = {"Zkowner/Zkrepo": "{owner}/{repo}", "Zkentityids": "{entity_id}"}
+OPTIONS: dict[str, dict[str, Any]] = {"github": {"repos": "Zkowner/Zkrepo"}, "nextasks": {"list": "Zklistid"}}
+PLACES: dict[str, str] = {"Zkowner/Zkrepo": "{owner}/{repo}", "Zkentityids": "{entity_id}", "Zklistid": "{list_id}"}
 #: Paths a built-in card reads that answer in a form a custom card cannot read: Prometheus text is neither JSON nor a short
 #: value (found in a real run on 1.0.0: Uptime Kuma's /metrics was offered and failed).
 NOT_JSON: dict[str, frozenset[str]] = {"caddy": frozenset({"/metrics"}), "uptimekuma": frozenset({"/metrics"})}
