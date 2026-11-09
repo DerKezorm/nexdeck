@@ -2700,7 +2700,23 @@
     "Calculate": "Berekenen",
     "Optional. A formula over the value: value * 9 / 5 + 32 turns °C into °F. + - * /, brackets, round, abs, min and max; {field} reads another field of the response.": "Optioneel. Een formule over de waarde: value * 9 / 5 + 32 maakt van °C °F. + - * /, haakjes, round, abs, min en max; {veld} leest een ander veld van het antwoord.",
     "Optional. A formula over each entry's value: value / 1024 turns KB into MB. + - * /, brackets, round, abs, min and max; {field} reads another field of the entry.": "Optioneel. Een formule over de waarde van elk item: value / 1024 maakt van KB MB. + - * /, haakjes, round, abs, min en max; {veld} leest een ander veld van het item.",
-    "Small values at the foot of the card, one per line: label | value path | unit | formula. Up to four, from the same response; the formula is optional.": "Kleine waarden onder op de kaart, één per regel: label | waardepad | eenheid | formule. Maximaal vier, uit hetzelfde antwoord; de formule is optioneel."
+    "Small values at the foot of the card, one per line: label | value path | unit | formula. Up to four, from the same response; the formula is optional.": "Kleine waarden onder op de kaart, één per regel: label | waardepad | eenheid | formule. Maximaal vier, uit hetzelfde antwoord; de formule is optioneel.",
+    "Photos and albums of a Piwigo gallery, and who visits it.": "Foto's en albums van een Piwigo-galerij, en wie hem bezoekt.",
+    "The address of the gallery, where ws.php lies.": "Het adres van de galerij, waar ws.php staat.",
+    "API key ID": "ID van de API-sleutel",
+    "Profile > API Keys, Piwigo 16.1 or newer. Without a key only public albums are counted.": "Profiel > API Keys, Piwigo 16.1 of nieuwer. Zonder sleutel tellen alleen openbare albums.",
+    "Secret": "Geheim",
+    "Shown once, when the key is made. Users and the figures of the whole gallery need the key of an administrator.": "Eén keer getoond, bij het maken van de sleutel. Gebruikers en de cijfers van de hele galerij vragen de sleutel van een beheerder.",
+    "Gallery": "Galerij",
+    "Photos and albums, with users, tags and comments for an administrator's key.": "Foto's en albums; met de sleutel van een beheerder ook gebruikers, tags en reacties.",
+    "Albums": "Albums",
+    "How many photos each album holds, its sub-albums included.": "Hoeveel foto's elk album bevat, subalbums meegeteld.",
+    "Top-level albums": "Albums op het hoogste niveau",
+    "All albums": "Alle albums",
+    "Most photos first": "Meeste foto's eerst",
+    "Newest photo first": "Nieuwste foto eerst",
+    "By name": "Op naam",
+    "The users of the gallery and when each came last. Needs an administrator's key.": "De gebruikers van de galerij en wanneer elk het laatst kwam. Vraagt de sleutel van een beheerder."
   },
   "labels": {
     "Private resources": "Privé-resources",
@@ -4207,6 +4223,10 @@
     "Nothing is assigned to you.": "Er is niets aan je toegewezen.",
     "Nothing is open in this list.": "In deze lijst staat niets open.",
     "Pick a list in the card's settings.": "Kies een lijst in de instellingen van de kaart.",
-    "nextasks has no such list, or the token may not see it.": "nextasks heeft zo'n lijst niet, of het token mag hem niet zien."
+    "nextasks has no such list, or the token may not see it.": "nextasks heeft zo'n lijst niet, of het token mag hem niet zien.",
+    "Webmaster": "Webmaster",
+    "Generic": "Gedeeld",
+    "No albums.": "Geen albums.",
+    "No users.": "Geen gebruikers."
   }
 }

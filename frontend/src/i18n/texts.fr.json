@@ -2700,7 +2700,23 @@
     "Calculate": "Calculer",
     "Optional. A formula over the value: value * 9 / 5 + 32 turns °C into °F. + - * /, brackets, round, abs, min and max; {field} reads another field of the response.": "Facultatif. Une formule sur la valeur : value * 9 / 5 + 32 convertit les °C en °F. + - * /, parenthèses, round, abs, min et max ; {champ} lit un autre champ de la réponse.",
     "Optional. A formula over each entry's value: value / 1024 turns KB into MB. + - * /, brackets, round, abs, min and max; {field} reads another field of the entry.": "Facultatif. Une formule sur la valeur de chaque entrée : value / 1024 convertit les Ko en Mo. + - * /, parenthèses, round, abs, min et max ; {champ} lit un autre champ de l’entrée.",
-    "Small values at the foot of the card, one per line: label | value path | unit | formula. Up to four, from the same response; the formula is optional.": "Petites valeurs en bas de la carte, une par ligne : libellé | chemin de la valeur | unité | formule. Jusqu’à quatre, de la même réponse ; la formule est facultative."
+    "Small values at the foot of the card, one per line: label | value path | unit | formula. Up to four, from the same response; the formula is optional.": "Petites valeurs en bas de la carte, une par ligne : libellé | chemin de la valeur | unité | formule. Jusqu’à quatre, de la même réponse ; la formule est facultative.",
+    "Photos and albums of a Piwigo gallery, and who visits it.": "Photos et albums d'une galerie Piwigo, et qui la visite.",
+    "The address of the gallery, where ws.php lies.": "L'adresse de la galerie, là où se trouve ws.php.",
+    "API key ID": "ID de la clé API",
+    "Profile > API Keys, Piwigo 16.1 or newer. Without a key only public albums are counted.": "Profil > API Keys, Piwigo 16.1 ou plus récent. Sans clé, seuls les albums publics sont comptés.",
+    "Secret": "Secret",
+    "Shown once, when the key is made. Users and the figures of the whole gallery need the key of an administrator.": "Affiché une seule fois, à la création de la clé. Les utilisateurs et les chiffres de toute la galerie demandent la clé d'un administrateur.",
+    "Gallery": "Galerie",
+    "Photos and albums, with users, tags and comments for an administrator's key.": "Photos et albums ; avec la clé d'un administrateur, aussi utilisateurs, tags et commentaires.",
+    "Albums": "Albums",
+    "How many photos each album holds, its sub-albums included.": "Combien de photos contient chaque album, sous-albums compris.",
+    "Top-level albums": "Albums de premier niveau",
+    "All albums": "Tous les albums",
+    "Most photos first": "Le plus de photos d'abord",
+    "Newest photo first": "Photo la plus récente d'abord",
+    "By name": "Par nom",
+    "The users of the gallery and when each came last. Needs an administrator's key.": "Les utilisateurs de la galerie et quand chacun est venu pour la dernière fois. Demande la clé d'un administrateur."
   },
   "labels": {
     "Private resources": "Ressources privées",
@@ -4207,6 +4223,10 @@
     "Nothing is assigned to you.": "Rien ne t’est attribué.",
     "Nothing is open in this list.": "Rien n’est ouvert dans cette liste.",
     "Pick a list in the card's settings.": "Choisis une liste dans les paramètres de la carte.",
-    "nextasks has no such list, or the token may not see it.": "nextasks n’a pas cette liste, ou le jeton n’a pas le droit de la voir."
+    "nextasks has no such list, or the token may not see it.": "nextasks n’a pas cette liste, ou le jeton n’a pas le droit de la voir.",
+    "Webmaster": "Webmaster",
+    "Generic": "Générique",
+    "No albums.": "Aucun album.",
+    "No users.": "Aucun utilisateur."
   }
 }

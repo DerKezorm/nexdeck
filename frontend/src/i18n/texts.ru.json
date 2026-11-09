@@ -2700,7 +2700,23 @@
     "Calculate": "Пересчитать",
     "Optional. A formula over the value: value * 9 / 5 + 32 turns °C into °F. + - * /, brackets, round, abs, min and max; {field} reads another field of the response.": "Необязательно. Формула над значением: value * 9 / 5 + 32 переводит °C в °F. + - * /, скобки, round, abs, min и max; {поле} читает другое поле ответа.",
     "Optional. A formula over each entry's value: value / 1024 turns KB into MB. + - * /, brackets, round, abs, min and max; {field} reads another field of the entry.": "Необязательно. Формула над значением каждой записи: value / 1024 переводит КБ в МБ. + - * /, скобки, round, abs, min и max; {поле} читает другое поле записи.",
-    "Small values at the foot of the card, one per line: label | value path | unit | formula. Up to four, from the same response; the formula is optional.": "Небольшие значения внизу карточки, по одному в строке: подпись | путь к значению | единица | формула. До четырёх, из того же ответа; формула необязательна."
+    "Small values at the foot of the card, one per line: label | value path | unit | formula. Up to four, from the same response; the formula is optional.": "Небольшие значения внизу карточки, по одному в строке: подпись | путь к значению | единица | формула. До четырёх, из того же ответа; формула необязательна.",
+    "Photos and albums of a Piwigo gallery, and who visits it.": "Фото и альбомы галереи Piwigo и кто её посещает.",
+    "The address of the gallery, where ws.php lies.": "Адрес галереи, там, где лежит ws.php.",
+    "API key ID": "ID ключа API",
+    "Profile > API Keys, Piwigo 16.1 or newer. Without a key only public albums are counted.": "Профиль > API Keys, Piwigo 16.1 или новее. Без ключа считаются только публичные альбомы.",
+    "Secret": "Секрет",
+    "Shown once, when the key is made. Users and the figures of the whole gallery need the key of an administrator.": "Показывается один раз, при создании ключа. Пользователям и цифрам всей галереи нужен ключ администратора.",
+    "Gallery": "Галерея",
+    "Photos and albums, with users, tags and comments for an administrator's key.": "Фото и альбомы; с ключом администратора ещё пользователи, теги и комментарии.",
+    "Albums": "Альбомы",
+    "How many photos each album holds, its sub-albums included.": "Сколько фото в каждом альбоме, вместе с вложенными альбомами.",
+    "Top-level albums": "Альбомы верхнего уровня",
+    "All albums": "Все альбомы",
+    "Most photos first": "Больше всего фото сначала",
+    "Newest photo first": "Новое фото сначала",
+    "By name": "По имени",
+    "The users of the gallery and when each came last. Needs an administrator's key.": "Пользователи галереи и когда каждый заходил последний раз. Нужен ключ администратора."
   },
   "labels": {
     "Private resources": "Частные ресурсы",
@@ -4207,6 +4223,10 @@
     "Nothing is assigned to you.": "Вам ничего не назначено.",
     "Nothing is open in this list.": "В этом списке ничего не открыто.",
     "Pick a list in the card's settings.": "Выберите список в настройках карточки.",
-    "nextasks has no such list, or the token may not see it.": "В nextasks нет такого списка, или токену нельзя его видеть."
+    "nextasks has no such list, or the token may not see it.": "В nextasks нет такого списка, или токену нельзя его видеть.",
+    "Webmaster": "Веб-мастер",
+    "Generic": "Общий",
+    "No albums.": "Нет альбомов.",
+    "No users.": "Нет пользователей."
   }
 }

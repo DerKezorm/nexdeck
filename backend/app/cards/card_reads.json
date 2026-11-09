@@ -2388,6 +2388,21 @@
    ]
   }
  ],
+ "piwigo": [
+  {
+   "path": "/ws.php?format=json&method=pwg.categories.getList&recursive=true&fullname=true",
+   "widgets": [
+    "library",
+    "albums"
+   ]
+  },
+  {
+   "path": "/ws.php?format=json&method=pwg.users.getList&display=username%2Cstatus%2Clast_visit%2Ctotal_count&per_page=100",
+   "widgets": [
+    "users"
+   ]
+  }
+ ],
  "planka": [
   {
    "path": "/api/projects",

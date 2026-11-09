@@ -2700,7 +2700,23 @@
     "Calculate": "換算",
     "Optional. A formula over the value: value * 9 / 5 + 32 turns °C into °F. + - * /, brackets, round, abs, min and max; {field} reads another field of the response.": "任意。値に適用する式です。value * 9 / 5 + 32 で °C を °F に換算します。+ - * /、括弧、round、abs、min、max が使えます。{フィールド} で応答の別のフィールドを読みます。",
     "Optional. A formula over each entry's value: value / 1024 turns KB into MB. + - * /, brackets, round, abs, min and max; {field} reads another field of the entry.": "任意。各項目の値に適用する式です。value / 1024 で KB を MB に換算します。+ - * /、括弧、round、abs、min、max が使えます。{フィールド} で項目の別のフィールドを読みます。",
-    "Small values at the foot of the card, one per line: label | value path | unit | formula. Up to four, from the same response; the formula is optional.": "カード下部の小さな値。1 行に 1 つ：ラベル | 値のパス | 単位 | 式。同じ応答から最大 4 つ。式は省略できます。"
+    "Small values at the foot of the card, one per line: label | value path | unit | formula. Up to four, from the same response; the formula is optional.": "カード下部の小さな値。1 行に 1 つ：ラベル | 値のパス | 単位 | 式。同じ応答から最大 4 つ。式は省略できます。",
+    "Photos and albums of a Piwigo gallery, and who visits it.": "Piwigo ギャラリーの写真とアルバム、そして訪れた人。",
+    "The address of the gallery, where ws.php lies.": "ギャラリーのアドレス(ws.php がある場所)。",
+    "API key ID": "API キー ID",
+    "Profile > API Keys, Piwigo 16.1 or newer. Without a key only public albums are counted.": "プロフィール > API Keys、Piwigo 16.1 以降。キーがなければ公開アルバムだけを数えます。",
+    "Secret": "シークレット",
+    "Shown once, when the key is made. Users and the figures of the whole gallery need the key of an administrator.": "キーを作ったときに一度だけ表示されます。ユーザーとギャラリー全体の数字には管理者のキーが必要です。",
+    "Gallery": "ギャラリー",
+    "Photos and albums, with users, tags and comments for an administrator's key.": "写真とアルバム。管理者のキーならユーザー、タグ、コメントも。",
+    "Albums": "アルバム",
+    "How many photos each album holds, its sub-albums included.": "各アルバムの写真の数(サブアルバムを含む)。",
+    "Top-level albums": "最上位のアルバム",
+    "All albums": "すべてのアルバム",
+    "Most photos first": "写真の多い順",
+    "Newest photo first": "新しい写真の順",
+    "By name": "名前順",
+    "The users of the gallery and when each came last. Needs an administrator's key.": "ギャラリーのユーザーと、それぞれが最後に来た日。管理者のキーが必要です。"
   },
   "labels": {
     "Private resources": "プライベートリソース",
@@ -4207,6 +4223,10 @@
     "Nothing is assigned to you.": "割り当てられたものはありません。",
     "Nothing is open in this list.": "このリストに未完了のものはありません。",
     "Pick a list in the card's settings.": "カードの設定でリストを選んでください。",
-    "nextasks has no such list, or the token may not see it.": "nextasksにそのようなリストがないか、トークンで見ることができません。"
+    "nextasks has no such list, or the token may not see it.": "nextasksにそのようなリストがないか、トークンで見ることができません。",
+    "Webmaster": "ウェブマスター",
+    "Generic": "共有",
+    "No albums.": "アルバムはありません。",
+    "No users.": "ユーザーはいません。"
   }
 }

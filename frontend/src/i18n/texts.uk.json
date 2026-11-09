@@ -1504,7 +1504,11 @@
     "Nothing is assigned to you.": "Вам нічого не призначено.",
     "Nothing is open in this list.": "У цьому списку нічого не відкрито.",
     "Pick a list in the card's settings.": "Виберіть список у налаштуваннях картки.",
-    "nextasks has no such list, or the token may not see it.": "У nextasks немає такого списку, або токен не може його бачити."
+    "nextasks has no such list, or the token may not see it.": "У nextasks немає такого списку, або токен не може його бачити.",
+    "Webmaster": "Вебмайстер",
+    "Generic": "Спільний",
+    "No albums.": "Немає альбомів.",
+    "No users.": "Немає користувачів."
   },
   "adapter": {
     "Team > Service users > a user > Access tokens. A service user with the User role reads every peer and can change nothing.": "Team > Service users > користувач > Access tokens. Service user із роллю User читає кожного піра й нічого не може змінити.",
@@ -4207,6 +4211,22 @@
     "Calculate": "Перерахувати",
     "Optional. A formula over the value: value * 9 / 5 + 32 turns °C into °F. + - * /, brackets, round, abs, min and max; {field} reads another field of the response.": "Необов’язково. Формула над значенням: value * 9 / 5 + 32 перетворює °C на °F. + - * /, дужки, round, abs, min і max; {поле} читає інше поле відповіді.",
     "Optional. A formula over each entry's value: value / 1024 turns KB into MB. + - * /, brackets, round, abs, min and max; {field} reads another field of the entry.": "Необов’язково. Формула над значенням кожного запису: value / 1024 перетворює КБ на МБ. + - * /, дужки, round, abs, min і max; {поле} читає інше поле запису.",
-    "Small values at the foot of the card, one per line: label | value path | unit | formula. Up to four, from the same response; the formula is optional.": "Невеликі значення внизу картки, по одному в рядку: підпис | шлях до значення | одиниця | формула. До чотирьох, з тієї самої відповіді; формула необов’язкова."
+    "Small values at the foot of the card, one per line: label | value path | unit | formula. Up to four, from the same response; the formula is optional.": "Невеликі значення внизу картки, по одному в рядку: підпис | шлях до значення | одиниця | формула. До чотирьох, з тієї самої відповіді; формула необов’язкова.",
+    "Photos and albums of a Piwigo gallery, and who visits it.": "Фото й альбоми галереї Piwigo і хто її відвідує.",
+    "The address of the gallery, where ws.php lies.": "Адреса галереї, там, де лежить ws.php.",
+    "API key ID": "ID ключа API",
+    "Profile > API Keys, Piwigo 16.1 or newer. Without a key only public albums are counted.": "Профіль > API Keys, Piwigo 16.1 або новіше. Без ключа рахуються лише публічні альбоми.",
+    "Secret": "Секрет",
+    "Shown once, when the key is made. Users and the figures of the whole gallery need the key of an administrator.": "Показується один раз, коли ключ створюють. Користувачам і цифрам усієї галереї потрібен ключ адміністратора.",
+    "Gallery": "Галерея",
+    "Photos and albums, with users, tags and comments for an administrator's key.": "Фото й альбоми; з ключем адміністратора ще користувачі, теги й коментарі.",
+    "Albums": "Альбоми",
+    "How many photos each album holds, its sub-albums included.": "Скільки фото в кожному альбомі, разом із вкладеними альбомами.",
+    "Top-level albums": "Альбоми верхнього рівня",
+    "All albums": "Усі альбоми",
+    "Most photos first": "Найбільше фото спершу",
+    "Newest photo first": "Найновіше фото спершу",
+    "By name": "За назвою",
+    "The users of the gallery and when each came last. Needs an administrator's key.": "Користувачі галереї і коли кожен заходив востаннє. Потрібен ключ адміністратора."
   }
 }

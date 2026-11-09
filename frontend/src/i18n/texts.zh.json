@@ -2700,7 +2700,23 @@
     "Calculate": "换算",
     "Optional. A formula over the value: value * 9 / 5 + 32 turns °C into °F. + - * /, brackets, round, abs, min and max; {field} reads another field of the response.": "可选。对数值套用的公式：value * 9 / 5 + 32 把 °C 换算成 °F。支持 + - * /、括号、round、abs、min 和 max；{字段} 读取响应中的其他字段。",
     "Optional. A formula over each entry's value: value / 1024 turns KB into MB. + - * /, brackets, round, abs, min and max; {field} reads another field of the entry.": "可选。对每个条目的数值套用的公式：value / 1024 把 KB 换算成 MB。支持 + - * /、括号、round、abs、min 和 max；{字段} 读取该条目的其他字段。",
-    "Small values at the foot of the card, one per line: label | value path | unit | formula. Up to four, from the same response; the formula is optional.": "卡片底部的小数值，每行一个：标签 | 数值路径 | 单位 | 公式。最多四个，取自同一响应；公式可省略。"
+    "Small values at the foot of the card, one per line: label | value path | unit | formula. Up to four, from the same response; the formula is optional.": "卡片底部的小数值，每行一个：标签 | 数值路径 | 单位 | 公式。最多四个，取自同一响应；公式可省略。",
+    "Photos and albums of a Piwigo gallery, and who visits it.": "Piwigo 图库的照片和相册，以及谁来访问。",
+    "The address of the gallery, where ws.php lies.": "图库的地址，即 ws.php 所在之处。",
+    "API key ID": "API 密钥 ID",
+    "Profile > API Keys, Piwigo 16.1 or newer. Without a key only public albums are counted.": "个人资料 > API Keys，需 Piwigo 16.1 或更新版本。没有密钥时只统计公开相册。",
+    "Secret": "密钥",
+    "Shown once, when the key is made. Users and the figures of the whole gallery need the key of an administrator.": "仅在创建密钥时显示一次。用户和整个图库的数字需要管理员的密钥。",
+    "Gallery": "图库",
+    "Photos and albums, with users, tags and comments for an administrator's key.": "照片和相册；使用管理员密钥时还有用户、标签和评论。",
+    "Albums": "相册",
+    "How many photos each album holds, its sub-albums included.": "每个相册有多少照片，含子相册。",
+    "Top-level albums": "顶层相册",
+    "All albums": "所有相册",
+    "Most photos first": "照片最多的在前",
+    "Newest photo first": "最新照片在前",
+    "By name": "按名称",
+    "The users of the gallery and when each came last. Needs an administrator's key.": "图库的用户以及每人最后一次来访的时间。需要管理员的密钥。"
   },
   "labels": {
     "Private resources": "私有资源",
@@ -4207,6 +4223,10 @@
     "Nothing is assigned to you.": "没有分配给你的任务。",
     "Nothing is open in this list.": "这个列表里没有未完成的任务。",
     "Pick a list in the card's settings.": "请在卡片设置中选择一个列表。",
-    "nextasks has no such list, or the token may not see it.": "nextasks 没有这个列表，或者 token 无权查看它。"
+    "nextasks has no such list, or the token may not see it.": "nextasks 没有这个列表，或者 token 无权查看它。",
+    "Webmaster": "网站管理员",
+    "Generic": "通用",
+    "No albums.": "没有相册。",
+    "No users.": "没有用户。"
   }
 }

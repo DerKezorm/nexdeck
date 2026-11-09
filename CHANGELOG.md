@@ -5,6 +5,10 @@ project uses semantic versioning.
 
 ## Unreleased
 
+### Added
+
+- **Piwigo.** How many photos and albums a gallery holds, how many photos each album has, and its users with the day each came last. Users, tags and comments need the API key of an administrator (Piwigo 16.1 or newer); without one the albums a key may see are counted. A beta (#69).
+
 ### Changed
 
 - **nextasks is out of beta.** Its maintainer released it after it had run on nextasks.
