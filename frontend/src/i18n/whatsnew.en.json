@@ -2028,6 +2028,25 @@
       "small": [
         "When DSM refuses the trusted-device enrolment, its own reason is shown, and a NAS that does not answer gives a readable error."
       ]
+    },
+    "1.7.0": {
+      "lead": "JSON API cards that calculate, and BookOrbit 3.",
+      "sections": [
+        {
+          "title": "Calculate on the JSON API cards",
+          "body": "The Value and the List card take an optional formula over what they read: value * 9 / 5 + 32 shows a temperature in °F, value / 1024 kilobytes as megabytes. Numbers, + - * /, brackets, round, abs, min and max, and {field} for another field of the response. Thresholds, decimals and the history use the result, and each badge may carry a formula of its own as a fourth column.",
+          "path": "A JSON API card > Settings > Calculate"
+        },
+        {
+          "title": "BookOrbit 3",
+          "body": "BookOrbit 3 hands out its shelves in a new shape, and the Reading now, Recently added and Library cards turned red although the connection test was green. Both shapes are read now, and on BookOrbit 3 the Library card counts every book being read.",
+          "path": "A BookOrbit card"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "A formula that is not one is refused with its reason, and a value it cannot use shows a dash instead of the raw value."
+      ]
     }
   }
 }

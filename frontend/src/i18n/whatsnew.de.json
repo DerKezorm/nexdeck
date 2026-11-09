@@ -2028,6 +2028,25 @@
       "small": [
         "Lehnt DSM den Eintrag als vertrauenswürdiges Gerät ab, steht dort sein eigener Grund, und ein NAS, das nicht antwortet, gibt einen lesbaren Fehler."
       ]
+    },
+    "1.7.0": {
+      "lead": "JSON-API-Karten, die rechnen, und BookOrbit 3.",
+      "sections": [
+        {
+          "title": "Umrechnen in JSON-API-Karten",
+          "body": "Die Karten Value und List nehmen eine optionale Formel über das, was sie lesen: value * 9 / 5 + 32 zeigt eine Temperatur in °F, value / 1024 Kilobyte als Megabyte. Zahlen, + - * /, Klammern, round, abs, min und max, und {feld} für ein anderes Feld der Antwort. Schwellen, Nachkommastellen und der Verlauf nehmen das Ergebnis, und jede Plakette kann als vierte Spalte eine eigene Formel tragen.",
+          "path": "Eine JSON-API-Karte > Einstellungen > Umrechnen"
+        },
+        {
+          "title": "BookOrbit 3",
+          "body": "BookOrbit 3 gibt seine Regale in einer neuen Form heraus, und die Karten Reading now, Recently added und Library wurden rot, obwohl der Verbindungstest grün war. Jetzt werden beide Formen gelesen, und unter BookOrbit 3 zählt die Library-Karte jedes Buch, das gerade gelesen wird.",
+          "path": "Eine BookOrbit-Karte"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Eine Formel, die keine ist, wird mit ihrem Grund abgelehnt, und ein Wert, mit dem sie nichts anfangen kann, zeigt einen Strich statt des Rohwerts."
+      ]
     }
   }
 }
