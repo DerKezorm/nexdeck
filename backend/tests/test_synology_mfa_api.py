@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
+import httpx
 import pytest
 
 from app.adapters.base import AuthFailed
@@ -88,6 +89,31 @@ def test_failed_enrolment_preserves_existing_credential(client):
     with db_session() as db:
         integration = db.get(Integration, integration_id)
         assert resolve_config(integration)["device_id"] == "original-device"
+
+
+def test_a_refusal_names_dsm_s_reason_and_a_silent_nas_is_no_crash(client):
+    setup_admin(client)
+    integration_id = make_integration(client)
+    url = f"/api/v1/integrations/{integration_id}/mfa/enrol"
+
+    with patch(
+        "app.adapters.synology.SynologyAdapter.enrol_mfa",
+        new_callable=AsyncMock,
+        side_effect=AuthFailed("DSM refused MFA enrolment: the two-factor code was wrong."),
+    ):
+        refused = client.post(url, json={"otp": "654321"}, headers=CSRF)
+    assert refused.status_code == 400
+    assert refused.json()["detail"] == {"code": "synology_mfa_failed", "message": "DSM refused MFA enrolment: the two-factor code was wrong."}
+
+    with patch(
+        "app.adapters.synology.SynologyAdapter.enrol_mfa",
+        new_callable=AsyncMock,
+        side_effect=httpx.ConnectError("no route to host"),
+    ):
+        silent = client.post(url, json={"otp": "654321"}, headers=CSRF)
+    assert silent.status_code == 502, silent.text
+    assert silent.json()["detail"]["code"] == "synology_unreachable"
+    assert "ConnectError" in silent.json()["detail"]["message"]
 
 
 def test_invalid_otp_format_is_rejected(client):

@@ -383,7 +383,7 @@ describe('Synology trusted-device enrolment', () => {
     ).not.toBeInTheDocument()
 
     expect(
-      within(dialog).getByText(/A new MFA code is required to re-enrol/),
+      within(dialog).getByText(/Enrolling again needs a new six-digit code/),
     ).toBeInTheDocument()
   })
 
