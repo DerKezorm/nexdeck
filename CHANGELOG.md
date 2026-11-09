@@ -3,6 +3,12 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## Unreleased
+
+### Fixed
+
+- **Every line in the chart popup.** On a chart card with more than one line, the popup of the 7 d, 30 d and 1 y ranges named only the first line. It now names every line at the moment under the pointer, with its colour, name and value, and each line gets its own dot; a line with no value at that moment stays out of the popup (#65).
+
 ## 1.5.0 (2026-11-07)
 
 ### Added
