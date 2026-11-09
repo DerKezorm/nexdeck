@@ -1995,6 +1995,20 @@
       "small": [
         "Die Karten zählen Tage in der Zeitzone deines nextasks-Kontos, lassen dort ausgeblendete Bereiche weg und zeigen nie Notizen, Anhänge oder Schlagworte."
       ]
+    },
+    "1.5.1": {
+      "lead": "Eine Diagrammkarte mit mehreren Linien nennt beim Zeigen alle.",
+      "sections": [
+        {
+          "title": "Alle Linien im Popup des Diagramms",
+          "body": "In den Bereichen 7 T, 30 T und 1 J nannte das Popup einer Diagrammkarte nur ihre erste Linie. Jetzt nennt es jede Linie zum Zeitpunkt unter dem Zeiger, mit Farbe, Name und Wert, und jede Linie bekommt ihren eigenen Punkt im Diagramm.",
+          "path": "Eine Diagrammkarte, Bereich 7 T, 30 T oder 1 J"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Eine Linie ohne Wert zu diesem Zeitpunkt, weil sie später beginnt oder eine Lücke hat, bleibt aus dem Popup heraus, statt den Wert eines anderen Tages zu zeigen."
+      ]
     }
   }
 }

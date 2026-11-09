@@ -1995,6 +1995,20 @@
       "small": [
         "The cards count days in the time zone of your nextasks account, leave out spaces you have hidden there, and never show notes, attachments or tags."
       ]
+    },
+    "1.5.1": {
+      "lead": "A chart card with more than one line names all of them when you point at it.",
+      "sections": [
+        {
+          "title": "Every line in the chart popup",
+          "body": "On the 7 d, 30 d and 1 y ranges the popup of a chart card named only its first line. It now names every line at the moment under the pointer, each with its colour, name and value, and each line gets its own dot on the chart.",
+          "path": "A chart card, range 7 d, 30 d or 1 y"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "A line that has no value at that moment, because it began later or has a gap, stays out of the popup instead of showing another day's value."
+      ]
     }
   }
 }
