@@ -44,6 +44,7 @@ import type { Action, Pressed, Primary, Saveable, Secondary, Status, WidgetData,
 import { AskCard } from './AskCard'
 import { BuilderCard } from './BuilderCard'
 import { ButtonCard } from './ButtonCard'
+import { ChartHover } from './ChartHover'
 import { HeadingCard } from './HeadingCard'
 import { FlowCard } from './FlowCard'
 import { HeatmapCard } from './HeatmapCard'
@@ -1789,8 +1790,8 @@ export function LogCard({ data }: RenderProps) {
  * metric for the sparklines, and a day arrives thinned to 240: what was drawn
  * as "a day" was its second half. A chart that names its hours asks for them.
  */
-function useChartHistory(widgetId: number, hours: number | null): Record<string, number[]> | null {
-  const [points, setPoints] = useState<Record<string, number[]> | null>(null)
+function useChartHistory(widgetId: number, hours: number | null): Record<string, [number, number][]> | null {
+  const [points, setPoints] = useState<Record<string, [number, number][]> | null>(null)
   useEffect(() => {
     setPoints(null)
     if (hours === null || !(widgetId > 0)) return
@@ -1799,7 +1800,8 @@ function useChartHistory(widgetId: number, hours: number | null): Record<string,
       get<Record<string, [number, number][]>>(`/widgets/${widgetId}/history?hours=${hours}`)
         .then((answer) => {
           if (gone || !answer || typeof answer !== 'object') return
-          setPoints(Object.fromEntries(Object.entries(answer).map(([metric, rows]) => [metric, (Array.isArray(rows) ? rows : []).map(([, value]) => value)])))
+          // The times stay: the popup names the moment under the pointer (#65).
+          setPoints(Object.fromEntries(Object.entries(answer).map(([metric, rows]) => [metric, Array.isArray(rows) ? rows : []])))
         })
         // The board's own series stay on screen; a chart that cannot fetch is not an empty one.
         .catch(() => undefined)
@@ -1856,7 +1858,12 @@ export function ChartCard({ data, series, widget }: RenderProps) {
   const fetched = useChartHistory(widget?.id ?? 0, hours)
   const ranges = configured === null ? [] : [configured <= 24 ? configured : 24, ...LONG_RANGES]
   const lines = Object.keys(data?.metrics ?? {})
-    .map((metric) => ({ metric, points: fetched?.[metric] ?? series?.[metric] ?? [] }))
+    .map((metric) => {
+      const asked = fetched?.[metric]
+      return asked
+        ? { metric, points: asked.map(([, value]) => value), times: asked.map(([ts]) => ts) as number[] | null }
+        : { metric, points: series?.[metric] ?? [], times: null }
+    })
     .filter((line) => line.points.length > 1)
   const all = lines.flatMap((line) => line.points)
   const low = all.length ? Math.min(...all) : 0
@@ -1910,20 +1917,33 @@ export function ChartCard({ data, series, widget }: RenderProps) {
           />
         </Suspense>
       ) : (
-      <div className="relative flex-1 min-h-[36px] mt-1" title={t('card.history')}>
+      // ⚠️ The lines fill the box they are given, not a fixed 64 pixels: in a small card a fixed height ran
+      // over the legend below and drew across its names (#65). The popup takes the place of the title.
+      <div className="relative flex-1 min-h-[40px] mt-1" role="img" aria-label={t('card.history')}>
         {lines.length ? (
-          lines.map((line, index) => (
-            <span key={line.metric} className={index ? 'absolute inset-0' : 'block'}>
-              <Sparkline
-                values={line.points}
-                height={64}
-                min={low}
-                max={high}
-                fill={lines.length === 1}
-                color={SLICE_COLOURS[index % SLICE_COLOURS.length]}
-              />
-            </span>
-          ))
+          <>
+            <div className="absolute inset-0 overflow-hidden">
+              {lines.map((line, index) => (
+                <span key={line.metric} className="absolute inset-0">
+                  <Sparkline
+                    values={line.points}
+                    height={64}
+                    min={low}
+                    max={high}
+                    fill={lines.length === 1}
+                    color={SLICE_COLOURS[index % SLICE_COLOURS.length]}
+                    className="!h-full"
+                  />
+                </span>
+              ))}
+            </div>
+            <ChartHover
+              lines={lines.map((line, index) => ({ metric: line.metric, values: line.points, times: line.times, colour: SLICE_COLOURS[index % SLICE_COLOURS.length] }))}
+              low={low}
+              high={high}
+              labelFor={labelFor}
+            />
+          </>
         ) : (
           <Empty>{t('card.collecting')}</Empty>
         )}

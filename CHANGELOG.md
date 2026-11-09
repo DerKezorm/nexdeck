@@ -9,6 +9,10 @@ project uses semantic versioning.
 
 - **Synology with two-factor sign-in.** A Synology connection whose account signs in with a second factor no longer fails: once it is saved, an admin enters the six-digit code from the authenticator app or Synology Secure SignIn, and DSM keeps nexdeck as a trusted device, so no code is asked again. The code is never stored, the device credential is kept encrypted, never shown and never exported, and it is dropped when the address, the user or the password change; the device can be removed again from the same place. Checked on DSM 6.2, not yet on DSM 7 (#66, contributed by iamevl).
 
+### Fixed
+
+- **The chart over a day has a popup too, and its lines keep off the legend.** Pointing at the short chart of a chart card names the time and every line's value, as the 7 d, 30 d and 1 y ranges already do. In a small card the lines ran over the legend below them and drew across its names; they now fill the space they are given (#65).
+
 ## 1.5.1 (2026-11-09)
 
 ### Fixed
