@@ -1909,7 +1909,6 @@
     "Filing": "Архив",
     "How many documents there are in all, how many came in this week, and how many are being read for their text right now.": "Сколько всего документов, сколько пришло на этой неделе и сколько сейчас распознаётся.",
     "Badges": "Значки",
-    "Small values at the foot of the card, one per line: label | value path | unit. Up to four, from the same response.": "Небольшие значения внизу карточки, по одному в строке: подпись | путь к значению | единица. До четырёх, из того же ответа.",
     "Copy the key right away: Papra shows it only once.": "Скопируйте ключ сразу: Papra показывает его только один раз.",
     "Documents of an organization, their size, and what came in last.": "Документы организации, их размер и что пришло последним.",
     "Empty means the FortiGate's own default.": "Пусто: стандартное значение FortiGate.",
@@ -2697,7 +2696,11 @@
     "WAN 3": "WAN 3",
     "Trusted device": "Доверенное устройство",
     "Set by enrolling nexdeck as a trusted device, never typed in.": "Задаётся при регистрации доверенного устройства, вручную не вводится.",
-    "With two-factor sign-in, save the connection, then enrol nexdeck as a trusted device below.": "При двухфакторном входе сохраните подключение и зарегистрируйте nexdeck ниже как доверенное устройство."
+    "With two-factor sign-in, save the connection, then enrol nexdeck as a trusted device below.": "При двухфакторном входе сохраните подключение и зарегистрируйте nexdeck ниже как доверенное устройство.",
+    "Calculate": "Пересчитать",
+    "Optional. A formula over the value: value * 9 / 5 + 32 turns °C into °F. + - * /, brackets, round, abs, min and max; {field} reads another field of the response.": "Необязательно. Формула над значением: value * 9 / 5 + 32 переводит °C в °F. + - * /, скобки, round, abs, min и max; {поле} читает другое поле ответа.",
+    "Optional. A formula over each entry's value: value / 1024 turns KB into MB. + - * /, brackets, round, abs, min and max; {field} reads another field of the entry.": "Необязательно. Формула над значением каждой записи: value / 1024 переводит КБ в МБ. + - * /, скобки, round, abs, min и max; {поле} читает другое поле записи.",
+    "Small values at the foot of the card, one per line: label | value path | unit | formula. Up to four, from the same response; the formula is optional.": "Небольшие значения внизу карточки, по одному в строке: подпись | путь к значению | единица | формула. До четырёх, из того же ответа; формула необязательна."
   },
   "labels": {
     "Private resources": "Частные ресурсы",

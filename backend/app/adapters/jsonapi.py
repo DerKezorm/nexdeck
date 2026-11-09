@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
+from ..cards.formula import Formula, FormulaError, Ref, _scan_reference, compile_formula, evaluate
 from ..services.jsonpath import PathError, as_number, extract
 from . import demo as fake
 from .base import Adapter, AdapterError, Context, Field, WidgetData, WidgetType, base_url
@@ -35,19 +37,85 @@ WRAP = Field("wrap", "Wrap long text", type="bool", default=False,
 #: As many badges as the foot of a card shows.
 MAX_BADGES = 4
 
+#: A formula over what the card read, the formulas of custom cards (``cards/formula.py``) with one word more:
+#: ``value`` is what the path found, ``{field}`` another field of the same response or entry (#67).
+CALCULATE_VALUE = Field("calculate", "Calculate", placeholder="value * 9 / 5 + 32",
+                        help="Optional. A formula over the value: value * 9 / 5 + 32 turns °C into °F. "
+                             "+ - * /, brackets, round, abs, min and max; {field} reads another field of the response.")
+CALCULATE_LIST = Field("calculate", "Calculate", placeholder="value * 9 / 5 + 32",
+                       help="Optional. A formula over each entry's value: value / 1024 turns KB into MB. "
+                            "+ - * /, brackets, round, abs, min and max; {field} reads another field of the entry.")
 
-def parse_badges(text: str) -> list[tuple[str, str, str]]:
-    """The badges of a value card: one per line, ``Label | path | unit``.
+#: The reference ``value`` becomes inside a formula; a name no response uses.
+_VALUE_REF = "__value__"
+_VALUE_WORD = re.compile(r"(?<![A-Za-z0-9_.])value(?![A-Za-z0-9_(])")
+
+
+def compile_calculation(text: Any) -> Formula | None:
+    """The formula of a card's "Calculate", or ``None`` when there is none.
+
+    ⚠️ Never ``eval``: the parser of the custom cards, which knows numbers,
+    references, ``+ - * /``, comparisons and four functions and nothing else.
+    The word ``value`` outside braces stands for what the path found; inside
+    braces a name is a field of the response, so ``{data.value}`` stays one.
+    """
+    text = str(text or "").strip()
+    if not text:
+        return None
+    try:
+        parts, index = [], 0
+        while index < len(text):
+            brace = text.find("{", index)
+            stop = len(text) if brace < 0 else brace
+            parts.append(_VALUE_WORD.sub("{" + _VALUE_REF + "}", text[index:stop]))
+            if brace < 0:
+                break
+            end = _scan_reference(text, brace)
+            parts.append(text[brace : end + 1])
+            index = end + 1
+        return compile_formula("".join(parts))
+    except FormulaError as error:
+        raise AdapterError(f"The formula in Calculate cannot be read: {error.message}", code="formula_error",
+                           hint="Write it like value * 9 / 5 + 32.") from error
+
+
+def calculated(formula: Formula, raw: Any, scope: Any) -> Any:
+    """The formula's result for one value: a number, ``True``/``False`` for a comparison, ``None`` when it has none.
+
+    ``value`` is the number the path found (``"21,5"`` counts, as everywhere on these cards); a field in braces is
+    looked up in ``scope``, the whole response or the entry of a list.
+    """
+    number = as_number(raw)
+
+    def resolve(ref: Ref) -> Any:
+        if ref.expression == _VALUE_REF:
+            return number if number is not None else raw
+        return ref.search(scope)
+
+    return evaluate(formula, resolve)
+
+
+def _tidy(result: Any) -> Any:
+    """A result as a list shows it: a whole number without ".0", a fraction to two places, a comparison as a word."""
+    if isinstance(result, bool):
+        return "true" if result else "false"
+    if isinstance(result, float):
+        return int(result) if result.is_integer() else round(result, 2)
+    return result
+
+
+def parse_badges(text: str) -> list[tuple[str, str, str, str]]:
+    """The badges of a value card: one per line, ``Label | path | unit | formula``.
 
     A line without a path is left out, and so is everything past the fourth:
-    the card draws four and no more (issue #38).
+    the card draws four and no more (issue #38). The formula is optional (#67).
     """
-    badges: list[tuple[str, str, str]] = []
+    badges: list[tuple[str, str, str, str]] = []
     for line in (text or "").splitlines():
-        parts = [part.strip() for part in line.split("|")]
+        parts = [part.strip() for part in line.split("|", 3)]
         if len(parts) < 2 or not parts[1]:
             continue
-        badges.append((parts[0], parts[1], parts[2] if len(parts) > 2 else ""))
+        badges.append((parts[0], parts[1], parts[2] if len(parts) > 2 else "", parts[3] if len(parts) > 3 else ""))
     return badges[:MAX_BADGES]
 
 
@@ -87,13 +155,14 @@ class JsonApiAdapter(Adapter):
                 Field("value_path", "Value path", required=True, placeholder="data.temperature", help="Dots for fields, [0] for list elements."),
                 Field("label", "Label", placeholder="Temperature"),
                 Field("unit", "Unit", placeholder="°C"),
+                CALCULATE_VALUE,
                 Field("decimals", "Decimals", type="number", default=1),
                 Field("warn_above", "Warn above", type="number"),
                 Field("bad_above", "Alarm above", type="number"),
                 Field("warn_below", "Warn below", type="number"),
                 Field("bad_below", "Alarm below", type="number"),
-                Field("badges", "Badges", type="textarea", placeholder="Latest | release.latest\nChannel | release.channel",
-                      help="Small values at the foot of the card, one per line: label | value path | unit. Up to four, from the same response."),
+                Field("badges", "Badges", type="textarea", placeholder="Latest | release.latest\nDew point | dewp | °F | value * 9 / 5 + 32",
+                      help="Small values at the foot of the card, one per line: label | value path | unit | formula. Up to four, from the same response; the formula is optional."),
                 WRAP,
             ),
         ),
@@ -110,6 +179,7 @@ class JsonApiAdapter(Adapter):
                 Field("title_path", "Title field", required=True, placeholder="name"),
                 Field("subtitle_path", "Subtitle field", placeholder="description"),
                 Field("value_path", "Value field", placeholder="count"),
+                CALCULATE_LIST,
                 Field("limit", "Entries", type="number", default=10),
                 WRAP,
             ),
@@ -145,6 +215,11 @@ class JsonApiAdapter(Adapter):
 
     def _value(self, payload: Any, options: dict[str, Any]) -> WidgetData:
         raw = extract(payload, str(options.get("value_path") or ""))
+        formula = compile_calculation(options.get("calculate"))
+        if formula is not None:
+            # A comparison answers in words; a formula that finds nothing to work with shows "–", not the raw value.
+            result = calculated(formula, raw, payload)
+            raw = ("true" if result else "false") if isinstance(result, bool) else result
         number = as_number(raw)
         status = "ok"
         metrics: dict[str, float] = {}
@@ -165,6 +240,7 @@ class JsonApiAdapter(Adapter):
         if not isinstance(rows, list):
             raise PathError("The items path does not point at a list.")
         limit = max(1, min(100, int(options.get("limit") or 10)))
+        formula = compile_calculation(options.get("calculate"))
         items = []
         for row in rows[:limit]:
             item = {"title": str(_safe(row, options.get("title_path")))}
@@ -172,12 +248,18 @@ class JsonApiAdapter(Adapter):
                 item["subtitle"] = str(_safe(row, options["subtitle_path"]))
             if options.get("value_path"):
                 item["value"] = _safe(row, options["value_path"])
+            if formula is not None:
+                item["value"] = _tidy(calculated(formula, item.get("value"), row))
             items.append(item)
         return WidgetData(items=items, secondary=[{"label": "Total", "value": len(rows)}], meta=wrapped(options))
 
     def demo(self, widget_kind: str, options: dict[str, Any], tick: int) -> WidgetData:
         if widget_kind == "value":
             number = fake.walk("jsonapi", tick, 18, 31)
+            # The preview shows what the formula makes of it, so °F reads as °F before the API is asked.
+            formula = compile_calculation(options.get("calculate"))
+            result = calculated(formula, number, {}) if formula is not None else number
+            number = round(result, 1) if isinstance(result, float) else number
             return WidgetData(
                 status=threshold_status(number, options),
                 primary={"label": options.get("label") or "Server room", "value": number, "unit": options.get("unit") or "°C"},
@@ -219,11 +301,14 @@ def badges(payload: Any, options: dict[str, Any]) -> list[dict[str, Any]]:
     set it would have been shown as 2.
     """
     rows = []
-    for label, path, unit in parse_badges(str(options.get("badges") or "")):
+    for label, path, unit, text in parse_badges(str(options.get("badges") or "")):
         try:
             raw = extract(payload, path)
         except PathError:
             raw = None
+        formula = compile_calculation(text)
+        if formula is not None:
+            raw = calculated(formula, raw, payload)
         value: Any = raw
         if isinstance(raw, bool):
             value = "true" if raw else "false"

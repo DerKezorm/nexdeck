@@ -1909,7 +1909,6 @@
     "Filing": "Arquivamento",
     "How many documents there are in all, how many came in this week, and how many are being read for their text right now.": "Quantos documentos há no total, quantos chegaram esta semana e quantos estão sendo lidos para extrair o texto agora.",
     "Badges": "Selos",
-    "Small values at the foot of the card, one per line: label | value path | unit. Up to four, from the same response.": "Valores pequenos no pé do cartão, um por linha: rótulo | caminho do valor | unidade. Até quatro, da mesma resposta.",
     "Copy the key right away: Papra shows it only once.": "Copie a chave na hora: o Papra a mostra uma única vez.",
     "Documents of an organization, their size, and what came in last.": "Documentos de uma organização, seu tamanho e o que chegou por último.",
     "Empty means the FortiGate's own default.": "Vazio significa o padrão do próprio FortiGate.",
@@ -2697,7 +2696,11 @@
     "WAN 3": "WAN 3",
     "Trusted device": "Dispositivo confiável",
     "Set by enrolling nexdeck as a trusted device, never typed in.": "Vem do registro como dispositivo confiável, nunca é digitado.",
-    "With two-factor sign-in, save the connection, then enrol nexdeck as a trusted device below.": "Com verificação em duas etapas, salve a conexão e registre o nexdeck abaixo como dispositivo confiável."
+    "With two-factor sign-in, save the connection, then enrol nexdeck as a trusted device below.": "Com verificação em duas etapas, salve a conexão e registre o nexdeck abaixo como dispositivo confiável.",
+    "Calculate": "Calcular",
+    "Optional. A formula over the value: value * 9 / 5 + 32 turns °C into °F. + - * /, brackets, round, abs, min and max; {field} reads another field of the response.": "Opcional. Uma fórmula sobre o valor: value * 9 / 5 + 32 converte °C em °F. + - * /, parênteses, round, abs, min e max; {campo} lê outro campo da resposta.",
+    "Optional. A formula over each entry's value: value / 1024 turns KB into MB. + - * /, brackets, round, abs, min and max; {field} reads another field of the entry.": "Opcional. Uma fórmula sobre o valor de cada item: value / 1024 converte KB em MB. + - * /, parênteses, round, abs, min e max; {campo} lê outro campo do item.",
+    "Small values at the foot of the card, one per line: label | value path | unit | formula. Up to four, from the same response; the formula is optional.": "Valores pequenos no rodapé do cartão, um por linha: rótulo | caminho do valor | unidade | fórmula. Até quatro, da mesma resposta; a fórmula é opcional."
   },
   "labels": {
     "Private resources": "Recursos privados",

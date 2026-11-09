@@ -1909,7 +1909,6 @@
     "Filing": "Archivio",
     "How many documents there are in all, how many came in this week, and how many are being read for their text right now.": "Quanti documenti ci sono in tutto, quanti sono arrivati questa settimana e quanti vengono letti ora per il loro testo.",
     "Badges": "Badge",
-    "Small values at the foot of the card, one per line: label | value path | unit. Up to four, from the same response.": "Piccoli valori in fondo alla scheda, uno per riga: etichetta | percorso del valore | unità. Fino a quattro, dalla stessa risposta.",
     "Copy the key right away: Papra shows it only once.": "Copia subito la chiave: Papra la mostra una sola volta.",
     "Documents of an organization, their size, and what came in last.": "Documenti di un'organizzazione, la loro dimensione e gli ultimi arrivati.",
     "Empty means the FortiGate's own default.": "Vuoto significa il valore predefinito della FortiGate.",
@@ -2697,7 +2696,11 @@
     "WAN 3": "WAN 3",
     "Trusted device": "Dispositivo attendibile",
     "Set by enrolling nexdeck as a trusted device, never typed in.": "Viene dalla registrazione come dispositivo attendibile, non si digita mai.",
-    "With two-factor sign-in, save the connection, then enrol nexdeck as a trusted device below.": "Con la verifica in due passaggi, salva la connessione e registra nexdeck qui sotto come dispositivo attendibile."
+    "With two-factor sign-in, save the connection, then enrol nexdeck as a trusted device below.": "Con la verifica in due passaggi, salva la connessione e registra nexdeck qui sotto come dispositivo attendibile.",
+    "Calculate": "Calcola",
+    "Optional. A formula over the value: value * 9 / 5 + 32 turns °C into °F. + - * /, brackets, round, abs, min and max; {field} reads another field of the response.": "Facoltativo. Una formula sul valore: value * 9 / 5 + 32 converte °C in °F. + - * /, parentesi, round, abs, min e max; {campo} legge un altro campo della risposta.",
+    "Optional. A formula over each entry's value: value / 1024 turns KB into MB. + - * /, brackets, round, abs, min and max; {field} reads another field of the entry.": "Facoltativo. Una formula sul valore di ogni voce: value / 1024 converte KB in MB. + - * /, parentesi, round, abs, min e max; {campo} legge un altro campo della voce.",
+    "Small values at the foot of the card, one per line: label | value path | unit | formula. Up to four, from the same response; the formula is optional.": "Piccoli valori in fondo alla scheda, uno per riga: etichetta | percorso del valore | unità | formula. Fino a quattro, dalla stessa risposta; la formula è facoltativa."
   },
   "labels": {
     "Private resources": "Risorse private",

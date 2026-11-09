@@ -3,6 +3,12 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## Unreleased
+
+### Added
+
+- **Calculate on the JSON API cards.** The Value and the List card take an optional formula over what they read, so a temperature in °C shows in °F with `value * 9 / 5 + 32`, and kilobytes as megabytes with `value / 1024`. It is the small calculation language of the custom cards: numbers, `+ - * /`, brackets, `round`, `abs`, `min` and `max`, and `{field}` for another field of the same response or entry; nothing else is run. Thresholds, decimals and the history read the result, and each badge of a Value card may carry a formula of its own as a fourth column. Without a formula a card reads as before (#67).
+
 ## 1.6.0 (2026-11-09)
 
 ### Added

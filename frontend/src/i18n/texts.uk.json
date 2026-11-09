@@ -3416,7 +3416,6 @@
     "Filing": "Архівування",
     "How many documents there are in all, how many came in this week, and how many are being read for their text right now.": "Скільки документів усього, скільки надійшло цього тижня і скільки зараз розпізнається для тексту.",
     "Badges": "Значки",
-    "Small values at the foot of the card, one per line: label | value path | unit. Up to four, from the same response.": "Малі значення внизу картки, по одному на рядок: підпис | шлях до значення | одиниця. До чотирьох, з тієї ж відповіді.",
     "Copy the key right away: Papra shows it only once.": "Скопіюйте ключ одразу: Papra показує його лише раз.",
     "Documents of an organization, their size, and what came in last.": "Документи організації, їхній розмір і що надійшло останнім.",
     "Empty means the FortiGate's own default.": "Порожнє означає власне значення FortiGate за замовчуванням.",
@@ -4204,6 +4203,10 @@
     "WAN 3": "WAN 3",
     "Trusted device": "Довірений пристрій",
     "Set by enrolling nexdeck as a trusted device, never typed in.": "Задається під час реєстрації довіреного пристрою, вручну не вводиться.",
-    "With two-factor sign-in, save the connection, then enrol nexdeck as a trusted device below.": "За двофакторного входу збережіть підключення і зареєструйте nexdeck нижче як довірений пристрій."
+    "With two-factor sign-in, save the connection, then enrol nexdeck as a trusted device below.": "За двофакторного входу збережіть підключення і зареєструйте nexdeck нижче як довірений пристрій.",
+    "Calculate": "Перерахувати",
+    "Optional. A formula over the value: value * 9 / 5 + 32 turns °C into °F. + - * /, brackets, round, abs, min and max; {field} reads another field of the response.": "Необов’язково. Формула над значенням: value * 9 / 5 + 32 перетворює °C на °F. + - * /, дужки, round, abs, min і max; {поле} читає інше поле відповіді.",
+    "Optional. A formula over each entry's value: value / 1024 turns KB into MB. + - * /, brackets, round, abs, min and max; {field} reads another field of the entry.": "Необов’язково. Формула над значенням кожного запису: value / 1024 перетворює КБ на МБ. + - * /, дужки, round, abs, min і max; {поле} читає інше поле запису.",
+    "Small values at the foot of the card, one per line: label | value path | unit | formula. Up to four, from the same response; the formula is optional.": "Невеликі значення внизу картки, по одному в рядку: підпис | шлях до значення | одиниця | формула. До чотирьох, з тієї самої відповіді; формула необов’язкова."
   }
 }

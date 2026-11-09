@@ -1909,7 +1909,6 @@
     "Filing": "Archiwizacja",
     "How many documents there are in all, how many came in this week, and how many are being read for their text right now.": "Ile jest dokumentów łącznie, ile wpłynęło w tym tygodniu i ile jest teraz czytanych ze względu na tekst.",
     "Badges": "Plakietki",
-    "Small values at the foot of the card, one per line: label | value path | unit. Up to four, from the same response.": "Małe wartości u dołu karty, po jednej w linii: etykieta | ścieżka wartości | jednostka. Do czterech, z tej samej odpowiedzi.",
     "Copy the key right away: Papra shows it only once.": "Skopiuj klucz od razu: Papra pokazuje go tylko raz.",
     "Documents of an organization, their size, and what came in last.": "Dokumenty organizacji, ich rozmiar i to, co wpłynęło ostatnio.",
     "Empty means the FortiGate's own default.": "Puste oznacza domyślny FortiGate.",
@@ -2697,7 +2696,11 @@
     "WAN 3": "WAN 3",
     "Trusted device": "Zaufane urządzenie",
     "Set by enrolling nexdeck as a trusted device, never typed in.": "Pochodzi z rejestracji jako zaufane urządzenie, nigdy nie wpisuje się go ręcznie.",
-    "With two-factor sign-in, save the connection, then enrol nexdeck as a trusted device below.": "Przy logowaniu dwuskładnikowym zapisz połączenie i zarejestruj nexdeck poniżej jako zaufane urządzenie."
+    "With two-factor sign-in, save the connection, then enrol nexdeck as a trusted device below.": "Przy logowaniu dwuskładnikowym zapisz połączenie i zarejestruj nexdeck poniżej jako zaufane urządzenie.",
+    "Calculate": "Przelicz",
+    "Optional. A formula over the value: value * 9 / 5 + 32 turns °C into °F. + - * /, brackets, round, abs, min and max; {field} reads another field of the response.": "Opcjonalne. Wzór na wartości: value * 9 / 5 + 32 zamienia °C na °F. + - * /, nawiasy, round, abs, min i max; {pole} czyta inne pole odpowiedzi.",
+    "Optional. A formula over each entry's value: value / 1024 turns KB into MB. + - * /, brackets, round, abs, min and max; {field} reads another field of the entry.": "Opcjonalne. Wzór na wartości każdego wpisu: value / 1024 zamienia KB na MB. + - * /, nawiasy, round, abs, min i max; {pole} czyta inne pole wpisu.",
+    "Small values at the foot of the card, one per line: label | value path | unit | formula. Up to four, from the same response; the formula is optional.": "Małe wartości u dołu karty, jedna na wiersz: etykieta | ścieżka wartości | jednostka | wzór. Do czterech, z tej samej odpowiedzi; wzór jest opcjonalny."
   },
   "labels": {
     "Private resources": "Zasoby prywatne",

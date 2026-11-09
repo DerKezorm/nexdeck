@@ -1909,7 +1909,6 @@
     "Filing": "归档",
     "How many documents there are in all, how many came in this week, and how many are being read for their text right now.": "一共有多少文档、本周收到多少，以及当前有多少正在进行文字识别。",
     "Badges": "徽章",
-    "Small values at the foot of the card, one per line: label | value path | unit. Up to four, from the same response.": "卡片底部的小数值，每行一个：标签 | 值路径 | 单位。最多四个，来自同一个响应。",
     "Copy the key right away: Papra shows it only once.": "请立刻复制密钥：Papra 只显示一次。",
     "Documents of an organization, their size, and what came in last.": "某个组织的文档、其大小，以及最近收到的内容。",
     "Empty means the FortiGate's own default.": "留空则使用 FortiGate 自己的默认值。",
@@ -2697,7 +2696,11 @@
     "WAN 3": "WAN 3",
     "Trusted device": "受信任设备",
     "Set by enrolling nexdeck as a trusted device, never typed in.": "由受信任设备登记生成，无需手动输入。",
-    "With two-factor sign-in, save the connection, then enrol nexdeck as a trusted device below.": "如果账户开启了两步验证，请先保存连接，再在下方把 nexdeck 登记为受信任设备。"
+    "With two-factor sign-in, save the connection, then enrol nexdeck as a trusted device below.": "如果账户开启了两步验证，请先保存连接，再在下方把 nexdeck 登记为受信任设备。",
+    "Calculate": "换算",
+    "Optional. A formula over the value: value * 9 / 5 + 32 turns °C into °F. + - * /, brackets, round, abs, min and max; {field} reads another field of the response.": "可选。对数值套用的公式：value * 9 / 5 + 32 把 °C 换算成 °F。支持 + - * /、括号、round、abs、min 和 max；{字段} 读取响应中的其他字段。",
+    "Optional. A formula over each entry's value: value / 1024 turns KB into MB. + - * /, brackets, round, abs, min and max; {field} reads another field of the entry.": "可选。对每个条目的数值套用的公式：value / 1024 把 KB 换算成 MB。支持 + - * /、括号、round、abs、min 和 max；{字段} 读取该条目的其他字段。",
+    "Small values at the foot of the card, one per line: label | value path | unit | formula. Up to four, from the same response; the formula is optional.": "卡片底部的小数值，每行一个：标签 | 数值路径 | 单位 | 公式。最多四个，取自同一响应；公式可省略。"
   },
   "labels": {
     "Private resources": "私有资源",
