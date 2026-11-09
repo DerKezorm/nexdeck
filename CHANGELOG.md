@@ -3,6 +3,12 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## Unreleased
+
+### Changed
+
+- **nextasks is out of beta.** Its maintainer released it after it had run on nextasks.
+
 ## 1.7.0 (2026-11-09)
 
 ### Added

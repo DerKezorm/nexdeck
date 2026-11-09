@@ -1,7 +1,7 @@
 """nextasks: what is due in a family's or a small group's tasks, read through its API tokens.
 
 Written against nextasks' ``docs/api.md`` (branch ``neu``, 07.11.2026) and its ``/api/v1``: ``GET /me``,
-``/dashboard``, ``/lists`` and ``/tasks``. In beta until it has run against a nextasks in use.
+``/dashboard``, ``/lists`` and ``/tasks``. Out of beta since 09.11.2026, released by its maintainer.
 
 - The token (``ntk_…``) goes in ``Authorization: Bearer``, never in the address. nextasks refuses any request that
   carries an ``Origin`` header (403 ``origin_refused``), so it is only ever called from nexdeck's server.
@@ -62,8 +62,8 @@ class NextasksAdapter(NexappApi, Adapter):
     category = "other"
     description = "The tasks of a family or a small group in nextasks: what is overdue, due today and coming up, what is assigned to you, and the open tasks of one list."
     icon = "nextasks"
-    #: Beta until every card has run against a nextasks in use; measured against a fresh one on 07.11.2026.
-    beta = True
+    #: Measured against a fresh nextasks on 07.11.2026, out of beta by its maintainer's word on 09.11.2026.
+    beta = False
     #: Empty while nextasks' repository is private: a link there would end at a 404 for everybody else.
     docs_url = ""
     app = "nextasks"
