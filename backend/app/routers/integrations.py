@@ -21,13 +21,21 @@ from ..schemas import IntegrationCreate, IntegrationPatch, IntegrationTest
 from ..services import chronicle, favicons, found, versions
 from ..services.collector import collector, demo_flag
 from ..services.hass_ws import hass_listener
+from ..services.synology_mfa_state import advance, replace_if_unchanged
 from ..services.integrations import (
     broken_lines,
     public_config,
     resolve_config,
     store_config,
+    synology_identity_changed,
     validate_required,
 )
+
+class SynologyMfaEnrol(BaseModel):
+    """One-time code supplied by an administrator; never persisted."""
+
+    otp: str = Field(min_length=6, max_length=6, pattern=r"^[0-9]{6}$")
+
 
 router = APIRouter(prefix="/api/v1", tags=["integrations"])
 
@@ -141,6 +149,7 @@ def create_integration(body: IntegrationCreate, user: AdminUser, db: DbSession) 
     if body.kind == "custom":
         raise error("not_a_connection", "A custom card sits on a connection of another kind; it is not a connection itself.")
     _refuse_line_breaks(body.kind, body.config)
+    _protect_synology_device_id(body.kind, body.config)
     config = store_config(body.kind, body.config)
     if not body.demo:
         missing = validate_required(body.kind, config)
@@ -158,6 +167,27 @@ def create_integration(body: IntegrationCreate, user: AdminUser, db: DbSession) 
     if integration.kind == "homeassistant":
         hass_listener.watch(integration.id)
     return _public(db, integration)
+
+
+
+def _protect_synology_device_id(kind: str, config: dict[str, Any]) -> None:
+    """Only the dedicated MFA endpoint may write Synology device credentials."""
+    if kind != "synology":
+        return
+
+    if "_synology_mfa_revision" in config:
+        raise error(
+            "protected_field",
+            "Synology MFA revision is managed internally.",
+            status.HTTP_400_BAD_REQUEST,
+        )
+
+    if config.get("device_id") not in (None, "", "********"):
+        raise error(
+            "protected_field",
+            "Use Synology MFA enrolment to register a trusted device.",
+            status.HTTP_400_BAD_REQUEST,
+        )
 
 
 def _refuse_line_breaks(kind: str, config: dict[str, Any]) -> None:
@@ -190,7 +220,29 @@ def patch_integration(integration_id: int, body: IntegrationPatch, user: AdminUs
         integration.name = body.name.strip()
     if body.config is not None:
         _refuse_line_breaks(integration.kind, body.config)
-        integration.config = store_config(integration.kind, body.config, integration.config)
+        _protect_synology_device_id(integration.kind, body.config)
+
+        invalidate_device = (
+            integration.kind == "synology"
+            and synology_identity_changed(
+                body.config,
+                integration.config or {},
+            )
+        )
+
+        updated_config = store_config(
+            integration.kind,
+            body.config,
+            integration.config,
+        )
+
+        if invalidate_device:
+            updated_config.pop("device_id", None)
+
+        if integration.kind == "synology":
+            updated_config = advance(updated_config)
+
+        integration.config = updated_config
         changed.append("settings")
     if body.enabled is not None:
         if body.enabled != integration.enabled:
@@ -410,6 +462,164 @@ async def widget_barred(integration_id: int, widget: str, user: CurrentUser, db:
     finally:
         await hand_back(adapter, config, ctx)
     return {"reason": reason}
+
+
+@router.post(
+    "/integrations/{integration_id}/mfa/enrol",
+    summary="Enrol a Synology trusted device",
+)
+async def enrol_synology_mfa(
+    integration_id: int,
+    body: SynologyMfaEnrol,
+    user: AdminUser,
+    db: DbSession,
+) -> dict:
+    integration = db.get(Integration, integration_id)
+    if integration is None:
+        raise error(
+            "not_found",
+            "There is no such integration.",
+            status.HTTP_404_NOT_FOUND,
+        )
+
+    if integration.kind != "synology":
+        raise error(
+            "wrong_kind",
+            "MFA enrolment is only available for Synology connections.",
+            status.HTTP_400_BAD_REQUEST,
+        )
+
+    if integration.demo:
+        raise error(
+            "demo_connection",
+            "MFA enrolment is unavailable for demo connections.",
+            status.HTTP_400_BAD_REQUEST,
+        )
+
+    try:
+        config = resolve_config(integration)
+    except SecretUnreadable:
+        raise error(
+            "secret_unreadable",
+            "The stored connection credentials cannot be decrypted.",
+            status.HTTP_400_BAD_REQUEST,
+        ) from None
+
+    original_config = dict(integration.config or {})
+    db.rollback()
+
+    adapter = get_adapter("synology")
+    ctx = Context(collector.client, integration_id=integration_id, cache={})
+
+    try:
+        device_id = await adapter.enrol_mfa(config, ctx, body.otp)
+    except AdapterError:
+        raise error(
+            "synology_mfa_failed",
+            "Synology rejected MFA enrolment. Check the authentication code and try again.",
+            status.HTTP_400_BAD_REQUEST,
+        ) from None
+
+    updated_config = advance(
+        store_config("synology", {"device_id": device_id}, original_config)
+    )
+
+    if not replace_if_unchanged(
+        db, integration_id, original_config, updated_config
+    ):
+        db.rollback()
+        raise error(
+            "synology_mfa_conflict",
+            "The Synology connection changed during MFA enrolment. "
+            "Please start enrolment again.",
+            status.HTTP_409_CONFLICT,
+        )
+
+    integration = db.get(Integration, integration_id)
+    farewell = (adapter, config)
+
+    chronicle.record(
+        "connection_changed",
+        integration_id=integration_id,
+        user_id=user.id,
+        name=integration.name if integration else "Synology",
+        detail="Synology trusted device enrolled",
+        db=db,
+    )
+
+    db.commit()
+    collector.reschedule_integration(integration_id, farewell)
+
+    return {
+        "ok": True,
+        "message": "Synology trusted device enrolled successfully.",
+    }
+
+
+@router.post(
+    "/integrations/{integration_id}/mfa/unenrol",
+    summary="Remove a Synology trusted device",
+)
+async def unenrol_synology_mfa(
+    integration_id: int,
+    user: AdminUser,
+    db: DbSession,
+) -> dict:
+    integration = db.get(Integration, integration_id)
+
+    if integration is None:
+        raise error(
+            "not_found",
+            "There is no such integration.",
+            status.HTTP_404_NOT_FOUND,
+        )
+
+    if integration.kind != "synology":
+        raise error(
+            "wrong_kind",
+            "MFA un-enrolment is only available for Synology connections.",
+            status.HTTP_400_BAD_REQUEST,
+        )
+
+    if integration.demo:
+        raise error(
+            "demo_connection",
+            "MFA un-enrolment is unavailable for demo connections.",
+            status.HTTP_400_BAD_REQUEST,
+        )
+
+    original_config = dict(integration.config or {})
+    farewell = _farewell(integration)
+
+    updated_config = advance(original_config)
+    updated_config.pop("device_id", None)
+
+    if not replace_if_unchanged(
+        db, integration_id, original_config, updated_config
+    ):
+        db.rollback()
+        raise error(
+            "synology_mfa_conflict",
+            "The Synology connection changed. Please try again.",
+            status.HTTP_409_CONFLICT,
+        )
+
+    chronicle.record(
+        "connection_changed",
+        integration_id=integration_id,
+        user_id=user.id,
+        name=integration.name,
+        detail="Synology trusted device un-enrolled",
+        db=db,
+    )
+
+    db.commit()
+    collector.reschedule_integration(integration_id, farewell)
+
+    return {
+        "ok": True,
+        "message": "Synology trusted device removed.",
+    }
 
 
 @router.post("/integrations/{integration_id}/test", summary="Test a saved integration")
