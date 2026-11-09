@@ -28,6 +28,10 @@ def join_path(base: str, path: str) -> str:
     return base.rstrip("/") + "/" + path
 
 
+#: A long text on the card breaks onto further lines instead of ending in "…" (#63).
+WRAP = Field("wrap", "Wrap long text", type="bool", default=False,
+             help="Long text breaks onto further lines instead of being cut short.")
+
 #: As many badges as the foot of a card shows.
 MAX_BADGES = 4
 
@@ -90,6 +94,7 @@ class JsonApiAdapter(Adapter):
                 Field("bad_below", "Alarm below", type="number"),
                 Field("badges", "Badges", type="textarea", placeholder="Latest | release.latest\nChannel | release.channel",
                       help="Small values at the foot of the card, one per line: label | value path | unit. Up to four, from the same response."),
+                WRAP,
             ),
         ),
         WidgetType(
@@ -106,6 +111,7 @@ class JsonApiAdapter(Adapter):
                 Field("subtitle_path", "Subtitle field", placeholder="description"),
                 Field("value_path", "Value field", placeholder="count"),
                 Field("limit", "Entries", type="number", default=10),
+                WRAP,
             ),
         ),
     )
@@ -151,6 +157,7 @@ class JsonApiAdapter(Adapter):
             primary={"label": options.get("label") or "", "value": value, "unit": options.get("unit") or ""},
             secondary=badges(payload, options),
             metrics=metrics,
+            meta=wrapped(options),
         )
 
     def _list(self, payload: Any, options: dict[str, Any]) -> WidgetData:
@@ -166,7 +173,7 @@ class JsonApiAdapter(Adapter):
             if options.get("value_path"):
                 item["value"] = _safe(row, options["value_path"])
             items.append(item)
-        return WidgetData(items=items, secondary=[{"label": "Total", "value": len(rows)}])
+        return WidgetData(items=items, secondary=[{"label": "Total", "value": len(rows)}], meta=wrapped(options))
 
     def demo(self, widget_kind: str, options: dict[str, Any], tick: int) -> WidgetData:
         if widget_kind == "value":
@@ -175,12 +182,18 @@ class JsonApiAdapter(Adapter):
                 status=threshold_status(number, options),
                 primary={"label": options.get("label") or "Server room", "value": number, "unit": options.get("unit") or "°C"},
                 metrics={"value": number},
+                meta=wrapped(options),
             )
-        return WidgetData(items=[
+        return WidgetData(meta=wrapped(options), items=[
             {"title": "backup-nightly", "subtitle": "finished 02:14", "value": "ok"},
             {"title": "certificates", "subtitle": "renewed 12 days ago", "value": 4},
             {"title": "snapshots", "subtitle": "last 03:00", "value": 17},
         ], secondary=[{"label": "Total", "value": 3}])
+
+
+def wrapped(options: dict[str, Any]) -> dict[str, Any]:
+    """Tells the card to break long text onto further lines, when the card asks for it (#63)."""
+    return {"wrap": True} if options.get("wrap") else {}
 
 
 def shown(raw: Any, options: dict[str, Any]) -> Any:

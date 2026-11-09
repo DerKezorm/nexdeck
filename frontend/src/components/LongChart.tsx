@@ -104,17 +104,32 @@ export function LongChart({ widgetId, metrics, days, colours, labelFor, forecast
     dashed = { x1: x(now), y1: y(ahead.now), x2: x(end), y2: y(value), reaches: ahead.at <= last, date: new Date(ahead.at * 1000).toLocaleDateString(i18n.language, { day: 'numeric', month: 'short' }) }
   }
 
-  const shown = hover !== null ? lines[0].points[hover] : null
+  // The moment under the pointer, and each line's point at it: every line is named, not only the first.
+  // A line that has nothing near that moment (it began later, or has a gap) is left out of the tip.
+  const nearest = (points: Point[], ts: number) =>
+    points.reduce((best, point) => (Math.abs(point[0] - ts) < Math.abs(best[0] - ts) ? point : best), points[0])
+  const spacing = (points: Point[]) => (points[points.length - 1][0] - points[0][0]) / (points.length - 1)
+  const tipped =
+    hover === null
+      ? []
+      : lines
+          .map((line, index) => ({ line, colour: colours[index % colours.length], point: nearest(line.points, hover) }))
+          .filter(({ line, point }) => Math.abs(point[0] - hover) <= spacing(line.points) / 2 + 1)
+  const shown = tipped[0]?.point ?? null
   const pick = (clientX: number) => {
     const rect = box.current?.getBoundingClientRect()
     if (!rect) return
     const at = clientX - rect.left
-    let best = 0
-    lines[0].points.forEach((point, index) => {
-      if (Math.abs(x(point[0]) - at) < Math.abs(x(lines[0].points[best][0]) - at)) best = index
-    })
+    let best: number | null = null
+    for (const line of lines) {
+      for (const point of line.points) {
+        if (best === null || Math.abs(x(point[0]) - at) < Math.abs(x(best) - at)) best = point[0]
+      }
+    }
     setHover(at > x(now) + 6 ? null : best)
   }
+  const tipTop = single && shown ? y(shown[3]) : Math.min(...tipped.map(({ point }) => y(point[1])))
+  const round = (value: number) => formatValue(Math.round(value * 10) / 10)
 
   return (
     <div ref={box} className="relative flex-1 min-h-[60px]" data-testid="long-chart">
@@ -175,22 +190,34 @@ export function LongChart({ widgetId, metrics, days, colours, labelFor, forecast
         {shown && (
           <g>
             <line x1={x(shown[0])} x2={x(shown[0])} y1={PAD.top} y2={height - PAD.bottom} stroke="var(--nd-border-strong)" strokeWidth={1} />
-            <circle cx={x(shown[0])} cy={y(shown[1])} r={4} fill="var(--nd-bg)" stroke={colours[0]} strokeWidth={2} />
+            {tipped.map(({ line, colour, point }) => (
+              <circle key={line.metric} cx={x(point[0])} cy={y(point[1])} r={4} fill="var(--nd-bg)" stroke={colour} strokeWidth={2} />
+            ))}
           </g>
         )}
       </svg>
       {shown && (
         <div
           className="glass-strong pointer-events-none absolute z-10 whitespace-nowrap rounded-lg px-2 py-1 text-[11px] shadow-xl"
-          style={{ left: Math.min(Math.max(x(shown[0]), 60), width - 60), top: y(single ? shown[3] : shown[1]), transform: 'translate(-50%, calc(-100% - 8px))' }}
+          style={{ left: Math.min(Math.max(x(shown[0]), 60), width - 60), top: tipTop, transform: 'translate(-50%, calc(-100% - 8px))' }}
           data-testid="long-chart-tip"
         >
           <div className="text-faint">
             {new Date(shown[0] * 1000).toLocaleString(i18n.language, days >= 365 ? { day: 'numeric', month: 'short', year: 'numeric' } : { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
           </div>
-          <div className="num">{formatValue(Math.round(shown[1] * 10) / 10)}</div>
-          {single && shown[2] !== shown[3] && (
-            <div className="num text-faint">{t('card.lowHigh', { low: formatValue(Math.round(shown[2] * 10) / 10), high: formatValue(Math.round(shown[3] * 10) / 10) })}</div>
+          {single ? (
+            <>
+              <div className="num">{round(shown[1])}</div>
+              {shown[2] !== shown[3] && <div className="num text-faint">{t('card.lowHigh', { low: round(shown[2]), high: round(shown[3]) })}</div>}
+            </>
+          ) : (
+            tipped.map(({ line, colour, point }) => (
+              <div key={line.metric} className="flex items-center gap-1.5" data-testid="long-chart-tip-line">
+                <span className="rounded-full" style={{ width: 7, height: 7, background: colour }} />
+                <span className="text-muted">{labelFor(line.metric)}</span>
+                <span className="num ml-auto pl-2">{round(point[1])}</span>
+              </div>
+            ))
           )}
         </div>
       )}

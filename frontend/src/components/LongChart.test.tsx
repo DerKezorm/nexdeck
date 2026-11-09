@@ -22,6 +22,7 @@ vi.mock('../api/client', async (original) => ({
   ...(await original<typeof import('../api/client')>()),
   get: vi.fn(async (path: string) => {
     asked.push(path)
+    if (path.includes('/widgets/8/history/long')) return { down: LONG, up: LONG.map(([ts, avg]) => [ts, avg / 10, avg / 10, avg / 10]), late: LONG.slice(25) }
     if (path.includes('/history/long')) return { used: LONG }
     return { used: [[now - 60, 80], [now, 81]] }
   }),
@@ -135,6 +136,32 @@ describe('on the card', () => {
     chart.getBoundingClientRect = () => ({ left: 0, top: 0, width: 400, height: 200, right: 400, bottom: 200, x: 0, y: 0, toJSON: () => ({}) })
     fireEvent.pointerMove(chart.querySelector('svg') as SVGElement, { clientX: 200 })
     expect(screen.getByTestId('long-chart-tip').textContent).toMatch(/to/)
+  })
+
+  it('names every line at the moment under the pointer, not only the first', async () => {
+    localStorage.setItem('nexdeck.chart.8', '720')
+    const data: WidgetData = {
+      status: 'ok',
+      primary: { label: 'Download', value: 89, metric: 'down' },
+      secondary: [{ label: 'Upload', value: 9, metric: 'up' }, { label: 'Later', value: 1, metric: 'late' }],
+      metrics: { down: 89, up: 9, late: 1 },
+      meta: { renderer: 'chart', chart_hours: 24 },
+    }
+    render(<ChartCard widget={{ ...VIEW, id: 8 }} data={data} series={{}} />)
+    const chart = await screen.findByTestId('long-chart')
+    chart.getBoundingClientRect = () => ({ left: 0, top: 0, width: 400, height: 200, right: 400, bottom: 200, x: 0, y: 0, toJSON: () => ({}) })
+    // Early in the month: the line that began on day 25 has nothing there and stays out of the tip.
+    fireEvent.pointerMove(chart.querySelector('svg') as SVGElement, { clientX: 100 })
+    const rows = screen.getAllByTestId('long-chart-tip-line').map((row) => row.textContent)
+    expect(rows).toHaveLength(2)
+    expect(rows[0]).toMatch(/^Download\d/)
+    expect(rows[1]).toMatch(/^Upload\d/)
+    const [download, upload] = rows.map((row) => Number(row!.replace(/^\D+/, '')))
+    expect(download / upload).toBeCloseTo(10, 0)
+    expect(chart.querySelectorAll('svg circle')).toHaveLength(2)
+    // At the end all three have a point.
+    fireEvent.pointerMove(chart.querySelector('svg') as SVGElement, { clientX: 390 })
+    expect(screen.getAllByTestId('long-chart-tip-line').map((row) => row.textContent?.replace(/[\d.,]+$/, ''))).toEqual(['Download', 'Upload', 'Later'])
   })
 })
 

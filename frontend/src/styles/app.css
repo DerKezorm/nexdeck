@@ -1193,6 +1193,20 @@ body {
   text-overflow: ellipsis;
 }
 
+/* A card that asks for it (the JSON API's "Wrap long text", #63) lets a long
+   text go on over further lines at the same size, and scrolls when it is
+   taller than the card rather than cutting the end off. A short value reads
+   exactly as before: it fits on one line either way. */
+.value-number.value-wrap {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-overflow: clip;
+  overflow-y: auto;
+  min-height: 0;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--nd-text) 18%, transparent) transparent;
+}
+
 /* A field with a symbol sitting in it.
  *
  * ⚠️ Not Tailwind's `pl-8`. Both are one class deep, so the order in the

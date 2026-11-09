@@ -3,6 +3,29 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## 1.5.1 (2026-11-09)
+
+### Fixed
+
+- **Every line in the chart popup.** On a chart card with more than one line, the popup of the 7 d, 30 d and 1 y ranges named only the first line. It now names every line at the moment under the pointer, with its colour, name and value, and each line gets its own dot; a line with no value at that moment stays out of the popup (#65).
+
+## 1.5.0 (2026-11-07)
+
+### Added
+
+- **nextasks, in beta.** Four cards for the tasks of a family or a small group: Today in nextasks counts what is overdue, due today and due in the next 7 days (red with anything overdue, yellow from five due today); Due tasks lists them, overdue first, each opening in nextasks; Assigned to me counts the open tasks of the token's account and lists the first; Task list shows the open tasks of one list, such as the shopping list. A read token is enough, days are counted in the account's time zone, and spaces the account has hidden stay off the cards. Notes, attachments and tags never reach a card.
+
+## 1.4.0 (2026-11-06)
+
+### Added
+
+- **Speed tests from UniFi.** Two new UniFi cards read back the speed tests the gateway runs itself, on its schedule or by hand, so no second container is needed for it: Speed test shows download, upload, latency and how long ago, and Speed test history draws them over a day, a week, a month or three, as a line or as bars. On a gateway with more than one internet line each line is drawn apart, and a card can keep to one of them. Works with the API key and with a local account (#64).
+- **Wrap long text on JSON API cards.** Both JSON API cards have a switch that breaks a long text onto further lines instead of ending it in "…": the value of the Value card, and the titles, subtitles and values of the List card. Off by default, so cards already on a board look as before (#63).
+
+### Security
+
+- oauthlib 4.0.1, for an advisory on the device flow (GHSA-3jp2-3mrg-2vxc), which apprise never uses.
+
 ## 1.3.0 (2026-11-05)
 
 ### Added

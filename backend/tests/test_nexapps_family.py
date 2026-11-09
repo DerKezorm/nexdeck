@@ -1,7 +1,8 @@
-"""The four apps of the family answer alike, so a card must tell them apart.
+"""The apps of the family answer alike, so a card must tell them apart.
 
-nexcanvas, nexbrand, nexpaper and nexdiary answer ``/me`` with the same few
-fields, and nexcanvas and nexdiary hand out tokens with the same prefix. Run
+nexcanvas, nexbrand, nexpaper, nexdiary and nextasks answer ``/me`` with the same
+few fields, and nexcanvas and nexdiary hand out tokens with the same prefix.
+nextasks names its ``spaces`` as nexcanvas does; its ``features`` tell it apart. Run
 against real instances on 11.10.2026, a nexbrand card at the address of
 nexcanvas said "nexbrand 0.4.1 answers", and a nexdiary card with a nexcanvas
 token drew a streak of nought. Each now says that another app answers.
@@ -25,14 +26,19 @@ ME = {
     "nexbrand": {"name": "alex", "display_name": "Alex", "level": "read", "clients": 2, "version": "0.2.0"},
     "nexpaper": {"name": "alex", "display_name": "Alex", "scope": "read", "version": "1.1.0"},
     "nexdiary": {"name": "alex", "display_name": "Alex", "level": "read", "version": "0.8.0"},
+    "nextasks": {"name": "alex", "display_name": "Alex", "level": "read", "time_zone": "Europe/Berlin",
+                 "spaces": [{"id": "s1", "name": "Home"}], "version": "0.1.0", "features": ["tasks", "dashboard"]},
 }
-#: The card routes of the three whose cards read ``/dashboard``, by app.
+#: The card routes of those whose cards read ``/dashboard``, by app.
 DASHBOARD = {
     "nexcanvas": ("boards", {"spaces": 1, "boards": 3, "changed_today": 0, "changed_week": 1, "recent": []}),
     "nexpaper": ("inbox", {"version": "1.1.0", "inbox": 2, "inbox_oldest": [], "inbox_oldest_at": None, "filed": 5,
                            "total": 7, "added_week": 1, "processing": 0, "deadlines": []}),
     "nexdiary": ("diary", {"version": "0.8.0", "today_written": True, "streak": 4, "streak_unit": "days",
                            "entries_month": 3, "notes_month": 9, "next_capsule": None, "next_capsule_days": None}),
+    "nextasks": ("today", {"counts": {"overdue": 0, "today": 1, "upcoming": 0, "assigned_to_me": 0, "flagged": 0, "open": 3},
+                           "overdue": [], "today": [], "upcoming": [], "link": None, "time_zone": "Europe/Berlin",
+                           "as_of": "2026-11-07T08:00:00.000Z"}),
 }
 
 

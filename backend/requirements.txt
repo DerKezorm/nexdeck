@@ -23,9 +23,10 @@ websockets==15.0.1
 # One adapter, a hundred notification services.
 apprise==1.13.1
 # apprise pulls it in through requests-oauthlib. Below 4.0.0 it has two
-# advisories (GHSA-hj66-6f7g-4r5v, GHSA-xpv3-w29h-x7cv), both on the server
-# side apprise never uses; pinned so no build falls back to 3.3.1.
-oauthlib==4.0.0
+# advisories (GHSA-hj66-6f7g-4r5v, GHSA-xpv3-w29h-x7cv), 4.0.0 a third on the
+# device flow (GHSA-3jp2-3mrg-2vxc), all on the server side apprise never
+# uses; pinned so no build falls back.
+oauthlib==4.0.1
 # httpx pulls it in. Below 2026.10.19 it trusts emSign roots whose intermediate
 # keys were compromised (GHSA-6q48-6c7w-9gw2); pinned so no build falls back.
 certifi==2026.10.19

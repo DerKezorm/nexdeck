@@ -2,7 +2,7 @@
  * Maintenance from the card: an administrator sees the button, a card in
  * maintenance says until when, and the dialog sends what was chosen.
  */
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -44,6 +44,13 @@ const QUEUE: WidgetView = {
 
 function card(view: WidgetView) {
   return render(<MemoryRouter><WidgetCard widget={view} data={{ status: 'ok', items: [] }} /></MemoryRouter>)
+}
+
+/** The button stays disabled until the plans are in; a click before that does nothing. */
+async function openTheWeeklyForm() {
+  const add = await screen.findByRole<HTMLButtonElement>('button', { name: 'Plan weekly maintenance' })
+  await waitFor(() => expect(add.disabled).toBe(false))
+  fireEvent.click(add)
 }
 
 describe('maintenance', () => {
@@ -125,7 +132,7 @@ describe('maintenance', () => {
   it('plans maintenance on the chosen days, from a time, for so long, on the clock of the browser', async () => {
     card(QUEUE)
     fireEvent.click(screen.getByRole('button', { name: 'Maintenance' }))
-    fireEvent.click(await screen.findByRole('button', { name: 'Plan weekly maintenance' }))
+    await openTheWeeklyForm()
     const form = screen.getByTestId('maintenance-weekly-new')
     fireEvent.click(screen.getByRole('button', { name: 'Wed' }))
     fireEvent.change(form.querySelector('input[type="time"]') as HTMLInputElement, { target: { value: '04:30' } })
@@ -140,7 +147,7 @@ describe('maintenance', () => {
   it('keeps the add button from a day-less plan', async () => {
     card(QUEUE)
     fireEvent.click(screen.getByRole('button', { name: 'Maintenance' }))
-    fireEvent.click(await screen.findByRole('button', { name: 'Plan weekly maintenance' }))
+    await openTheWeeklyForm()
     fireEvent.click(screen.getByRole('button', { name: 'Sun' }))
     expect((screen.getByRole('button', { name: 'Add to the plan' }) as HTMLButtonElement).disabled).toBe(true)
   })

@@ -1969,6 +1969,46 @@
       "small": [
         "Ein gestoppter Server auf den Server-Karten von Pterodactyl und Calagopus hat einen roten Punkt und steht am Ende der Liste. Die Karte selbst behält ihre Farbe."
       ]
+    },
+    "1.4.0": {
+      "lead": "Die eigenen Speedtests von UniFi auf dem Board, und JSON-API-Karten, die langen Text umbrechen.",
+      "sections": [
+        {
+          "title": "Speedtests aus UniFi",
+          "body": "Zwei neue UniFi-Karten lesen die Speedtests, die dein Gateway selbst macht, nach Zeitplan oder von Hand. Ein zweiter Container ist dafür nicht mehr nötig. „Speed test“ zeigt Download, Upload, Ping und wie lange es her ist; „Speed test history“ zeichnet sie über einen Tag, eine Woche, einen oder drei Monate, als Linie oder als Balken. Hat das Gateway mehr als eine Internetleitung, bekommt jede ihre eigene Linie, und eine Karte kann sich auf eine beschränken."
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Beide JSON-API-Karten haben den Schalter „Langen Text umbrechen“: Ein langer Wert und Titel, Untertitel und Werte einer Liste gehen in weiteren Zeilen weiter, statt mit „…“ zu enden."
+      ]
+    },
+    "1.5.0": {
+      "lead": "nextasks auf dem Board: was heute fällig ist, was überfällig ist, was dir gehört, und eine Liste.",
+      "sections": [
+        {
+          "title": "nextasks, als Beta",
+          "body": "Vier neue Karten für die Aufgaben einer Familie oder kleinen Gruppe. „Today in nextasks“ zählt, was überfällig, heute fällig und in den nächsten 7 Tagen fällig ist, rot bei Überfälligem und gelb, wenn heute viel ansteht. „Due tasks“ listet sie auf, Überfälliges zuerst, jede öffnet sich in nextasks. „Assigned to me“ zählt deine offenen Aufgaben und zeigt die ersten, und „Task list“ zeigt die offenen Aufgaben einer Liste, etwa der Einkaufsliste. Ein Lese-Token aus Mein Konto > Verbindungen reicht."
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Die Karten zählen Tage in der Zeitzone deines nextasks-Kontos, lassen dort ausgeblendete Bereiche weg und zeigen nie Notizen, Anhänge oder Schlagworte."
+      ]
+    },
+    "1.5.1": {
+      "lead": "Eine Diagrammkarte mit mehreren Linien nennt beim Zeigen alle.",
+      "sections": [
+        {
+          "title": "Alle Linien im Popup des Diagramms",
+          "body": "In den Bereichen 7 T, 30 T und 1 J nannte das Popup einer Diagrammkarte nur ihre erste Linie. Jetzt nennt es jede Linie zum Zeitpunkt unter dem Zeiger, mit Farbe, Name und Wert, und jede Linie bekommt ihren eigenen Punkt im Diagramm.",
+          "path": "Eine Diagrammkarte, Bereich 7 T, 30 T oder 1 J"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Eine Linie ohne Wert zu diesem Zeitpunkt, weil sie später beginnt oder eine Lücke hat, bleibt aus dem Popup heraus, statt den Wert eines anderen Tages zu zeigen."
+      ]
     }
   }
 }

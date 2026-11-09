@@ -44,9 +44,11 @@ ANSWERS: dict[str, Any] = {
 
 def made(text: str = GLANCE, answers: Any = None, **keywords: Any) -> WidgetData:
     definition = load.load_definition(text).definition
-    # ⚠️ Not the 50 ms of a real card: late in the whole run a garbage collection on its big heap fell into them (the
-    # list of fifty rows, twice on CI). Those 50 ms are tested in test_cards_pipeline.py with a clock that moves.
-    return present(definition, pipeline.run(definition, {"sys": ANSWERS if answers is None else answers}, budget_ms=1000), **keywords)
+    # ⚠️ No time limit at all here. These tests are about what a card shows, and the real clock is not theirs to
+    # judge: late in the whole run a garbage collection on its big heap fell into the 50 ms of a real card (the list
+    # of fifty rows, twice on CI), and on 06.11.2026 the runner stood still for more than a whole second. The limit
+    # itself is tested in test_cards_pipeline.py with a clock that moves.
+    return present(definition, pipeline.run(definition, {"sys": ANSWERS if answers is None else answers}, budget_ms=float("inf")), **keywords)
 
 
 def tree(text: str = GLANCE, answers: Any = None, **keywords: Any) -> list[dict[str, Any]]:
@@ -202,6 +204,14 @@ def test_karten7_ac4_a_list_shows_fifty_rows_at_most_and_ten_when_the_card_says_
     many = {**ANSWERS, "containers": [{"id": f"i{number}", "name": f"n{number:03}", "state": "up"} for number in range(120)]}
     assert len(rows_of(tree(changed(GLANCE, rows={"select": "containers", "limit": 50}), many))) == 50
     assert len(rows_of(tree(changed(GLANCE, rows={"select": "containers"}), many))) == 10
+
+
+def test_karten7_a_machine_that_stands_still_does_not_fail_what_a_card_shows(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Every look at the clock five seconds later, as on a runner that stalls: the rows are still counted right."""
+    ticks = iter(range(10_000))
+    monkeypatch.setattr(pipeline, "clock", lambda: next(ticks) * 5.0)
+    many = {**ANSWERS, "containers": [{"id": f"i{number}", "name": f"n{number:03}", "state": "up"} for number in range(120)]}
+    assert len(rows_of(tree(changed(GLANCE, rows={"select": "containers", "limit": 50}), many))) == 50
     with pytest.raises(load.CardInvalid):
         load.load_definition(changed(GLANCE, rows={"select": "containers", "limit": 51}))
 
