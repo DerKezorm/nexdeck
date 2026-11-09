@@ -92,6 +92,40 @@ async def test_recently_added_asks_the_shelf_for_no_more_than_fifty(ctx: Context
     assert [row["title"] for row in data.items] == ["Winter at the Lighthouse", "The Last Timetable"]
 
 
+def _shelf_v3(name: str, books: list[dict[str, Any]], total: int | None) -> respx.Route:
+    """A shelf as BookOrbit 3.0 and later hands it out: the books in an object, with the size of the whole shelf (#68)."""
+    return respx.get(f"{BO}/api/v1/dashboard/scrollers/{name}").mock(
+        side_effect=lambda request: httpx.Response(200, json={"books": books[: int(request.url.params["limit"])], "total": total}))
+
+
+@respx.mock
+@pytest.mark.parametrize("kind, name, books", [("reading", "continue-reading", READING), ("recent", "recently-added", RECENT)])
+async def test_the_shelves_of_bookorbit_3_read_like_those_of_2(ctx: Context, kind: str, name: str, books: list[dict[str, Any]]) -> None:
+    _login()
+    _shelf_v3(name, books, total=None)
+    data = await get_adapter("bookorbit").fetch(kind, CONFIG, {"limit": 5}, ctx)
+    assert [row["title"] for row in data.items] == [book["title"] for book in books]
+
+
+@respx.mock
+async def test_on_bookorbit_3_the_library_counts_the_whole_shelf_being_read(ctx: Context) -> None:
+    _login()
+    respx.get(f"{BO}/api/v1/dashboard/widgets/library-overview").mock(return_value=httpx.Response(200, json=OVERVIEW))
+    _shelf_v3("continue-reading", READING, total=73)
+    data = await get_adapter("bookorbit").fetch("summary", CONFIG, {}, ctx)
+    assert data.secondary[0] == {"label": "Being read", "value": 73}, "the shelf hands out fifty at most; its total is the count"
+
+
+@respx.mock
+@pytest.mark.parametrize("answer", [{"items": READING}, {"books": "none"}, "a page", 3])
+async def test_a_shelf_that_is_neither_shape_is_still_not_bookorbit(ctx: Context, answer: Any) -> None:
+    _login()
+    respx.get(f"{BO}/api/v1/dashboard/scrollers/continue-reading").mock(return_value=httpx.Response(200, json=answer))
+    with pytest.raises(AdapterError) as refused:
+        await get_adapter("bookorbit").fetch("reading", CONFIG, {}, ctx)
+    assert refused.value.code == "not_bookorbit"
+
+
 @respx.mock
 async def test_the_library_in_numbers(ctx: Context) -> None:
     _login()

@@ -2,7 +2,8 @@
 
 Measured against BookOrbit v2.9.0 (ghcr.io/bookorbit/bookorbit) on 11.09.2026,
 with five EPUB files in one library, two of them read part of the way through
-and one marked as read.
+and one marked as read. The shelves of 3.0 and later read from the source at
+v3.7.0 (09.11.2026, #68), not measured against a running one.
 
 ⚠️ There is no API key. The API signs in with a user name and a password at
 ``/api/v1/auth/login`` and hands back a JWT that lasts fifteen minutes, plus a
@@ -133,11 +134,24 @@ class BookOrbitAdapter(Adapter):
             raise AdapterError("BookOrbit did not answer with JSON.", code="not_json",
                                hint="The URL probably points at something else than BookOrbit.") from error
 
-    async def _shelf(self, config: dict[str, Any], ctx: Context, shelf: str, limit: int) -> list[dict[str, Any]]:
-        books = await self._json(config, ctx, f"/dashboard/scrollers/{shelf}", {"limit": max(1, min(SHELF_MAX, limit))})
-        if not isinstance(books, list):
+    async def _shelf(self, config: dict[str, Any], ctx: Context, shelf: str, limit: int) -> tuple[list[dict[str, Any]], int | None]:
+        """The books on a shelf, and how many the whole shelf holds when BookOrbit says so.
+
+        ⚠️ Up to 2.10 a shelf is a bare list. From 3.0.0 (commit e0d3d42, read
+        aloud) it is ``{"books": [...], "total": n}``, unannounced in the release
+        notes; the connection test never asks a shelf, so it stayed green while
+        every shelf card went red (#68). ``total`` is the whole shelf, and null
+        for shelves that cannot count (random, up next in series).
+        """
+        answer = await self._json(config, ctx, f"/dashboard/scrollers/{shelf}", {"limit": max(1, min(SHELF_MAX, limit))})
+        total = None
+        if isinstance(answer, dict) and isinstance(answer.get("books"), list):
+            given = answer.get("total")
+            total = given if type(given) is int and given >= 0 else None
+            answer = answer["books"]
+        if not isinstance(answer, list):
             raise AdapterError("This address answers, but not the way BookOrbit does.", code="not_bookorbit")
-        return [one for one in books if isinstance(one, dict)]
+        return [one for one in answer if isinstance(one, dict)], total
 
     async def test(self, config: dict[str, Any], ctx: Context) -> str:
         info = await self._json(config, ctx, "/app-info", cache=0)
@@ -151,12 +165,13 @@ class BookOrbitAdapter(Adapter):
             overview = await self._json(config, ctx, "/dashboard/widgets/library-overview")
             if not isinstance(overview, dict) or "totalBooks" not in overview:
                 raise AdapterError("This address answers, but not the way BookOrbit does.", code="not_bookorbit")
-            reading = await self._shelf(config, ctx, "continue-reading", SHELF_MAX)
-            return self._summary(overview, len(reading))
+            reading, total = await self._shelf(config, ctx, "continue-reading", SHELF_MAX)
+            # From 3.0 the shelf counts itself, past the fifty it hands out.
+            return self._summary(overview, total if total is not None else len(reading))
         limit = max(1, int(options.get("limit") or (6 if widget_kind == "reading" else 8)))
         if widget_kind == "recent":
-            return self._recent(await self._shelf(config, ctx, "recently-added", limit), time.time())
-        return self._reading(await self._shelf(config, ctx, "continue-reading", limit))
+            return self._recent((await self._shelf(config, ctx, "recently-added", limit))[0], time.time())
+        return self._reading((await self._shelf(config, ctx, "continue-reading", limit))[0])
 
     # -- the cards -----------------------------------------------------------
 
