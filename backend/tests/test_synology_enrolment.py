@@ -4,8 +4,8 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from app.adapters.synology import SynologyAdapter
 from app.adapters.base import AdapterError, AuthFailed
+from app.adapters.synology import SynologyAdapter
 
 
 class Response:

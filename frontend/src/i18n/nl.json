@@ -493,6 +493,24 @@
         "sign_in_no_ticket": "Controleer waar de beschrijving van de integratie naar het ticket zoekt.",
         "sign_in_failed": "Controleer de gebruiker en het wachtwoord.",
         "sign_in_web_page": "Iets voor de service, bijvoorbeeld een proxy met een login, vraagt eerst om in te loggen. Gebruik een sleutel, of een adres dat er omheen gaat."
+      },
+      "mfa": {
+        "title": "Vertrouwd apparaat bij Synology",
+        "saveFirst": "Sla eerst de wijzigingen op",
+        "enrolled": "Geregistreerd",
+        "notEnrolled": "Niet geregistreerd",
+        "help": "Voor een account met tweestapsverificatie: voer één keer de zescijferige code uit je authenticator-app of Synology Secure SignIn in, en DSM houdt nexdeck als vertrouwd apparaat.",
+        "code": "Verificatiecode",
+        "codePlaceholder": "Zescijferige code",
+        "enrolling": "Bezig met registreren…",
+        "enrol": "Registreren als vertrouwd apparaat",
+        "reenrol": "Opnieuw registreren",
+        "unenrol": "Registratie verwijderen",
+        "enrolledDone": "nexdeck is bij Synology geregistreerd als vertrouwd apparaat.",
+        "removedDone": "Registratie verwijderd. Opnieuw registreren vraagt een nieuwe zescijferige code.",
+        "confirmTitle": "Vertrouwd apparaat bij Synology verwijderen?",
+        "confirmBody": "nexdeck vergeet zijn apparaatgegevens en meldt zich opnieuw aan. Adres, gebruikersnaam en wachtwoord blijven. Opnieuw registreren vraagt een nieuwe zescijferige code.",
+        "confirm": "Verwijderen"
       }
     },
     "users": {

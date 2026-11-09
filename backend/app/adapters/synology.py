@@ -80,10 +80,10 @@ class SynologyAdapter(Adapter):
     })
     fields = (
         Field("url", "URL", type="url", required=True, placeholder="https://nas.local:5001"),
-        Field("username", "User name", required=True, help="A dedicated user without two-factor authentication works best."),
+        Field("username", "User name", required=True, help="With two-factor sign-in, save the connection, then enrol nexdeck as a trusted device below."),
         Field("password", "Password", type="password", secret=True, required=True),
-        Field("device_id", "Trusted device credential", type="password", secret=True,
-              help="Issued by Synology after MFA enrolment. Keep this credential private."),
+        Field("device_id", "Trusted device", type="password", secret=True,
+              help="Set by enrolling nexdeck as a trusted device, never typed in."),
         Field("insecure", "Ignore TLS errors", type="bool", default=True),
     )
     widgets = (

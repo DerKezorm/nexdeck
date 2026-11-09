@@ -6,6 +6,7 @@ import ipaddress
 import logging
 from typing import Any
 
+import httpx
 from fastapi import APIRouter, Request, Response, status
 from pydantic import BaseModel, Field
 from sqlalchemy import func, select
@@ -21,7 +22,6 @@ from ..schemas import IntegrationCreate, IntegrationPatch, IntegrationTest
 from ..services import chronicle, favicons, found, versions
 from ..services.collector import collector, demo_flag
 from ..services.hass_ws import hass_listener
-from ..services.synology_mfa_state import advance, replace_if_unchanged
 from ..services.integrations import (
     broken_lines,
     public_config,
@@ -30,6 +30,8 @@ from ..services.integrations import (
     synology_identity_changed,
     validate_required,
 )
+from ..services.synology_mfa_state import advance, replace_if_unchanged
+
 
 class SynologyMfaEnrol(BaseModel):
     """One-time code supplied by an administrator; never persisted."""
@@ -513,11 +515,19 @@ async def enrol_synology_mfa(
 
     try:
         device_id = await adapter.enrol_mfa(config, ctx, body.otp)
-    except AdapterError:
+    except AdapterError as failure:
+        # DSM's own reason (a wrong code, a wrong password) says more than a general refusal.
         raise error(
             "synology_mfa_failed",
-            "Synology rejected MFA enrolment. Check the authentication code and try again.",
+            failure.message or "Synology rejected MFA enrolment. Check the authentication code and try again.",
             status.HTTP_400_BAD_REQUEST,
+        ) from None
+    except httpx.HTTPError as failure:
+        # ⚠️ Not a 500: an address that does not answer is the most likely failure here.
+        raise error(
+            "synology_unreachable",
+            f"The NAS did not answer ({failure.__class__.__name__}). Check the address and try again.",
+            status.HTTP_502_BAD_GATEWAY,
         ) from None
 
     updated_config = advance(

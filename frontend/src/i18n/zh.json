@@ -493,6 +493,24 @@
         "sign_in_no_ticket": "请检查集成说明中查找票据的位置。",
         "sign_in_failed": "请检查用户名和密码。",
         "sign_in_web_page": "服务前面有东西，例如带登录的代理，要求先登录。请使用密钥，或使用绕开它的地址。"
+      },
+      "mfa": {
+        "title": "Synology 受信任设备",
+        "saveFirst": "请先保存更改",
+        "enrolled": "已登记",
+        "notEnrolled": "未登记",
+        "help": "适用于开启了两步验证的账户：输入一次身份验证器应用或 Synology Secure SignIn 中的六位数代码，DSM 就会把 nexdeck 记为受信任设备。",
+        "code": "验证码",
+        "codePlaceholder": "六位数代码",
+        "enrolling": "正在登记…",
+        "enrol": "登记为受信任设备",
+        "reenrol": "重新登记",
+        "unenrol": "移除登记",
+        "enrolledDone": "nexdeck 已在 Synology 登记为受信任设备。",
+        "removedDone": "已移除登记。重新登记需要新的六位数代码。",
+        "confirmTitle": "移除 Synology 受信任设备？",
+        "confirmBody": "nexdeck 会忘记它的设备凭据并重新登录。地址、用户名和密码保持不变。重新登记需要新的六位数代码。",
+        "confirm": "移除"
       }
     },
     "users": {

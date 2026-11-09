@@ -493,6 +493,24 @@
         "sign_in_no_ticket": "連携の記述で、チケットを探す場所を確認してください。",
         "sign_in_failed": "ユーザー名とパスワードを確認してください。",
         "sign_in_web_page": "ログインを求めるプロキシなど、サービスの手前にあるものが先にログインを要求しています。キーを使うか、それを経由しないアドレスを使用してください。"
+      },
+      "mfa": {
+        "title": "Synology の信頼済みデバイス",
+        "saveFirst": "先に変更を保存してください",
+        "enrolled": "登録済み",
+        "notEnrolled": "未登録",
+        "help": "2 段階認証のアカウントでは、認証アプリまたは Synology Secure SignIn の 6 桁のコードを一度入力すると、DSM が nexdeck を信頼済みデバイスとして記憶します。",
+        "code": "認証コード",
+        "codePlaceholder": "6 桁のコード",
+        "enrolling": "登録中…",
+        "enrol": "信頼済みデバイスとして登録",
+        "reenrol": "登録し直す",
+        "unenrol": "登録を解除",
+        "enrolledDone": "nexdeck は Synology に信頼済みデバイスとして登録されました。",
+        "removedDone": "登録を解除しました。再登録には新しい 6 桁のコードが必要です。",
+        "confirmTitle": "Synology の信頼済みデバイスを解除しますか？",
+        "confirmBody": "nexdeck はデバイスの認証情報を消去し、改めてサインインします。アドレス、ユーザー名、パスワードはそのままです。再登録には新しい 6 桁のコードが必要です。",
+        "confirm": "解除"
       }
     },
     "users": {

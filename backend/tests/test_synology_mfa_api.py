@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock, patch
 
+import pytest
+
 from app.adapters.base import AuthFailed
 from app.services.integrations import resolve_config
 from tests.conftest import CSRF, setup_admin
@@ -223,8 +225,6 @@ def test_unrelated_change_preserves_device(client):
         integration = db.get(Integration, integration_id)
         assert resolve_config(integration)["device_id"] == "original-device"
 
-
-import pytest
 
 
 @pytest.mark.parametrize(

@@ -509,6 +509,24 @@
         "sign_in_no_ticket": "Sprawdź, gdzie opis integracji szuka biletu.",
         "sign_in_failed": "Sprawdź użytkownika i hasło.",
         "sign_in_web_page": "Coś przed usługą, na przykład proxy z logowaniem, żąda najpierw zalogowania. Użyj klucza lub adresu, który to omija."
+      },
+      "mfa": {
+        "title": "Zaufane urządzenie Synology",
+        "saveFirst": "Najpierw zapisz zmiany",
+        "enrolled": "Zarejestrowane",
+        "notEnrolled": "Niezarejestrowane",
+        "help": "Dla konta z logowaniem dwuskładnikowym: wpisz raz sześciocyfrowy kod z aplikacji uwierzytelniającej lub Synology Secure SignIn, a DSM zachowa nexdeck jako zaufane urządzenie.",
+        "code": "Kod weryfikacyjny",
+        "codePlaceholder": "Kod sześciocyfrowy",
+        "enrolling": "Rejestrowanie…",
+        "enrol": "Zarejestruj jako zaufane urządzenie",
+        "reenrol": "Zarejestruj ponownie",
+        "unenrol": "Usuń rejestrację",
+        "enrolledDone": "nexdeck jest zarejestrowany w Synology jako zaufane urządzenie.",
+        "removedDone": "Rejestracja usunięta. Ponowna rejestracja wymaga nowego sześciocyfrowego kodu.",
+        "confirmTitle": "Usunąć zaufane urządzenie Synology?",
+        "confirmBody": "nexdeck zapomina swoje dane urządzenia i loguje się od nowa. Adres, nazwa użytkownika i hasło zostają. Ponowna rejestracja wymaga nowego sześciocyfrowego kodu.",
+        "confirm": "Usuń"
       }
     },
     "users": {

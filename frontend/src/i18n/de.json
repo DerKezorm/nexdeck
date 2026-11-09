@@ -493,6 +493,24 @@
         "sign_in_no_ticket": "Prüfe, wo die Beschreibung der Anbindung das Ticket sucht.",
         "sign_in_failed": "Prüfe Benutzer und Passwort.",
         "sign_in_web_page": "Davor sitzt etwas, etwa ein Proxy mit Anmeldung, das zuerst fragt. Nimm einen Schlüssel oder eine Adresse, die daran vorbeiführt."
+      },
+      "mfa": {
+        "title": "Vertrauenswürdiges Gerät bei Synology",
+        "saveFirst": "Erst Änderungen speichern",
+        "enrolled": "Eingetragen",
+        "notEnrolled": "Nicht eingetragen",
+        "help": "Für ein Konto mit Zwei-Faktor-Anmeldung: einmal den sechsstelligen Code aus deiner Authenticator-App oder Synology Secure SignIn eingeben, dann führt DSM nexdeck als vertrauenswürdiges Gerät.",
+        "code": "Bestätigungscode",
+        "codePlaceholder": "Sechsstelliger Code",
+        "enrolling": "Wird eingetragen…",
+        "enrol": "Als vertrauenswürdiges Gerät eintragen",
+        "reenrol": "Neu eintragen",
+        "unenrol": "Eintrag entfernen",
+        "enrolledDone": "nexdeck ist bei Synology als vertrauenswürdiges Gerät eingetragen.",
+        "removedDone": "Eintrag entfernt. Für einen neuen Eintrag braucht es einen neuen sechsstelligen Code.",
+        "confirmTitle": "Vertrauenswürdiges Gerät bei Synology entfernen?",
+        "confirmBody": "nexdeck vergisst seinen Geräteschlüssel und meldet sich neu an. Adresse, Benutzername und Passwort bleiben. Ein neuer Eintrag braucht einen neuen sechsstelligen Code.",
+        "confirm": "Entfernen"
       }
     },
     "users": {

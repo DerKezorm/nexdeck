@@ -493,6 +493,24 @@
         "sign_in_no_ticket": "Confira onde a descrição da integração procura o ticket.",
         "sign_in_failed": "Confira o usuário e a senha.",
         "sign_in_web_page": "Algo na frente do serviço, como um proxy com login, pede o login primeiro. Use uma chave ou um endereço que o contorne."
+      },
+      "mfa": {
+        "title": "Dispositivo confiável do Synology",
+        "saveFirst": "Salve as alterações primeiro",
+        "enrolled": "Registrado",
+        "notEnrolled": "Não registrado",
+        "help": "Para uma conta com verificação em duas etapas: digite uma vez o código de seis dígitos do seu app autenticador ou do Synology Secure SignIn, e o DSM mantém o nexdeck como dispositivo confiável.",
+        "code": "Código de verificação",
+        "codePlaceholder": "Código de seis dígitos",
+        "enrolling": "Registrando…",
+        "enrol": "Registrar como dispositivo confiável",
+        "reenrol": "Registrar de novo",
+        "unenrol": "Remover registro",
+        "enrolledDone": "O nexdeck está registrado no Synology como dispositivo confiável.",
+        "removedDone": "Registro removido. Registrar de novo exige um novo código de seis dígitos.",
+        "confirmTitle": "Remover o dispositivo confiável do Synology?",
+        "confirmBody": "O nexdeck esquece sua credencial de dispositivo e entra de novo. Endereço, usuário e senha continuam. Registrar de novo exige um novo código de seis dígitos.",
+        "confirm": "Remover"
       }
     },
     "users": {

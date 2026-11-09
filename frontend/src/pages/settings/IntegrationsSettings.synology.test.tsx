@@ -28,7 +28,7 @@ const adapter = {
     { name: 'url', label: 'URL', type: 'url', required: true },
     { name: 'username', label: 'User name', type: 'text', required: true },
     { name: 'password', label: 'Password', type: 'password', required: true, secret: true },
-    { name: 'device_id', label: 'Trusted device credential', type: 'password', secret: true },
+    { name: 'device_id', label: 'Trusted device', type: 'password', secret: true },
   ],
 }
 
@@ -171,7 +171,7 @@ describe('Synology trusted-device enrolment', () => {
     expect(within(dialog).getByLabelText('Authentication code')).toBeInTheDocument()
     expect(within(dialog).getByRole('button', { name: 'Enrol trusted device' })).toBeDisabled()
 
-    expect(within(dialog).queryByText('Trusted device credential')).toBeNull()
+    expect(within(dialog).queryByText('Trusted device')).toBeNull()
   })
 
   it('only enables enrolment for a six-digit code', async () => {

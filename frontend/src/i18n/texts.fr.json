@@ -55,7 +55,6 @@
     "A card stopped working": "Une carte a cessé de fonctionner",
     "A certificate is running out": "Un certificat arrive à expiration",
     "A chart": "Un graphique",
-    "A dedicated user without two-factor authentication works best.": "Un utilisateur dédié sans authentification à deux facteurs fonctionne le mieux.",
     "A dial": "Une jauge",
     "A dial needs to know what counts as full.": "Une jauge doit savoir ce qui compte comme plein.",
     "A disk is filling up": "Un disque se remplit",
@@ -2695,7 +2694,10 @@
     "WAN": "WAN",
     "WAN 1": "WAN 1",
     "WAN 2": "WAN 2",
-    "WAN 3": "WAN 3"
+    "WAN 3": "WAN 3",
+    "Trusted device": "Appareil de confiance",
+    "Set by enrolling nexdeck as a trusted device, never typed in.": "Vient de l’enregistrement comme appareil de confiance, jamais saisi à la main.",
+    "With two-factor sign-in, save the connection, then enrol nexdeck as a trusted device below.": "Avec la validation en deux étapes, enregistre la connexion puis inscris nexdeck plus bas comme appareil de confiance."
   },
   "labels": {
     "Private resources": "Ressources privées",

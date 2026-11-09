@@ -257,7 +257,7 @@ function IntegrationSheet({ adapters, integration, kind, prefill, onClose, onSav
     try {
       await post(`/integrations/${integration.id}/mfa/enrol`, { otp: mfaCode })
       setMfaEnrolled(true)
-      setMfaMessage('Synology trusted device enrolled successfully.')
+      setMfaMessage(t('settings.integrations.mfa.enrolledDone'))
       await queryClient.invalidateQueries({ queryKey: ['integrations'] })
     } catch (failure) {
       setMfaError(failure instanceof ApiError ? failure.message : t('errors.network'))
@@ -282,7 +282,7 @@ function IntegrationSheet({ adapters, integration, kind, prefill, onClose, onSav
         delete updated.device_id
         return updated
       })
-      setMfaMessage('Synology trusted device removed. A new MFA code is required to re-enrol.')
+      setMfaMessage(t('settings.integrations.mfa.removedDone'))
       await queryClient.invalidateQueries({ queryKey: ['integrations'] })
     } catch (failure) {
       setMfaError(failure instanceof ApiError ? failure.message : t('errors.network'))
@@ -361,17 +361,14 @@ function IntegrationSheet({ adapters, integration, kind, prefill, onClose, onSav
       {integration && adapter.kind === 'synology' && admin && !demo && (
         <section className="rounded-xl border border-line p-4 mt-4 mb-4">
           <div className="flex items-center justify-between gap-3 mb-2">
-            <h3 className="font-semibold text-sm">Synology trusted device</h3>
+            <h3 className="font-semibold text-sm">{t('settings.integrations.mfa.title')}</h3>
             <span className="chip text-xs">
-              {synologyIdentityChanged ? 'Save changes first' : mfaEnrolled ? 'Enrolled' : 'Not enrolled'}
+              {synologyIdentityChanged ? t('settings.integrations.mfa.saveFirst') : mfaEnrolled ? t('settings.integrations.mfa.enrolled') : t('settings.integrations.mfa.notEnrolled')}
             </span>
           </div>
-          <p className="text-sm text-muted mb-3">
-            Enter a six-digit code from Synology Secure SignIn to register
-            this NexDeck connection as a trusted device.
-          </p>
+          <p className="text-sm text-muted mb-3">{t('settings.integrations.mfa.help')}</p>
           <label htmlFor="synology-mfa-code" className="text-sm font-medium block mb-1">
-            Authentication code
+            {t('settings.integrations.mfa.code')}
           </label>
           <input
             id="synology-mfa-code"
@@ -384,7 +381,7 @@ function IntegrationSheet({ adapters, integration, kind, prefill, onClose, onSav
             value={mfaCode}
             onChange={(event) => setMfaCode(event.target.value.replace(/[^0-9]/g, '').slice(0, 6))}
             disabled={mfaBusy || busy}
-            placeholder="Six-digit code"
+            placeholder={t('settings.integrations.mfa.codePlaceholder')}
           />
           <button
             type="button"
@@ -392,7 +389,7 @@ function IntegrationSheet({ adapters, integration, kind, prefill, onClose, onSav
             disabled={mfaBusy || busy || synologyIdentityChanged || !/^[0-9]{6}$/.test(mfaCode)}
             onClick={() => void enrolMfa()}
           >
-            {mfaBusy ? 'Enrolling…' : mfaEnrolled ? 'Re-enrol trusted device' : 'Enrol trusted device'}
+            {mfaBusy ? t('settings.integrations.mfa.enrolling') : mfaEnrolled ? t('settings.integrations.mfa.reenrol') : t('settings.integrations.mfa.enrol')}
           </button>
           {mfaEnrolled && (
             <button
@@ -401,7 +398,7 @@ function IntegrationSheet({ adapters, integration, kind, prefill, onClose, onSav
               disabled={mfaBusy || busy}
               onClick={() => setMfaConfirmOpen(true)}
             >
-              Un-enrol trusted device
+              {t('settings.integrations.mfa.unenrol')}
             </button>
           )}
           {mfaMessage && <p role="status" className="text-sm text-ok mt-2">{mfaMessage}</p>}
@@ -410,10 +407,10 @@ function IntegrationSheet({ adapters, integration, kind, prefill, onClose, onSav
       )}
       <Confirm
         open={mfaConfirmOpen}
-        title="Un-enrol Synology trusted device?"
-        body="This removes NexDeck's stored trusted-device credential and clears its connection cache. Your NAS address, username and password will be preserved. You will need a new six-digit MFA code to enrol again."
+        title={t('settings.integrations.mfa.confirmTitle')}
+        body={t('settings.integrations.mfa.confirmBody')}
         danger
-        confirmLabel="Un-enrol"
+        confirmLabel={t('settings.integrations.mfa.confirm')}
         confirmDisabled={mfaBusy || busy}
         onCancel={() => setMfaConfirmOpen(false)}
         onConfirm={() => void unenrolMfa()}

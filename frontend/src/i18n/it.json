@@ -493,6 +493,24 @@
         "sign_in_no_ticket": "Controlla dove la descrizione dell'integrazione cerca il ticket.",
         "sign_in_failed": "Controlla utente e password.",
         "sign_in_web_page": "Davanti al servizio c'è qualcosa, per esempio un proxy con accesso, che chiede prima. Usa una chiave o un indirizzo che lo eviti."
+      },
+      "mfa": {
+        "title": "Dispositivo attendibile Synology",
+        "saveFirst": "Salva prima le modifiche",
+        "enrolled": "Registrato",
+        "notEnrolled": "Non registrato",
+        "help": "Per un account con verifica in due passaggi: inserisci una volta il codice a sei cifre della tua app di autenticazione o di Synology Secure SignIn, e DSM tiene nexdeck come dispositivo attendibile.",
+        "code": "Codice di verifica",
+        "codePlaceholder": "Codice a sei cifre",
+        "enrolling": "Registrazione…",
+        "enrol": "Registra come dispositivo attendibile",
+        "reenrol": "Registra di nuovo",
+        "unenrol": "Rimuovi registrazione",
+        "enrolledDone": "nexdeck è registrato su Synology come dispositivo attendibile.",
+        "removedDone": "Registrazione rimossa. Per registrarlo di nuovo serve un nuovo codice a sei cifre.",
+        "confirmTitle": "Rimuovere il dispositivo attendibile Synology?",
+        "confirmBody": "nexdeck dimentica la sua credenziale del dispositivo e accede di nuovo. Indirizzo, nome utente e password restano. Una nuova registrazione richiede un nuovo codice a sei cifre.",
+        "confirm": "Rimuovi"
       }
     },
     "users": {

@@ -493,6 +493,24 @@
         "sign_in_no_ticket": "Check where the description of the integration looks for the ticket.",
         "sign_in_failed": "Check the user and password.",
         "sign_in_web_page": "Something in front of the service, a proxy with a login say, asks for the sign-in first. Use a key, or an address that goes around it."
+      },
+      "mfa": {
+        "title": "Synology trusted device",
+        "saveFirst": "Save changes first",
+        "enrolled": "Enrolled",
+        "notEnrolled": "Not enrolled",
+        "help": "For an account with two-factor sign-in: enter the six-digit code from your authenticator app or Synology Secure SignIn once, and DSM keeps nexdeck as a trusted device.",
+        "code": "Authentication code",
+        "codePlaceholder": "Six-digit code",
+        "enrolling": "Enrolling…",
+        "enrol": "Enrol trusted device",
+        "reenrol": "Re-enrol trusted device",
+        "unenrol": "Un-enrol trusted device",
+        "enrolledDone": "Synology trusted device enrolled successfully.",
+        "removedDone": "Trusted device removed. Enrolling again needs a new six-digit code.",
+        "confirmTitle": "Un-enrol Synology trusted device?",
+        "confirmBody": "nexdeck forgets its trusted-device credential and signs in anew. Address, user name and password stay. Enrolling again needs a new six-digit code.",
+        "confirm": "Un-enrol"
       }
     },
     "users": {

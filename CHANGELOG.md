@@ -3,6 +3,12 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## Unreleased
+
+### Added
+
+- **Synology with two-factor sign-in.** A Synology connection whose account signs in with a second factor no longer fails: once it is saved, an admin enters the six-digit code from the authenticator app or Synology Secure SignIn, and DSM keeps nexdeck as a trusted device, so no code is asked again. The code is never stored, the device credential is kept encrypted, never shown and never exported, and it is dropped when the address, the user or the password change; the device can be removed again from the same place. Checked on DSM 6.2, not yet on DSM 7 (#66, contributed by iamevl).
+
 ## 1.5.1 (2026-11-09)
 
 ### Fixed

@@ -55,7 +55,6 @@
     "A card stopped working": "カードが動作しなくなったとき",
     "A certificate is running out": "証明書の期限が近づいているとき",
     "A chart": "グラフ",
-    "A dedicated user without two-factor authentication works best.": "2要素認証のない専用ユーザーが最適です。",
     "A dial": "ダイヤル",
     "A dial needs to know what counts as full.": "ダイヤルには、何をもって満杯とするかが必要です。",
     "A disk is filling up": "ディスクが満杯に近づいているとき",
@@ -2695,7 +2694,10 @@
     "WAN": "WAN",
     "WAN 1": "WAN 1",
     "WAN 2": "WAN 2",
-    "WAN 3": "WAN 3"
+    "WAN 3": "WAN 3",
+    "Trusted device": "信頼済みデバイス",
+    "Set by enrolling nexdeck as a trusted device, never typed in.": "信頼済みデバイスの登録で設定され、手入力はしません。",
+    "With two-factor sign-in, save the connection, then enrol nexdeck as a trusted device below.": "2 段階認証の場合は接続を保存し、下で nexdeck を信頼済みデバイスとして登録してください。"
   },
   "labels": {
     "Private resources": "プライベートリソース",
