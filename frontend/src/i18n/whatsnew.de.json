@@ -2009,6 +2009,25 @@
       "small": [
         "Eine Linie ohne Wert zu diesem Zeitpunkt, weil sie später beginnt oder eine Lücke hat, bleibt aus dem Popup heraus, statt den Wert eines anderen Tages zu zeigen."
       ]
+    },
+    "1.6.0": {
+      "lead": "Synology-Konten mit Zwei-Faktor-Anmeldung, und ein Popup im Diagramm über einen Tag.",
+      "sections": [
+        {
+          "title": "Synology mit Zwei-Faktor-Anmeldung",
+          "body": "Eine Synology-Anbindung, deren Konto sich mit einem zweiten Faktor anmeldet, scheitert nicht mehr. Anbindung speichern, dann einmal den sechsstelligen Code aus deiner Authenticator-App oder Synology Secure SignIn eingeben, und DSM führt nexdeck als vertrauenswürdiges Gerät. Der Code wird nie gespeichert, und das Gerät fällt weg, sobald Adresse, Benutzer oder Passwort sich ändern. Beigetragen von iamevl; geprüft mit DSM 6.2, mit DSM 7 noch nicht.",
+          "path": "Einstellungen > Anbindungen > eine Synology-Anbindung"
+        },
+        {
+          "title": "Das Diagramm über einen Tag",
+          "body": "Das 24-h-Diagramm einer Diagrammkarte hat jetzt dasselbe Popup wie die längeren Bereiche: die Uhrzeit unter dem Zeiger und jede Linie mit Farbe, Name und Wert. In einer kleinen Karte laufen seine Linien nicht mehr über die Legende darunter.",
+          "path": "Eine Diagrammkarte, Bereich 24 h"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Lehnt DSM den Eintrag als vertrauenswürdiges Gerät ab, steht dort sein eigener Grund, und ein NAS, das nicht antwortet, gibt einen lesbaren Fehler."
+      ]
     }
   }
 }

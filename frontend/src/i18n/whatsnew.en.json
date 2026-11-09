@@ -2009,6 +2009,25 @@
       "small": [
         "A line that has no value at that moment, because it began later or has a gap, stays out of the popup instead of showing another day's value."
       ]
+    },
+    "1.6.0": {
+      "lead": "Synology accounts with two-factor sign-in, and a popup on the chart over a day.",
+      "sections": [
+        {
+          "title": "Synology with two-factor sign-in",
+          "body": "A Synology connection whose account signs in with a second factor no longer fails. Save the connection, then enter the six-digit code from your authenticator app or Synology Secure SignIn once, and DSM keeps nexdeck as a trusted device. The code is never stored, and the device is dropped when the address, the user or the password change. Contributed by iamevl; checked on DSM 6.2, not yet on DSM 7.",
+          "path": "Settings > Integrations > a Synology connection"
+        },
+        {
+          "title": "The chart over a day",
+          "body": "The 24 h chart of a chart card has the same popup as the longer ranges now: the time under the pointer and every line with its colour, name and value. In a small card its lines no longer run over the legend below them.",
+          "path": "A chart card, range 24 h"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "When DSM refuses the trusted-device enrolment, its own reason is shown, and a NAS that does not answer gives a readable error."
+      ]
     }
   }
 }
