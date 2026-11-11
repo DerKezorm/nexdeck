@@ -98,6 +98,7 @@ from .base import (
     WidgetType,
     ago,
     guard_outbound,
+    port_number,
 )
 
 DEFAULT_PORT = {"tls": 993, "starttls": 143, "none": 143}
@@ -655,10 +656,7 @@ def settings(config: dict[str, Any]) -> Settings:
     if not host:
         raise AdapterError("This connection names no server.", code="bad_url",
                            hint="Enter the name or the address of the mail server.")
-    try:
-        port = int(port_text) if port_text else DEFAULT_PORT[security]
-    except ValueError:
-        port = 0
+    port = port_number(port_text) if port_text else DEFAULT_PORT[security]
     if not 0 < port < 65536:
         raise AdapterError("That is not a port number.", code="bad_url", hint=PORT_HINT)
     # ⚠️ Not HTTP, and still the same rule as every other connection:

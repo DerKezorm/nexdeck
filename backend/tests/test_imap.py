@@ -910,6 +910,8 @@ def test_settings_as_people_type_them() -> None:
     assert imap.settings({"host": "mail.example.com", "security": "none"}).port == 143
     assert imap.settings({"host": "imaps://mail.example.com:1993/"}).port == 1993
     assert imap.settings({"host": "mail.example.com:1", "port": 994}).port == 994
+    # A number field is stored as a float (#70 in NUT, the same here).
+    assert imap.settings({"host": "mail.example.com", "port": 994.0}).port == 994
     ipv6 = imap.settings({"host": "[2001:db8::7]:993"})
     assert (ipv6.host, ipv6.port) == ("2001:db8::7", 993)
     assert imap.settings({"host": "mail.example.com", "security": "sometimes"}).security == "tls"

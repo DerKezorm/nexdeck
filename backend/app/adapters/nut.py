@@ -20,7 +20,8 @@ UPS whose driver died while upsd lives on. The server is asked ``VER``;
 watts; many real ones send only ``ups.load`` and ``ups.realpower.nominal``,
 and some neither. Watts are taken from the first and worked out from the
 second and third, and left out when neither is there, never guessed from the
-VA rating. ``battery.charge`` is missing on small models (a charge of 0 would
+VA rating. Some cards send ``ups.realpower`` as 0 because they do not measure
+it (#71); beside a load above 0 that 0 gives way to the calculation. ``battery.charge`` is missing on small models (a charge of 0 would
 read as an empty battery), and ``battery.runtime`` is in seconds.
 
 ⚠️ What is not measured: ``ERR ACCESS-DENIED`` (an address upsd's access rules
@@ -52,6 +53,7 @@ from .base import (
     measured,
     percent_primary,
     percent_text,
+    port_number,
 )
 
 DEFAULT_PORT = 3493
@@ -149,10 +151,7 @@ def _target(config: dict[str, Any]) -> tuple[str, int]:
     host = host.strip("[]").strip()
     if not host:
         raise AdapterError("This connection names no server.", code="bad_url", hint="Enter the address of the machine upsd runs on.")
-    try:
-        port = int(port_text) if port_text else DEFAULT_PORT
-    except ValueError:
-        port = 0
+    port = port_number(port_text) if port_text else DEFAULT_PORT
     if not 0 < port < 65536:
         raise AdapterError("That is not a port number.", code="bad_url", hint="upsd listens on 3493 unless somebody changed it.")
     # ⚠️ Not HTTP, and the same rule as every other connection: link-local and the cloud metadata service are barred.
@@ -218,11 +217,15 @@ def state_of(variables: dict[str, str]) -> tuple[str, str, bool]:
 
 
 def power_of(variables: dict[str, str]) -> float | None:
-    """Watts: what the UPS says, or its rated watts times its load. Nothing else is a number worth showing."""
+    """Watts: what the UPS says, or its rated watts times its load. Nothing else is a number worth showing.
+
+    ⚠️ A card that does not measure power can still send ``ups.realpower`` as 0 (APC AP9630 through
+    snmp-ups, #71). A 0 beside a load above 0 is not a measurement, so the rated watts times the load win.
+    """
     direct = _number(variables, "ups.realpower")
-    if direct is not None:
-        return round(direct, 1)
     nominal, load = _number(variables, "ups.realpower.nominal"), _number(variables, "ups.load")
+    if direct is not None and (direct != 0 or not load or nominal is None):
+        return round(direct, 1)
     return round(nominal * load / 100, 1) if nominal is not None and load is not None else None
 
 

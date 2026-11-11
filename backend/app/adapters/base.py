@@ -1186,6 +1186,19 @@ def _barred_message(what: str) -> AdapterError:
     )
 
 
+def port_number(text: Any) -> int:
+    """A port as typed: ``3493``, or ``3493.0`` as a number field is stored. 0 when it is no whole number.
+
+    ⚠️ ``store_config`` keeps every field of type ``number`` as a float, so ``int(str(...))`` fails on
+    every port that was typed into its own field (#70).
+    """
+    try:
+        value = float(str(text).strip())
+    except ValueError:
+        return 0
+    return int(value) if value.is_integer() else 0
+
+
 def guard_outbound(url: str) -> None:
     """Refuse an address that is never a service of the house.
 

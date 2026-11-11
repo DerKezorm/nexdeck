@@ -69,6 +69,7 @@ from .base import (
     WidgetType,
     guard_outbound,
     measured,
+    port_number,
 )
 
 DEFAULT_PORT = {"java": 25565, "bedrock": 19132}
@@ -194,10 +195,7 @@ def _settings(config: dict[str, Any]) -> tuple[str, str, int]:
     host = host.strip("[]")
     if not host:
         raise AdapterError("This connection names no server.", code="bad_url", hint="Enter the address of the Minecraft server.")
-    try:
-        port = int(port_text) if port_text else DEFAULT_PORT[edition]
-    except ValueError:
-        port = 0
+    port = port_number(port_text) if port_text else DEFAULT_PORT[edition]
     if not 0 < port < 65536:
         raise AdapterError("That is not a port number.", code="bad_url",
                            hint="Java listens on 25565 and Bedrock on 19132 unless somebody changed it.")

@@ -13,6 +13,11 @@ project uses semantic versioning.
 
 - **nextasks is out of beta.** Its maintainer released it after it had run on nextasks.
 
+### Fixed
+
+- **A port typed into its own field is a port again.** NUT, IMAP and Minecraft turned it down with "That is not a port number", because a number field is kept as `3493.0`; only an empty field or a port in the address worked (#70).
+- **NUT shows watts for a UPS that sends a power of 0.** Network cards that do not measure power, such as the APC AP9630, still send `ups.realpower` as 0. When the UPS carries a load, the watts are now worked out from its rated watts and the load, as for a UPS that sends no power at all (#71).
+
 ## 1.7.0 (2026-11-09)
 
 ### Added

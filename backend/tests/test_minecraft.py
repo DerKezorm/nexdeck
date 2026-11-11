@@ -268,6 +268,8 @@ def test_host_and_port_as_people_type_them() -> None:
     assert minecraft._settings({"host": "mc.example.com"}) == ("java", "mc.example.com", 25565)
     assert minecraft._settings({"edition": "bedrock", "host": "mc.example.com"}) == ("bedrock", "mc.example.com", 19132)
     assert minecraft._settings({"host": "mc.example.com:1", "port": 25599}) == ("java", "mc.example.com", 25599)
+    # A number field is stored as a float (#70 in NUT, the same here).
+    assert minecraft._settings({"host": "mc.example.com", "port": 25599.0}) == ("java", "mc.example.com", 25599)
     assert minecraft._settings({"host": "[2001:db8::7]", "port": 25565}) == ("java", "2001:db8::7", 25565)
     for broken in ({"host": ""}, {"host": "mc.example.com", "port": 70000}, {"host": "mc.example.com", "port": "abc"}):
         with pytest.raises(AdapterError):

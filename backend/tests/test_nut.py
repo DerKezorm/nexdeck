@@ -186,6 +186,17 @@ def test_watts_are_what_the_ups_says_or_its_rated_watts_times_the_load() -> None
     assert power_of({}) is None
 
 
+def test_a_realpower_of_zero_beside_a_load_is_worked_out_from_the_rated_watts() -> None:
+    # #71: an APC AP9630 through snmp-ups does not measure power and sends 0 anyway.
+    assert power_of({"ups.realpower": "0", "ups.realpower.nominal": "1000", "ups.load": "26"}) == 260.0
+    # A 0 with nothing to work it out from, or beside no load, is what the UPS says.
+    assert power_of({"ups.realpower": "0", "ups.load": "26"}) == 0.0
+    assert power_of({"ups.realpower": "0", "ups.realpower.nominal": "1000", "ups.load": "0"}) == 0.0
+    assert power_of({"ups.realpower": "0", "ups.realpower.nominal": "1000"}) == 0.0
+    data = NutAdapter._card("power", "apc", {"ups.status": "OL", "ups.realpower": "0", "ups.realpower.nominal": "1000", "ups.load": "26"})
+    assert data.primary["value"] == 260.0 and data.metrics["power"] == 260.0
+
+
 def test_the_status_flags_in_words() -> None:
     assert state_of({"ups.status": "OL CHRG"}) == ("On mains · Charging", "warn", False)
     assert state_of({"ups.status": "OB DISCHRG LB"}) == ("On battery · Discharging · Battery low", "bad", True)
@@ -272,9 +283,22 @@ def test_the_address_may_be_typed_the_way_people_copy_it() -> None:
     assert _target({"host": "nut.example.com"}) == ("nut.example.com", 3493)
     assert _target({"host": "nut://nut.example.com:3500/"}) == ("nut.example.com", 3500)
     assert _target({"host": "nut.example.com", "port": "3600"}) == ("nut.example.com", 3600)
-    for bad in ({"host": ""}, {"host": "nut.example.com", "port": "99999"}, {"host": "169.254.169.254"}):
+    for bad in ({"host": ""}, {"host": "nut.example.com", "port": "99999"}, {"host": "169.254.169.254"},
+                {"host": "nut.example.com", "port": 3493.5}):
         with pytest.raises(AdapterError):
             _target(bad)
+
+
+def test_a_port_typed_into_its_own_field_is_read_as_it_is_stored() -> None:
+    # #70: store_config keeps a number field as a float, and "3493.0" was no port.
+    from app.adapters.nut import _target
+    from app.services.integrations import store_config
+
+    stored = store_config("nut", {"host": "nut.example.com", "port": 3493, "ups": "apc"})
+    assert stored["port"] == 3493.0
+    assert _target(stored) == ("nut.example.com", 3493)
+    assert _target(store_config("nut", {"host": "nut.example.com", "port": "3500"})) == ("nut.example.com", 3500)
+    assert _target(store_config("nut", {"host": "nut.example.com", "port": ""})) == ("nut.example.com", 3493)
 
 
 def test_the_cards_have_demo_data_that_moves() -> None:
