@@ -2047,6 +2047,25 @@
       "small": [
         "A formula that is not one is refused with its reason, and a value it cannot use shows a dash instead of the raw value."
       ]
+    },
+    "1.8.0": {
+      "lead": "Piwigo, and NUT fixes for ports and power.",
+      "sections": [
+        {
+          "title": "Piwigo",
+          "body": "How many photos and albums a gallery holds, the photos of each album, and its users with the day each came last. Users, tags and comments need the API key of an administrator (Piwigo 16.1 or newer). A beta.",
+          "path": "Integrations > Add > Piwigo"
+        },
+        {
+          "title": "NUT: ports and watts",
+          "body": "A port typed into its own field was turned down with \"That is not a port number\"; it works now, for IMAP and Minecraft too. And a UPS whose network card sends a power of 0, such as the APC AP9630, shows its watts worked out from the rated watts and the load.",
+          "path": "A NUT connection"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "nextasks is out of beta."
+      ]
     }
   }
 }

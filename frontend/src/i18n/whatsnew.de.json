@@ -2047,6 +2047,25 @@
       "small": [
         "Eine Formel, die keine ist, wird mit ihrem Grund abgelehnt, und ein Wert, mit dem sie nichts anfangen kann, zeigt einen Strich statt des Rohwerts."
       ]
+    },
+    "1.8.0": {
+      "lead": "Piwigo, und NUT-Korrekturen bei Port und Leistung.",
+      "sections": [
+        {
+          "title": "Piwigo",
+          "body": "Wie viele Fotos und Alben eine Galerie hat, die Fotos je Album und die Benutzer mit dem Tag ihres letzten Besuchs. Benutzer, Tags und Kommentare brauchen den API-Schlüssel eines Administrators (Piwigo 16.1 oder neuer). Eine Beta.",
+          "path": "Anbindungen > Hinzufügen > Piwigo"
+        },
+        {
+          "title": "NUT: Port und Watt",
+          "body": "Ein Port im eigenen Feld wurde mit „That is not a port number“ abgelehnt; jetzt geht er, auch bei IMAP und Minecraft. Und eine USV, deren Netzwerkkarte eine Leistung von 0 meldet, etwa die APC AP9630, zeigt ihre Watt aus Nennleistung und Last gerechnet.",
+          "path": "Eine NUT-Anbindung"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "nextasks ist keine Beta mehr."
+      ]
     }
   }
 }
