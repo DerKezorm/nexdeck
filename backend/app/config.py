@@ -76,6 +76,13 @@ class Settings(BaseSettings):
     #: Check GitHub for a newer nexdeck release. Off by default: it is an
     #: outbound call that the operator has to opt into.
     update_check: bool = False
+    #: Optional Unix socket for the separately installed host-side update agent.
+    #: Empty disables self-updating. Never mount the Docker socket here.
+    update_agent_socket: Path | None = None
+    #: Dedicated credential for the host update agent; never expose via API.
+    update_agent_token: str = ""
+    #: Expected deployment identity, shared with the host update agent.
+    update_deployment_id: str = ""
     #: Allowed origins for API calls from other origins. Empty means only the
     #: dashboard itself may call the API from a browser.
     cors_origins: str = ""

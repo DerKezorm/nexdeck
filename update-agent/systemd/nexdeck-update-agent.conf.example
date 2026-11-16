@@ -1,0 +1,21 @@
+# NexDeck Update Agent deployment-specific permissions
+#
+# Install as:
+# /etc/systemd/system/nexdeck-update-agent.service.d/deployment.conf
+#
+# Replace /path/to/nexdeck with the absolute directory containing
+# your compose.yaml and application data directory.
+#
+# The updater needs write access to:
+# - .nexdeck-updater/ for managed overrides and recovery packages
+# - data/ for backups and restored application data
+# - the parent of data/ for atomic rollback directory renames
+#
+# Never grant access to the entire filesystem.
+#
+# IMPORTANT:
+# This example assumes the deployment and data directories
+# share the same parent structure. Adjust for external volumes.
+
+[Service]
+ReadWritePaths=/path/to/nexdeck

@@ -1,5 +1,5 @@
-import { useQuery } from '@tanstack/react-query'
-import { useState, type ReactNode } from 'react'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { useEffect, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { ApiError, get, patch, post } from '../../api/client'
@@ -192,7 +192,104 @@ function Thanks() {
 export function AboutSettings() {
   const { t, i18n } = useTranslation()
   const admin = useAuth((state) => state.user?.role === 'admin')
+  const [trackingUpdate, setTrackingUpdate] = useState(false)
+  const [updateTarget, setUpdateTarget] = useState<string | null>(null)
+  const [installMessage, setInstallMessage] = useState<string | null>(null)
   const about = useQuery({ queryKey: ['about'], queryFn: () => get<About>('/about') })
+  const updater = useQuery({
+    queryKey: ['self-update-status'],
+    queryFn: () => get<{
+      configured: boolean
+      available: boolean
+      can_update: boolean
+      reason: string
+      stage?: string
+      error?: string | null
+    }>('/self-update/status'),
+    enabled: admin,
+    retry: false,
+    refetchInterval: (query) => {
+      const stage = query.state.data?.stage
+      return trackingUpdate || (stage && !['idle', 'complete', 'failed'].includes(stage))
+        ? 2000
+        : false
+    },
+  })
+  useEffect(() => {
+    if (!trackingUpdate || !updateTarget) return
+
+    let cancelled = false
+    let checking = false
+    const started = Date.now()
+
+    const checkVersion = async () => {
+      if (cancelled || checking) return
+
+      if (Date.now() - started >= 300_000) {
+        setTrackingUpdate(false)
+        setInstallMessage(
+          'The update has not completed within five minutes. Check the host updater logs before retrying.',
+        )
+        return
+      }
+
+      checking = true
+
+      try {
+        const response = await fetch(
+          `/api/v1/about?_update_check=${Date.now()}`,
+          { cache: 'no-store', credentials: 'same-origin' },
+        )
+
+        if (response.ok) {
+          const result = await response.json() as About
+
+          if (!cancelled && result.version === updateTarget) {
+            window.location.reload()
+          }
+        }
+      } catch {
+        // Temporary connection failures are expected during container replacement.
+      } finally {
+        checking = false
+      }
+    }
+
+    const interval = window.setInterval(() => {
+      void checkVersion()
+    }, 2000)
+
+    void checkVersion()
+
+    return () => {
+      cancelled = true
+      window.clearInterval(interval)
+    }
+  }, [trackingUpdate, updateTarget])
+
+  const [updateDialog, setUpdateDialog] = useState(false)
+
+  const installUpdate = useMutation({
+    mutationFn: () =>
+      post<{ status: string; backup: string; installation_started: boolean }>(
+        '/self-update/install',
+        {},
+      ),
+    onSuccess: (result) => {
+      setUpdateTarget(about.data?.latest_version ?? null)
+      setTrackingUpdate(true)
+      setUpdateDialog(false)
+      setInstallMessage(
+        `Update accepted. Restore point: ${result.backup}. NexDeck may briefly disconnect.`,
+      )
+      void updater.refetch()
+    },
+    onError: (error) => {
+      setInstallMessage(
+        error instanceof ApiError ? error.message : 'Update request failed.',
+      )
+    },
+  })
   const [toast, setToast] = useState<{ text: string; level: 'ok' | 'error' } | null>(null)
   const [whatsNew, setWhatsNew] = useState(false)
   const data = about.data
@@ -296,7 +393,79 @@ export function AboutSettings() {
             </span>
             {data.checked_at && <span className="text-xs text-faint">{t('about.lastChecked', { when: new Date(data.checked_at).toLocaleString(i18n.language) })}</span>}
           </div>
+          {(newer || installMessage || (updater.data?.stage && updater.data.stage !== 'idle')) && (
+            <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-line pt-4">
+              {newer && (
+                <>
+                  <button
+                    type="button"
+                    className="btn"
+                    disabled={!admin || !updater.data?.can_update || installUpdate.isPending || trackingUpdate}
+                    onClick={() => setUpdateDialog(true)}
+                    title="Install the available NexDeck update"
+                  >
+                    Install update
+                  </button>
+                  <Out href={data.release_url}>Release notes</Out>
+                </>
+              )}
+              <span className="text-xs text-muted">
+                {updater.isPending
+                  ? 'Checking updater availability…'
+                  : updater.data?.can_update
+                    ? 'Host updater ready.'
+                    : 'Automatic installation requires a configured host updater.'}
+                {updater.data?.stage && updater.data.stage !== 'idle'
+                  ? ` Status: ${updater.data.stage}.`
+                  : ''}
+                {updater.data?.error ? ` Error: ${updater.data.error}` : ''}
+              </span>
+            </div>
+          )}
         </SettingsCard>
+      )}
+
+      <Dialog
+        open={updateDialog}
+        onClose={() => setUpdateDialog(false)}
+        title="Install NexDeck update"
+        footer={
+          <>
+            <button
+              className="btn"
+              type="button"
+              onClick={() => setUpdateDialog(false)}
+            >
+              {t('common.cancel')}
+            </button>
+            <button
+              className="btn btn-accent"
+              type="button"
+              disabled={!updater.data?.can_update || installUpdate.isPending}
+              onClick={() => installUpdate.mutate()}
+            >
+              {installUpdate.isPending ? 'Preparing backup…' : 'Install update'}
+            </button>
+          </>
+        }
+      >
+        <p className="text-sm text-muted">
+          NexDeck will create a pre-update database snapshot before
+          installing the new version using Docker Compose.
+        </p>
+        <p className="mt-3 text-sm text-muted">
+          The application may briefly disconnect while the container
+          is recreated. Database migrations may prevent returning to
+          an older version without restoring a compatible backup.
+        </p>
+        <p className="mt-3 text-xs text-faint">
+          Installation will become available when the host updater
+          has been configured and enabled.
+        </p>
+      </Dialog>
+
+      {installMessage && (
+        <p className="mt-3 text-sm" role="status">{installMessage}</p>
       )}
 
       <Thanks />
