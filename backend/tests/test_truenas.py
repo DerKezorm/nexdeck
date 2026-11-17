@@ -83,6 +83,8 @@ ANSWERS = {
     "app.query": APPS, "disk.query": DISKS, "disk.temperatures": TEMPERATURES, "pool.snapshottask.query": SNAPSHOT_TASKS,
     "replication.query": REPLICATIONS, "cloudsync.query": CLOUD_SYNCS, "rsynctask.query": RSYNC_TASKS,
     "cloud_backup.query": CLOUD_BACKUPS, "service.query": SERVICES, "vm.query": VMS, "virt.instance.query": INSTANCES,
+    # With {"count": True} TrueNAS' filter_list answers with the number alone.
+    "smb.status": 2,
 }
 #: The first reporting.realtime event, as TrueNAS 25.10.7 sent it on 22.09.2026
 #: 0.01 s after core.subscribe, to a read-only administrator's key. Idle, 8 GB,
@@ -689,6 +691,78 @@ async def test_the_services_card_shows_what_is_meant_to_run(ctx: Context, truena
     ], "set to start and stopped is red; running without being set to start still shows"
     every = await adapter.fetch("services", HTTPS, {"all_services": True}, ctx)
     assert ("UPS", "Stopped", "unknown") in [(item["title"], item["value"], item["status"]) for item in every.items]
+
+
+def sessions_of(card: WidgetData) -> Any:
+    return next((entry["value"] for entry in card.secondary if entry.get("part") == "smb_sessions"), None)
+
+
+@pytest.mark.parametrize("version", ["25.04.2.4", "26.0.0", "TrueNAS-27.0.0"])
+async def test_the_services_card_counts_the_open_smb_sessions(version: str, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Issue #73: whether anybody is connected, counted as TrueNAS counts its own clients."""
+    adapter, fake = fake_on(monkeypatch)
+    monkeypatch.setitem(ANSWERS, "system.info", {**INFO, "version": version})
+    card = await adapter.fetch("services", HTTPS, {}, fresh())
+    assert params_of(fake, "smb.status") == ["SESSIONS", [], {"count": True}, {"fast": True}]
+    assert card.secondary == [{"label": "SMB sessions", "value": 2, "part": "smb_sessions"}]
+    assert card.status == "bad", "the stopped NFS still colours the card; the count does not"
+    monkeypatch.setitem(ANSWERS, "smb.status", 0)
+    assert sessions_of(await adapter.fetch("services", HTTPS, {}, fresh())) == 0, "nobody connected is said, not left out"
+
+
+@pytest.mark.parametrize("version", ["25.10.7", "25.10.2.1", "", "TrueNAS-SCALE-24.10.2"])
+async def test_smb_sessions_are_not_asked_where_the_method_is_private(version: str, monkeypatch: pytest.MonkeyPatch) -> None:
+    """25.10 refuses a read-only key, and logs every call from a full key; an unknown version may be 25.10."""
+    adapter, fake = fake_on(monkeypatch)
+    monkeypatch.setitem(ANSWERS, "system.info", {**INFO, "version": version})
+    card = await adapter.fetch("services", HTTPS, {}, fresh())
+    assert "smb.status" not in fake.methods()
+    assert card.secondary == []
+    assert [item["title"] for item in card.items] == ["NFS", "SMB", "SSH"]
+
+
+@pytest.mark.parametrize("errname", ["EACCES", "ENOMETHOD"])
+async def test_a_refused_session_count_leaves_the_services_card_as_it_was(errname: str, monkeypatch: pytest.MonkeyPatch) -> None:
+    """A key whose role lacks SHARING_SMB_READ: the services still show, without the count."""
+    adapter, _fake = fake_on(monkeypatch, refuse={"smb.status": errname})
+    monkeypatch.setitem(ANSWERS, "system.info", {**INFO, "version": "26.0.0"})
+    card = await adapter.fetch("services", HTTPS, {}, fresh())
+    assert card.error is None
+    assert card.secondary == []
+    assert [item["title"] for item in card.items] == ["NFS", "SMB", "SSH"]
+
+
+async def test_smb_sessions_are_shown_only_while_smb_runs_and_only_when_wanted(monkeypatch: pytest.MonkeyPatch) -> None:
+    adapter, fake = fake_on(monkeypatch)
+    monkeypatch.setitem(ANSWERS, "system.info", {**INFO, "version": "26.0.0"})
+    monkeypatch.setitem(ANSWERS, "service.query", [{**SERVICES[0], "state": "STOPPED", "pids": []}, *SERVICES[1:]])
+    card = await adapter.fetch("services", HTTPS, {}, fresh())
+    assert card.secondary == [], "a stopped SMB has nothing to count; 0 would read as nobody connected"
+    monkeypatch.setitem(ANSWERS, "service.query", [{**SERVICES[0], "enable": False}, *SERVICES[1:]])
+    card = await adapter.fetch("services", HTTPS, {}, fresh())
+    assert sessions_of(card) == 2, "a running SMB not set to start is counted too"
+    monkeypatch.setitem(ANSWERS, "smb.status", [{"session_id": "3", "username": "alex"}])
+    card = await adapter.fetch("services", HTTPS, {}, fresh())
+    assert card.secondary == [], "a list where the count belongs is not a count"
+    fake.sent.clear()
+    card = await adapter.fetch("services", HTTPS, {"show_smb_sessions": False}, fresh())
+    assert "smb.status" not in fake.methods() and "system.info" not in fake.methods(), "switched off is not asked at all"
+    assert card.secondary == []
+
+
+async def test_the_version_for_the_session_count_is_read_once_an_hour(ctx: Context, monkeypatch: pytest.MonkeyPatch) -> None:
+    adapter, fake = fake_on(monkeypatch)
+    monkeypatch.setitem(ANSWERS, "system.info", {**INFO, "version": "26.0.0"})
+    await adapter.fetch("services", HTTPS, {}, ctx)
+    assert fake.methods().count("system.info") == 1
+    fake.sent.clear()
+    later(monkeypatch, 1800)
+    await adapter.fetch("services", HTTPS, {}, ctx)
+    assert "system.info" not in fake.methods() and "smb.status" in fake.methods()
+    fake.sent.clear()
+    later(monkeypatch, 3700)
+    await adapter.fetch("services", HTTPS, {}, ctx)
+    assert "system.info" in fake.methods(), "an update to 25.10 or 26 is noticed within the hour"
 
 
 async def test_vms_and_containers_are_counted_once(ctx: Context, truenas) -> None:

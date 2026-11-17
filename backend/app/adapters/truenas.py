@@ -121,6 +121,15 @@ UPDATE_RETRY = 600.0
 #: some builds. A refused role is not caught here: that is ``auth_failed``.
 OPTIONAL = {"cloud_backup.query", "virt.instance.query", "vm.query"}
 
+#: The open SMB sessions on the services card, counted the way TrueNAS counts
+#: its own clients (``smb.client_count``): sessions only, as a number, without
+#: checking that each process still lives.
+SMB_STATUS = "smb.status"
+SMB_COUNT = ["SESSIONS", [], {"count": True}, {"fast": True}]
+#: Methods whose answer only adds to a card. Any refusal, a missing role as
+#: well, is an empty answer: the card shows what it showed before.
+EXTRA = {SMB_STATUS}
+
 #: Not a method but the realtime event, read once per fetch on the same connection.
 REALTIME = "reporting.realtime"
 #: How long the first realtime event may take. TrueNAS sends it at once.
@@ -172,8 +181,8 @@ class TruenasAdapter(Adapter):
         WidgetType(kind="protection", label="Data protection", description="Snapshot, replication, cloud sync, rsync and cloud backup tasks with their last run. Needs TrueNAS 25.04 or later.",
                    renderer="list", default_size=(3, 3), refresh_seconds=120,
                    parts=(("snapshot", "Snapshots"), ("replication", "Replication"), ("cloudsync", "Cloud sync"), ("rsync", "Rsync"), ("cloud_backup", "Cloud backup"))),
-        WidgetType(kind="services", label="Services", description="The services that start with TrueNAS, such as SMB, NFS and SSH, and whether they run. Needs TrueNAS 25.04 or later.",
-                   renderer="list", default_size=(3, 2), refresh_seconds=60,
+        WidgetType(kind="services", label="Services", description="The services that start with TrueNAS, such as SMB, NFS and SSH, whether they run, and how many SMB sessions are open. Needs TrueNAS 25.04 or later; TrueNAS 25.10 does not tell the sessions.",
+                   renderer="list", default_size=(3, 2), refresh_seconds=60, parts=(("smb_sessions", "SMB sessions"),),
                    options=(Field("all_services", "Show services that are switched off", type="bool", default=False),)),
         WidgetType(kind="vms", label="VMs and containers", description="Virtual machines and containers with their state. Needs TrueNAS 25.04 or later.",
                    renderer="list", default_size=(3, 2), refresh_seconds=30),
@@ -343,7 +352,7 @@ class TruenasAdapter(Adapter):
                         try:
                             answers[method] = await call(socket, method, *params.get(method, []))
                         except AdapterError as error:
-                            if method not in OPTIONAL or error.code != "rpc_error":
+                            if method not in EXTRA and (method not in OPTIONAL or error.code != "rpc_error"):
                                 raise
                             answers[method] = None
                     return answers
@@ -426,7 +435,7 @@ class TruenasAdapter(Adapter):
             wanted = [method for key, method in PROTECTION_READS if part_on(options, key)]
             return _protection(await self._read(config, ctx, wanted, cache=60) if wanted else {})
         if widget_kind == "services":
-            return _services((await self._read(config, ctx, ["service.query"], cache=30))["service.query"], options)
+            return await self._service_rows(config, ctx, options)
         if widget_kind == "vms":
             read = await self._read(config, ctx, ["vm.query", "virt.instance.query"])
             return _machines(read["vm.query"], read["virt.instance.query"])
@@ -529,6 +538,37 @@ class TruenasAdapter(Adapter):
         waiting = _waiting_update(answer)
         ctx.cache["truenas:update-last"] = waiting
         return _unless_installed(waiting, info)
+
+    async def _service_rows(self, config: dict[str, Any], ctx: Context, options: dict[str, Any]) -> WidgetData:
+        """The services, and how many SMB sessions are open (issue #73).
+
+        ⚠️ ``smb.status`` is not open on every version. 25.04 lets a read-only
+        administrator call it, 26 and later too (role ``SHARING_SMB_READ``).
+        On 25.10 it is a private method without a role (its source, 25.10.0
+        to 25.10.8): a read-only key is refused, and a full key gets through
+        while TrueNAS writes "Private method ... called" into its log on every
+        call, a line a minute. So on 25.10 it is not asked at all, and the
+        card shows the services as before.
+
+        The version is kept for the hour; reading it costs one more
+        connection, once.
+        """
+        methods = ["service.query"]
+        if part_on(options, "smb_sessions") and _smb_sessions_open(await self._release(config, ctx)):
+            methods.append(SMB_STATUS)
+        read = await self._read(config, ctx, methods, cache=30, params={SMB_STATUS: SMB_COUNT})
+        return _services(read["service.query"], options, read.get(SMB_STATUS))
+
+    async def _release(self, config: dict[str, Any], ctx: Context) -> tuple[int, int]:
+        """This TrueNAS' version as (25, 10), read at most once an hour."""
+        now = time.monotonic()
+        known = ctx.cache.get("truenas:release")
+        if known and known[0] > now:
+            return known[1]
+        info = (await self._read(config, ctx, ["system.info"]))["system.info"] or {}
+        release = _version(str(info.get("version") or ""))
+        ctx.cache["truenas:release"] = (now + VERSION_SECONDS, release)
+        return release
 
     async def _disks(self, config: dict[str, Any], ctx: Context, options: dict[str, Any]) -> WidgetData:
         """Every disk with its temperature; ``KEEP`` says why only every five minutes.
@@ -646,7 +686,7 @@ class TruenasAdapter(Adapter):
             })
         if widget_kind == "services":
             return _services([{"service": "cifs", "enable": True, "state": "RUNNING"}, {"service": "nfs", "enable": True, "state": "RUNNING"},
-                              {"service": "ssh", "enable": True, "state": "RUNNING"}, {"service": "ups", "enable": False, "state": "STOPPED"}], options)
+                              {"service": "ssh", "enable": True, "state": "RUNNING"}, {"service": "ups", "enable": False, "state": "STOPPED"}], options, 3)
         if widget_kind == "vms":
             return _machines([{"name": "homeassistant", "vcpus": 2, "cores": 1, "threads": 1, "memory": 4096, "status": {"state": "RUNNING"}},
                               {"name": "windows", "vcpus": 4, "cores": 1, "threads": 1, "memory": 8192, "status": {"state": "STOPPED"}}],
@@ -1052,30 +1092,47 @@ def _protection(read: dict[str, Any]) -> WidgetData:
                       secondary=[{"label": "Tasks", "value": len(items)}, {"label": "Failed", "value": failed}])
 
 
-def _services(services: Any, options: dict[str, Any]) -> WidgetData:
+def _smb_sessions_open(release: tuple[int, int]) -> bool:
+    """Whether ``smb.status`` may be asked on this version; see ``_service_rows``.
+
+    An unknown version is not asked: it may be 25.10.
+    """
+    return (25, 4) <= release < (25, 10) or release >= (26, 0)
+
+
+def _services(services: Any, options: dict[str, Any], sessions: Any = None) -> WidgetData:
     """The services meant to start with TrueNAS, and whether they run.
 
     ``enable`` is "start on boot". One that should start and is stopped is
     red; one that runs without being set to start is shown as well, since it
     runs. The rest only with the option, or the card would list eight
     services most people never switched on.
+
+    ``sessions`` is the count from ``smb.status``, None when it was not
+    asked or refused. It is shown only while SMB runs: a stopped SMB has no
+    sessions to count, and a 0 there would read as "nobody connected".
     """
     every = bool(options.get("all_services"))
     items: list[dict[str, Any]] = []
+    smb_running = False
     for service in services or []:
         if not isinstance(service, dict):
             continue
         state = str(service.get("state") or "").upper()
         running = state == "RUNNING"
+        name = str(service.get("service") or "?")
+        smb_running = smb_running or (name == "cifs" and running)
         if not (every or service.get("enable") or running):
             continue
-        name = str(service.get("service") or "?")
         items.append({
             "title": SERVICE_NAMES.get(name, name.upper()),
             "value": "Running" if running else ("Stopped" if state == "STOPPED" else "Unknown"),
             "status": "ok" if running else ("bad" if service.get("enable") and state == "STOPPED" else "unknown"),
         })
-    return WidgetData(status=_overall(items), items=_sorted(items))
+    counted = []
+    if smb_running and isinstance(sessions, int) and part_on(options, "smb_sessions"):
+        counted = [{"label": "SMB sessions", "value": sessions, "part": "smb_sessions"}]
+    return WidgetData(status=_overall(items), items=_sorted(items), secondary=counted)
 
 
 def _machines(vms: Any, instances: Any) -> WidgetData:
