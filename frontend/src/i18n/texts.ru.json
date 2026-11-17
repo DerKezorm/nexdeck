@@ -1990,6 +1990,7 @@
     "Show services that are switched off": "Показывать отключённые службы",
     "Snapshot, replication, cloud sync, rsync and cloud backup tasks with their last run. Needs TrueNAS 25.04 or later.": "Задачи снимков, репликации, облачной синхронизации, rsync и облачного резервного копирования с последним запуском. Нужен TrueNAS 25.04 или новее.",
     "The services that start with TrueNAS, such as SMB, NFS and SSH, whether they run, and how many SMB sessions are open. Needs TrueNAS 25.04 or later; TrueNAS 25.10 does not tell the sessions.": "Службы, которые запускаются вместе с TrueNAS, например SMB, NFS и SSH, работают ли они и сколько открыто сессий SMB. Нужен TrueNAS 25.04 или новее; TrueNAS 25.10 не сообщает о сессиях.",
+    "Who is connected over SMB: the user, the machine and for how long. Needs TrueNAS 25.04, or 26 or later; TrueNAS 25.10 does not tell the sessions.": "Кто подключён по SMB: пользователь, компьютер и как долго. Нужен TrueNAS 25.04 либо 26 и новее; TrueNAS 25.10 не сообщает сеансы.",
     "Update available": "Доступно обновление",
     "SMB sessions": "Сессии SMB",
     "Virtual machines and containers with their state. Needs TrueNAS 25.04 or later.": "Виртуальные машины и контейнеры с их состоянием. Нужен TrueNAS 25.04 или новее.",

@@ -1990,6 +1990,7 @@
     "Show services that are switched off": "Mostrar serviços que estão desligados",
     "Snapshot, replication, cloud sync, rsync and cloud backup tasks with their last run. Needs TrueNAS 25.04 or later.": "Tarefas de snapshot, replicação, sincronização na nuvem, rsync e backup na nuvem com sua última execução. Exige o TrueNAS 25.04 ou mais novo.",
     "The services that start with TrueNAS, such as SMB, NFS and SSH, whether they run, and how many SMB sessions are open. Needs TrueNAS 25.04 or later; TrueNAS 25.10 does not tell the sessions.": "Os serviços que iniciam com o TrueNAS, como SMB, NFS e SSH, se rodam e quantas sessões SMB estão abertas. Exige o TrueNAS 25.04 ou mais novo; o TrueNAS 25.10 não informa as sessões.",
+    "Who is connected over SMB: the user, the machine and for how long. Needs TrueNAS 25.04, or 26 or later; TrueNAS 25.10 does not tell the sessions.": "Quem está conectado por SMB: o usuário, a máquina e há quanto tempo. Requer TrueNAS 25.04, ou 26 ou posterior; o TrueNAS 25.10 não informa as sessões.",
     "Update available": "Atualização disponível",
     "SMB sessions": "Sessões SMB",
     "Virtual machines and containers with their state. Needs TrueNAS 25.04 or later.": "Máquinas virtuais e contêineres com seu estado. Exige o TrueNAS 25.04 ou mais novo.",

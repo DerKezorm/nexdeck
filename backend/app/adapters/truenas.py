@@ -126,6 +126,10 @@ OPTIONAL = {"cloud_backup.query", "virt.instance.query", "vm.query"}
 #: checking that each process still lives.
 SMB_STATUS = "smb.status"
 SMB_COUNT = ["SESSIONS", [], {"count": True}, {"fast": True}]
+#: The same sessions one by one, for the SMB sessions card. Without ``fast``:
+#: a list that somebody reads before a restart must not show a client whose
+#: process is gone.
+SMB_LIST = ["SESSIONS", [], {}, {}]
 #: Methods whose answer only adds to a card. Any refusal, a missing role as
 #: well, is an empty answer: the card shows what it showed before.
 EXTRA = {SMB_STATUS}
@@ -184,6 +188,8 @@ class TruenasAdapter(Adapter):
         WidgetType(kind="services", label="Services", description="The services that start with TrueNAS, such as SMB, NFS and SSH, whether they run, and how many SMB sessions are open. Needs TrueNAS 25.04 or later; TrueNAS 25.10 does not tell the sessions.",
                    renderer="list", default_size=(3, 2), refresh_seconds=60, parts=(("smb_sessions", "SMB sessions"),),
                    options=(Field("all_services", "Show services that are switched off", type="bool", default=False),)),
+        WidgetType(kind="smb_sessions", label="SMB sessions", description="Who is connected over SMB: the user, the machine and for how long. Needs TrueNAS 25.04, or 26 or later; TrueNAS 25.10 does not tell the sessions.",
+                   renderer="list", default_size=(3, 2), refresh_seconds=60),
         WidgetType(kind="vms", label="VMs and containers", description="Virtual machines and containers with their state. Needs TrueNAS 25.04 or later.",
                    renderer="list", default_size=(3, 2), refresh_seconds=30),
     )
@@ -371,13 +377,23 @@ class TruenasAdapter(Adapter):
 
         ``cache`` is how long an answer may be reused; ``KEEP`` raises it for
         the methods that must not be asked more often. 0 asks everything anew.
+
+        ⚠️ A method asked with arguments is kept under them as well. The
+        services card counts the SMB sessions and the SMB sessions card lists
+        them, both with ``smb.status``; under the method's name alone one card
+        got the other's answer.
         """
         guard_outbound(base_url(config))
         now = time.monotonic()
         found: dict[str, Any] = {}
         missing = []
+
+        def kept(method: str) -> str:
+            asked = (params or {}).get(method)
+            return f"truenas:{method}" + (f":{json.dumps(asked, sort_keys=True)}" if asked is not None else "")
+
         for method in methods:
-            hit = ctx.cache.get(f"truenas:{method}")
+            hit = ctx.cache.get(kept(method))
             if cache and hit and hit[0] > now:
                 found[method] = hit[1]
             else:
@@ -416,7 +432,7 @@ class TruenasAdapter(Adapter):
                                        hint=HTTP_REFUSED_HINT) from error
                 raise
         for method, value in fresh.items():
-            ctx.cache[f"truenas:{method}"] = (now + (max(cache, KEEP.get(method, 0.0)) if cache else 0.0), value)
+            ctx.cache[kept(method)] = (now + (max(cache, KEEP.get(method, 0.0)) if cache else 0.0), value)
         return {**found, **fresh}
 
     async def test(self, config: dict[str, Any], ctx: Context) -> str:
@@ -436,6 +452,8 @@ class TruenasAdapter(Adapter):
             return _protection(await self._read(config, ctx, wanted, cache=60) if wanted else {})
         if widget_kind == "services":
             return await self._service_rows(config, ctx, options)
+        if widget_kind == "smb_sessions":
+            return await self._smb_session_rows(config, ctx)
         if widget_kind == "vms":
             read = await self._read(config, ctx, ["vm.query", "virt.instance.query"])
             return _machines(read["vm.query"], read["virt.instance.query"])
@@ -558,6 +576,19 @@ class TruenasAdapter(Adapter):
             methods.append(SMB_STATUS)
         read = await self._read(config, ctx, methods, cache=30, params={SMB_STATUS: SMB_COUNT})
         return _services(read["service.query"], options, read.get(SMB_STATUS))
+
+    async def _smb_session_rows(self, config: dict[str, Any], ctx: Context) -> WidgetData:
+        """Who is connected over SMB, for a look before a restart (issue #73).
+
+        The versions are those of the count on the services card; see
+        ``_service_rows``. Here a version that does not tell the sessions is
+        said on the card, which has nothing else to show.
+        """
+        release = await self._release(config, ctx)
+        if not _smb_sessions_open(release):
+            raise _smb_sessions_closed(release)
+        read = await self._read(config, ctx, ["service.query", SMB_STATUS], cache=30, params={SMB_STATUS: SMB_LIST})
+        return _smb_sessions(read["service.query"], read.get(SMB_STATUS))
 
     async def _release(self, config: dict[str, Any], ctx: Context) -> tuple[int, int]:
         """This TrueNAS' version as (25, 10), read at most once an hour."""
@@ -687,6 +718,15 @@ class TruenasAdapter(Adapter):
         if widget_kind == "services":
             return _services([{"service": "cifs", "enable": True, "state": "RUNNING"}, {"service": "nfs", "enable": True, "state": "RUNNING"},
                               {"service": "ssh", "enable": True, "state": "RUNNING"}, {"service": "ups", "enable": False, "state": "STOPPED"}], options, 3)
+        if widget_kind == "smb_sessions":
+            def opened(minutes: float) -> str:
+                return datetime.fromtimestamp(time.time() - minutes * 60, UTC).isoformat()
+
+            return _smb_sessions([{"service": "cifs", "enable": True, "state": "RUNNING"}], [
+                {"username": "alex", "remote_machine": "alex-macbook", "hostname": "ipv4:192.168.1.31:51544", "session_dialect": "SMB3_11", "creation_time": opened(25)},
+                {"username": "alex", "remote_machine": "alex-macbook", "hostname": "ipv4:192.168.1.31:51547", "session_dialect": "SMB3_11", "creation_time": opened(3)},
+                {"username": "media", "remote_machine": "192.168.1.40", "hostname": "ipv4:192.168.1.40:40112", "session_dialect": "SMB3_11", "creation_time": opened(2900)},
+            ])
         if widget_kind == "vms":
             return _machines([{"name": "homeassistant", "vcpus": 2, "cores": 1, "threads": 1, "memory": 4096, "status": {"state": "RUNNING"}},
                               {"name": "windows", "vcpus": 4, "cores": 1, "threads": 1, "memory": 8192, "status": {"state": "STOPPED"}}],
@@ -1098,6 +1138,123 @@ def _smb_sessions_open(release: tuple[int, int]) -> bool:
     An unknown version is not asked: it may be 25.10.
     """
     return (25, 4) <= release < (25, 10) or release >= (26, 0)
+
+
+def _smb_sessions_closed(release: tuple[int, int]) -> AdapterError:
+    """Why this TrueNAS' SMB sessions are not asked; see ``_service_rows``."""
+    if (25, 10) <= release < (26, 0):
+        return AdapterError(
+            f"TrueNAS {release[0]}.{release[1]} does not tell the SMB sessions.", code="smb_sessions_private",
+            hint="On 25.10 the method is private: a read-only key is refused, and a full key would write a warning "
+                 "into TrueNAS' log on every call. The card shows the sessions from TrueNAS 26 on.",
+        )
+    if release == (0, 0):
+        return AdapterError(
+            "TrueNAS did not say its version, so the SMB sessions are not asked.", code="smb_sessions_private",
+            hint="TrueNAS 25.10 keeps them private and logs every call. On 25.04 and on 26 or later they show.",
+        )
+    return AdapterError(
+        f"The SMB sessions need TrueNAS 25.04 or later; this is {release[0]}.{release[1]}.", code="needs_current_api",
+        hint="TrueNAS 25.04, and 26 or later, tell them to a Read-Only Administrator.",
+    )
+
+
+#: What ``smbstatus`` calls the dialects, as people know them.
+SMB_DIALECTS = {
+    "NT1": "SMB 1", "SMB2_02": "SMB 2.0.2", "SMB2_10": "SMB 2.1", "SMB3_00": "SMB 3.0",
+    "SMB3_02": "SMB 3.0.2", "SMB3_10": "SMB 3.1.0", "SMB3_11": "SMB 3.1.1",
+}
+
+
+def _smb_sessions(services: Any, sessions: Any) -> WidgetData:
+    """One row for each user on each machine, with how long they have been connected.
+
+    A Mac opens several sessions to the same NAS and Windows one per user;
+    who is on which machine is what matters before a restart, so those are
+    one row, connected since the oldest of them. The count of sessions is the
+    same number the services card shows.
+
+    A stopped SMB is said as such: ``smbstatus`` has nothing to read then,
+    and an empty list would read as "nobody connected".
+    """
+    if isinstance(services, list) and not any(
+        isinstance(service, dict) and service.get("service") == "cifs" and str(service.get("state") or "").upper() == "RUNNING"
+        for service in services
+    ):
+        return WidgetData(status="unknown", items=[{"title": "SMB", "value": "Stopped", "status": "unknown"}])
+    if not isinstance(sessions, list):
+        raise AdapterError(
+            "TrueNAS did not tell the SMB sessions.", code="smb_sessions_refused",
+            hint="The key's user needs the Read-Only Administrator role. On TrueNAS 26 and later the role SHARING_SMB_READ is enough.",
+        )
+    rows: dict[tuple[str, str], dict[str, Any]] = {}
+    users: set[str] = set()
+    for session in sessions:
+        if not isinstance(session, dict):
+            continue
+        user = str(session.get("username") or session.get("uid") or "?")
+        machine = _smb_machine(session)
+        opened = _smb_opened(session.get("creation_time"))
+        users.add(user)
+        row = rows.setdefault((user, machine), {"user": user, "machine": machine, "opened": opened, "dialect": ""})
+        if opened is not None and (row["opened"] is None or opened < row["opened"]):
+            row["opened"] = opened
+        row["dialect"] = row["dialect"] or SMB_DIALECTS.get(str(session.get("session_dialect") or ""), str(session.get("session_dialect") or ""))
+    items = [
+        {"id": f"{row['user']}@{row['machine']}", "title": row["user"],
+         "subtitle": " · ".join(part for part in (row["machine"], row["dialect"]) if part),
+         "value": ago(row["opened"]) if row["opened"] is not None else "", "status": "ok"}
+        for row in rows.values()
+    ]
+    items.sort(key=lambda item: (str(item["title"]).lower(), str(item["subtitle"]).lower()))
+    counted = sum(1 for session in sessions if isinstance(session, dict))
+    return WidgetData(status="ok", items=items, secondary=[{"label": "Sessions", "value": counted}, {"label": "Users", "value": len(users)}])
+
+
+def _smb_machine(session: dict[str, Any]) -> str:
+    """The machine a session comes from: the name it gave, else its address.
+
+    ``remote_machine`` is the client's NetBIOS name, and the address when it
+    gave none, as SMB 2 and later do not. ``hostname`` is the socket, such as
+    ``ipv4:192.168.1.31:51544``; the port changes with every connection.
+    """
+    named = str(session.get("remote_machine") or "").strip()
+    if named:
+        return named
+    socket = str(session.get("hostname") or "")
+    kind, _, rest = socket.partition(":")
+    if kind in ("ipv4", "ipv6") and rest:
+        return rest.rsplit(":", 1)[0].strip("[]")
+    return socket or "?"
+
+
+def _smb_opened(value: Any) -> float | None:
+    """When a session began, from Samba's ``creation_time``, as seconds since the epoch.
+
+    ⚠️ Samba works out the offset from the hour of local time and of UTC alone,
+    without the day (``timeval_str_buf`` in ``lib/util/time_basic.c``). Where
+    the two days differ the offset is a day off: at 00:30 in Berlin it writes
+    ``-23:00``, and every session opened in that hour would read as opened in
+    the future. No real offset is beyond -12 or +14 hours, so one beyond is
+    put back by a day. (Hawaii and a few islands near the date line can still
+    land on a wrong offset that looks real; that is left as it is.)
+    """
+    if not isinstance(value, str) or not value:
+        return None
+    try:
+        moment = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if moment.tzinfo is None:
+        return moment.replace(tzinfo=UTC).timestamp()
+    offset = moment.utcoffset()
+    hours = offset.total_seconds() / 3600 if offset is not None else 0.0
+    seconds = moment.timestamp()
+    if hours > 14:
+        seconds += 86400
+    elif hours < -12:
+        seconds -= 86400
+    return seconds
 
 
 def _services(services: Any, options: dict[str, Any], sessions: Any = None) -> WidgetData:

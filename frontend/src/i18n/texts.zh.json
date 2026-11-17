@@ -1990,6 +1990,7 @@
     "Show services that are switched off": "显示已关闭的服务",
     "Snapshot, replication, cloud sync, rsync and cloud backup tasks with their last run. Needs TrueNAS 25.04 or later.": "快照、复制、云同步、rsync 和云备份任务及其最近一次运行。需要 TrueNAS 25.04 或更高版本。",
     "The services that start with TrueNAS, such as SMB, NFS and SSH, whether they run, and how many SMB sessions are open. Needs TrueNAS 25.04 or later; TrueNAS 25.10 does not tell the sessions.": "随 TrueNAS 启动的服务，例如 SMB、NFS 和 SSH，它们是否运行，以及打开了多少个 SMB 会话。需要 TrueNAS 25.04 或更高版本；TrueNAS 25.10 不提供会话数。",
+    "Who is connected over SMB: the user, the machine and for how long. Needs TrueNAS 25.04, or 26 or later; TrueNAS 25.10 does not tell the sessions.": "谁通过 SMB 连接：用户、计算机以及连接了多久。需要 TrueNAS 25.04，或 26 及更高版本；TrueNAS 25.10 不提供会话信息。",
     "Update available": "有可用更新",
     "SMB sessions": "SMB 会话",
     "Virtual machines and containers with their state. Needs TrueNAS 25.04 or later.": "虚拟机和容器及其状态。需要 TrueNAS 25.04 或更高版本。",

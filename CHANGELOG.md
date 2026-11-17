@@ -8,6 +8,7 @@ project uses semantic versioning.
 ### Added
 
 - **TrueNAS: open SMB sessions.** The Services card shows how many SMB sessions are open while SMB runs, so you see whether anybody is connected; it can be switched off like any other part of a card. TrueNAS 25.04 and 26 or later tell the count to a Read-Only Administrator. TrueNAS 25.10 keeps it to itself (the method is private there and would write a warning into its log on every call), so on 25.10 the card shows the services as before (#73).
+- **TrueNAS: who is connected over SMB.** A new card, SMB sessions, lists each user with the machine they are on and how long they have been connected, so you know whom a restart would cut off. A Mac's several sessions to the NAS are one row. Like the count, it needs TrueNAS 25.04, or 26 or later; on 25.10 the card says why it stays empty (#73).
 
 ## 1.8.0 (2026-11-11)
 

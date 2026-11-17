@@ -10,6 +10,7 @@ from __future__ import annotations
 import asyncio
 import json
 import time
+from datetime import UTC, datetime
 from typing import Any
 
 import httpx
@@ -20,8 +21,8 @@ from websockets.exceptions import InvalidStatus
 from websockets.http11 import Response
 
 from app.adapters import get_adapter
-from app.adapters.base import AdapterError, Context, WidgetData
-from app.adapters.truenas import _version
+from app.adapters.base import AdapterError, Context, WidgetData, ago
+from app.adapters.truenas import _smb_machine, _smb_opened, _version
 
 KEY = "1-readonlykey"
 INFO = {"version": "25.10.7", "hostname": "truenas", "uptime_seconds": 3600.5, "loadavg": [0.5, 0.3, 0.1], "physmem": 8_333_570_048, "cores": 4}
@@ -78,13 +79,36 @@ VMS = [{"id": 1, "name": "homeassistant", "vcpus": 1, "cores": 2, "threads": 1, 
        {"id": 2, "name": "windows", "vcpus": 4, "cores": 1, "threads": 1, "memory": 8192, "status": {"state": "STOPPED", "pid": None, "domain_state": "SHUTOFF"}}]
 INSTANCES = [{"id": "pihole", "name": "pihole", "type": "CONTAINER", "status": "RUNNING", "cpu": "1", "memory": 536_870_912},
              {"id": "homeassistant", "name": "homeassistant", "type": "VM", "status": "RUNNING", "cpu": "2", "memory": 4_294_967_296}]
+
+
+def smb_session(user: str, machine: str, socket: str, opened: str, session_id: str) -> dict[str, Any]:
+    """One entry of ``smbstatus -jp`` as Samba writes it (``status_json.c``), not measured."""
+    return {"session_id": session_id, "server_id": {"pid": "4242", "task_id": "0", "vnn": "4294967295", "unique_id": "8461929128395432"},
+            "uid": 3000, "gid": 3000, "username": user, "groupname": "builtin_users", "creation_time": opened,
+            "expiration_time": "30828-09-14T03:30:07.999999+01:00", "auth_time": opened, "remote_machine": machine,
+            "hostname": socket, "session_dialect": "SMB3_11", "client_guid": "4ac46e2c-7c55-11ef-a6b3-0242ac120002",
+            "encryption": {"cipher": "-", "degree": "none"}, "signing": {"cipher": "AES-128-GMAC", "degree": "partial"}, "channels": {}}
+
+
+#: Two sessions from one Mac, one from a TV that gave no name, written with the
+#: offset Samba gives Berlin in winter.
+SMB_SESSIONS = [
+    smb_session("alex", "alex-macbook", "ipv4:192.168.1.31:51547", "2026-11-17T14:55:00.123456+01:00", "11"),
+    smb_session("media", "", "ipv4:192.168.1.40:40112", "2026-11-15T09:00:00.000000+01:00", "12"),
+    smb_session("alex", "alex-macbook", "ipv4:192.168.1.31:51544", "2026-11-17T13:30:00.654321+01:00", "10"),
+]
+
+
+def smb_status(params: list[Any]) -> Any:
+    """``smb.status`` answers the count with a number, the list with the sessions."""
+    return len(SMB_SESSIONS) - 1 if params[2].get("count") else SMB_SESSIONS
 ANSWERS = {
     "system.info": INFO, "pool.query": POOLS, "alert.list": ALERTS, "update.status": UPDATE, "network.general.summary": SUMMARY,
     "app.query": APPS, "disk.query": DISKS, "disk.temperatures": TEMPERATURES, "pool.snapshottask.query": SNAPSHOT_TASKS,
     "replication.query": REPLICATIONS, "cloudsync.query": CLOUD_SYNCS, "rsynctask.query": RSYNC_TASKS,
     "cloud_backup.query": CLOUD_BACKUPS, "service.query": SERVICES, "vm.query": VMS, "virt.instance.query": INSTANCES,
     # With {"count": True} TrueNAS' filter_list answers with the number alone.
-    "smb.status": 2,
+    "smb.status": smb_status,
 }
 #: The first reporting.realtime event, as TrueNAS 25.10.7 sent it on 22.09.2026
 #: 0.01 s after core.subscribe, to a read-only administrator's key. Idle, 8 GB,
@@ -149,7 +173,8 @@ class FakeTruenas:
         elif method in self.refuse:
             self._pending.append(json.dumps({"jsonrpc": "2.0", "id": number, "error": {"code": -32001, "message": "Method call error", "data": {"errname": self.refuse[method], "reason": "Not permitted"}}}))
         else:
-            self._pending.append(json.dumps({"jsonrpc": "2.0", "id": number, "result": ANSWERS[method]}))
+            answer = ANSWERS[method]
+            self._pending.append(json.dumps({"jsonrpc": "2.0", "id": number, "result": answer(message["params"]) if callable(answer) else answer}))
 
     async def recv(self) -> str:
         if not self._pending:
@@ -765,6 +790,116 @@ async def test_the_version_for_the_session_count_is_read_once_an_hour(ctx: Conte
     assert "system.info" in fake.methods(), "an update to 25.10 or 26 is noticed within the hour"
 
 
+#: 15:00 UTC on 17.11.2026, 16:00 in Berlin, the moment the session ages are read at.
+SESSIONS_READ_AT = datetime(2026, 11, 17, 15, 0, tzinfo=UTC).timestamp()
+
+
+def sessions_read_at(monkeypatch: pytest.MonkeyPatch) -> None:
+    import app.adapters.truenas as module
+
+    monkeypatch.setattr(module, "ago", lambda moment: ago(moment, now=SESSIONS_READ_AT))
+
+
+def rows_of(card: WidgetData) -> list[tuple[Any, ...]]:
+    return [(item["title"], item["subtitle"], item["value"], item["status"]) for item in card.items]
+
+
+@pytest.mark.parametrize("version", ["25.04.2.4", "26.0.0", "TrueNAS-27.0.0"])
+async def test_the_smb_sessions_card_lists_who_is_connected_from_where_and_since_when(version: str, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Issue #73, round two: who to warn before a restart. A Mac's two sessions are one row."""
+    adapter, fake = fake_on(monkeypatch)
+    sessions_read_at(monkeypatch)
+    monkeypatch.setitem(ANSWERS, "system.info", {**INFO, "version": version})
+    card = await adapter.fetch("smb_sessions", HTTPS, {}, fresh())
+    assert params_of(fake, "smb.status") == ["SESSIONS", [], {}, {}], "the list, without fast: no client whose process is gone"
+    assert rows_of(card) == [
+        ("alex", "alex-macbook · SMB 3.1.1", "2 h", "ok"),
+        ("media", "192.168.1.40 · SMB 3.1.1", "2 d", "ok"),
+    ], "connected since the older of the Mac's sessions; the address where the TV gave no name"
+    assert card.secondary == [{"label": "Sessions", "value": 3}, {"label": "Users", "value": 2}]
+    assert card.status == "ok"
+
+
+async def test_nobody_connected_is_an_empty_list_that_says_so(monkeypatch: pytest.MonkeyPatch) -> None:
+    adapter, _fake = fake_on(monkeypatch)
+    monkeypatch.setitem(ANSWERS, "system.info", {**INFO, "version": "26.0.0"})
+    monkeypatch.setitem(ANSWERS, "smb.status", [])
+    card = await adapter.fetch("smb_sessions", HTTPS, {}, fresh())
+    assert (card.items, card.status) == ([], "ok")
+    assert card.secondary == [{"label": "Sessions", "value": 0}, {"label": "Users", "value": 0}]
+
+
+async def test_the_count_and_the_list_of_sessions_are_kept_apart(ctx: Context, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Both read smb.status. Kept under the method's name alone, each card got the other's answer."""
+    adapter, _fake = fake_on(monkeypatch)
+    monkeypatch.setitem(ANSWERS, "system.info", {**INFO, "version": "26.0.0"})
+    assert sessions_of(await adapter.fetch("services", HTTPS, {}, ctx)) == 2
+    listed = await adapter.fetch("smb_sessions", HTTPS, {}, ctx)
+    assert [item["title"] for item in listed.items] == ["alex", "media"]
+    assert sessions_of(await adapter.fetch("services", HTTPS, {}, ctx)) == 2
+
+
+@pytest.mark.parametrize(("version", "code"), [
+    ("25.10.8", "smb_sessions_private"), ("25.10.2.1", "smb_sessions_private"), ("", "smb_sessions_private"),
+    ("TrueNAS-SCALE-24.10.2", "needs_current_api"),
+])
+async def test_the_smb_sessions_card_says_why_a_version_does_not_tell_them(version: str, code: str, monkeypatch: pytest.MonkeyPatch) -> None:
+    """25.10 refuses a read-only key and logs every call from a full one: the card says so instead of asking."""
+    adapter, fake = fake_on(monkeypatch)
+    monkeypatch.setitem(ANSWERS, "system.info", {**INFO, "version": version})
+    with pytest.raises(AdapterError) as closed:
+        await adapter.fetch("smb_sessions", HTTPS, {}, fresh())
+    assert closed.value.code == code
+    assert "smb.status" not in fake.methods()
+
+
+async def test_a_stopped_smb_is_said_and_not_shown_as_nobody_connected(monkeypatch: pytest.MonkeyPatch) -> None:
+    adapter, _fake = fake_on(monkeypatch, refuse={"smb.status": "EFAULT"})
+    monkeypatch.setitem(ANSWERS, "system.info", {**INFO, "version": "26.0.0"})
+    monkeypatch.setitem(ANSWERS, "service.query", [{**SERVICES[0], "state": "STOPPED", "pids": []}, *SERVICES[1:]])
+    card = await adapter.fetch("smb_sessions", HTTPS, {}, fresh())
+    assert [(item["title"], item["value"], item["status"]) for item in card.items] == [("SMB", "Stopped", "unknown")]
+    assert (card.secondary, card.status, card.error) == ([], "unknown", None)
+
+
+@pytest.mark.parametrize("errname", ["EACCES", "ENOMETHOD"])
+async def test_refused_sessions_are_an_error_on_their_own_card(errname: str, monkeypatch: pytest.MonkeyPatch) -> None:
+    """The services card goes on without the count; this card has nothing else, so it says why."""
+    adapter, _fake = fake_on(monkeypatch, refuse={"smb.status": errname})
+    monkeypatch.setitem(ANSWERS, "system.info", {**INFO, "version": "26.0.0"})
+    with pytest.raises(AdapterError) as refused:
+        await adapter.fetch("smb_sessions", HTTPS, {}, fresh())
+    assert refused.value.code == "smb_sessions_refused"
+
+
+@pytest.mark.parametrize(("written", "meant"), [
+    ("2026-11-17T14:55:00.123456+01:00", datetime(2026, 11, 17, 13, 55, 0, 123456, tzinfo=UTC)),
+    # 00:30 in Berlin is 23:30 UTC the day before; Samba writes -23:00.
+    ("2026-11-18T00:30:00.000000-23:00", datetime(2026, 11, 17, 23, 30, tzinfo=UTC)),
+    # 20:00 in New York is 01:00 UTC the day after; Samba writes +19:00.
+    ("2026-11-17T20:00:00.000000+19:00", datetime(2026, 11, 18, 1, 0, tzinfo=UTC)),
+    ("2026-11-17T08:00:00.000000-10:00", datetime(2026, 11, 17, 18, 0, tzinfo=UTC)),
+    ("2026-11-17T08:00:00.000000+14:00", datetime(2026, 11, 16, 18, 0, tzinfo=UTC)),
+])
+def test_a_session_s_start_is_read_with_samba_s_offset_put_right(written: str, meant: datetime) -> None:
+    assert _smb_opened(written) == meant.timestamp()
+
+
+@pytest.mark.parametrize("written", [None, "", "yesterday", 1_789_712_345])
+def test_a_start_that_cannot_be_read_is_none(written: Any) -> None:
+    assert _smb_opened(written) is None
+
+
+@pytest.mark.parametrize(("session", "machine"), [
+    ({"remote_machine": "alex-macbook", "hostname": "ipv4:192.168.1.31:51547"}, "alex-macbook"),
+    ({"remote_machine": "", "hostname": "ipv4:192.168.1.40:40112"}, "192.168.1.40"),
+    ({"remote_machine": " ", "hostname": "ipv6:fd00::40:40112"}, "fd00::40"),
+    ({}, "?"),
+])
+def test_the_machine_is_its_name_else_its_address_without_the_port(session: dict[str, Any], machine: str) -> None:
+    assert _smb_machine(session) == machine
+
+
 async def test_vms_and_containers_are_counted_once(ctx: Context, truenas) -> None:
     adapter, _fake = truenas
     card = await adapter.fetch("vms", HTTPS, {}, ctx)
@@ -837,7 +972,7 @@ def test_an_update_is_told_once_per_version() -> None:
     assert adapter.detect("system", None, after, {}) == []
 
 
-@pytest.mark.parametrize("kind", ["interfaces", "apps", "disks", "protection", "services", "vms"])
+@pytest.mark.parametrize("kind", ["interfaces", "apps", "disks", "protection", "services", "smb_sessions", "vms"])
 def test_every_new_card_has_a_demo(kind: str) -> None:
     data = get_adapter("truenas").demo(kind, {}, 3)
     assert data.items, kind
