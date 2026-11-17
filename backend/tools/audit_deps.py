@@ -47,6 +47,14 @@ ACCEPTED: dict[str, Accepted] = {
     # in the image, and no fixed deepmerge exists (seen 28.10.2026).
     "GHSA-gcqx-w48m-w2h4": Accepted("npm", "deepmerge", date(2026, 12, 31),
                                     "build tool only, merges nexdeck's own options; no fixed version yet"),
+    # picomatch 4.0.7 backtracks without end on single-branch repeated extglobs
+    # such as +(*). The danger is in the pattern, not in the path it is matched
+    # against. Reached only while building and testing: vite, vitest, fdir,
+    # tinyglobby and @rollup/pluginutils, all matching globs from nexdeck's own
+    # config. Nothing of it in the image (only dist), and 4.0.7 is the newest
+    # release, affected through 4.0.7 (seen 17.11.2026).
+    "GHSA-fc5q-39xc-vjpf": Accepted("npm", "picomatch", date(2026, 12, 31),
+                                    "build and test tools only, match nexdeck's own globs; no fixed version yet"),
 }
 
 

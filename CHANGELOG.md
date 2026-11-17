@@ -10,6 +10,10 @@ project uses semantic versioning.
 - **TrueNAS: open SMB sessions.** The Services card shows how many SMB sessions are open while SMB runs, so you see whether anybody is connected; it can be switched off like any other part of a card. TrueNAS 25.04 and 26 or later tell the count to a Read-Only Administrator. TrueNAS 25.10 keeps it to itself (the method is private there and would write a warning into its log on every call), so on 25.10 the card shows the services as before (#73).
 - **TrueNAS: who is connected over SMB.** A new card, SMB sessions, lists each user with the machine they are on and how long they have been connected, so you know whom a restart would cut off. A Mac's several sessions to the NAS are one row. Like the count, it needs TrueNAS 25.04, or 26 or later; on 25.10 the card says why it stays empty (#73).
 
+### Security
+
+- **The dependency audit accepts a second advisory, until 31 December 2026.** GHSA-fc5q-39xc-vjpf (picomatch backtracks without end on a crafted glob such as `+(*)`) is reached only by the tools that build and test the interface, which match nexdeck's own globs; nothing of it is in the image, and no fixed version exists yet. Like the first, the entry names its package and ends on its day.
+
 ## 1.8.0 (2026-11-11)
 
 ### Added
