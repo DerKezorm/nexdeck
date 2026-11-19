@@ -54,7 +54,7 @@
  ],
  "arcane": [
   {
-   "path": "/api/environments?limit=-1",
+   "path": "/api/agents?limit=-1",
    "widgets": [
     "summary",
     "environments",

@@ -51,6 +51,20 @@ It comes with ``containers:list`` alone.
 project was updated it still said one update was waiting, for the old image
 nothing used any more, while every container said none. The overview counts
 the containers, like the update card, so the two never disagree.
+
+⚠️ Arcane 3.0 (14.11.2026) moved every ``/environments/...`` route to
+``/agents/...`` and dropped the old paths; an Arcane 2 answers 404 for
+``/agents``. Taken from the code of 3.1.0, issue #74. The adapter asks
+``/agents`` first, falls back to ``/environments`` on 404 and remembers which
+one answered for the connection, asking again when the remembered one starts
+to answer 404 (Arcane was upgraded under a running nexdeck). Arcane 3 also
+names the action in the query instead of the path: a container is started
+with ``POST .../containers/{id}?action=start``, a project with
+``POST .../projects/{id}/deploy?action=up`` and stopped with
+``POST .../projects/{id}?action=down``. Updating a container stayed
+``.../containers/{id}/update`` but needs ``image-updates:apply``, and the
+version moved from ``/app-version`` to ``/app/version``. Lists, counts, the
+envelope, ``limit=-1`` and every field read here stayed the same.
 """
 
 from __future__ import annotations
@@ -81,6 +95,10 @@ from .base import (
 ACTION_SECONDS = 300.0
 
 KEY_HINT = "Add it to the key in Arcane under Settings > API keys."
+
+#: Where the environments are: Arcane 3 calls them agents, Arcane 2 environments. Asked in this order.
+AGENTS = "/agents"
+ROOTS = (AGENTS, "/environments")
 
 ENVIRONMENT = Field("environment", "Environment", type="choices", help="Empty for every environment.")
 
@@ -180,7 +198,8 @@ class ArcaneAdapter(Adapter):
         Field("api_key", "API key", type="password", secret=True, required=True,
               help="A key from Settings > API keys. The cards read with environments:list, containers:list and projects:list, "
                    "the overview also with images:list, volumes:list and networks:list. The buttons need containers:start, "
-                   "containers:stop, containers:restart, projects:deploy, projects:down, projects:update and image-updates:check."),
+                   "containers:stop, containers:restart, projects:deploy, projects:down, projects:update and image-updates:check "
+                   "(image-updates:apply from Arcane 3 on)."),
         Field("insecure", "Ignore TLS errors", type="bool", default=False),
     )
     widgets = (
@@ -242,6 +261,9 @@ class ArcaneAdapter(Adapter):
                                hint="Its agent may be down. Arcane marks it offline only at its next heartbeat, up to two minutes later.")
         if said == "Environment is disabled":
             raise AdapterError("This environment is switched off in Arcane.", code="environment_disabled")
+        if response.status_code == 404:
+            # ⚠️ Also how one generation of Arcane answers the other's paths.
+            raise AdapterError(f"Arcane refused: {said}" if said else "Arcane answered with HTTP 404.", code="not_found")
         if answer is None:
             raise AdapterError(f"Arcane answered with HTTP {response.status_code}.", code="http_error",
                                hint="Check the URL; it is the address of Arcane itself, port 3552 by default.")
@@ -262,8 +284,33 @@ class ArcaneAdapter(Adapter):
     async def _get(self, config: dict[str, Any], ctx: Context, path: str, *, params: dict[str, Any] | None = None, cache: float = 5) -> Any:
         return await self._data(config, ctx, "GET", path, params=params, cache=cache)
 
+    def _root_key(self, config: dict[str, Any]) -> str:
+        return f"arcane.root:{self._api(config)}"
+
+    async def _root(self, config: dict[str, Any], ctx: Context) -> str:
+        """``/agents`` on Arcane 3, ``/environments`` on Arcane 2."""
+        known = ctx.cache.get(self._root_key(config))
+        if known in ROOTS:
+            return str(known)
+        await self._environments(config, ctx)
+        return str(ctx.cache[self._root_key(config)])
+
     async def _environments(self, config: dict[str, Any], ctx: Context, cache: float = 30) -> list[dict[str, Any]]:
-        found = await self._get(config, ctx, "/environments", params={"limit": -1}, cache=cache)
+        key = self._root_key(config)
+        known = ctx.cache.get(key)
+        # The remembered one first, then Arcane 3, then Arcane 2.
+        tried = [known] if known in ROOTS else []
+        tried += [root for root in ROOTS if root not in tried]
+        found: Any = None
+        for number, root in enumerate(tried):
+            try:
+                found = await self._get(config, ctx, root, params={"limit": -1}, cache=cache)
+            except AdapterError as error:
+                if error.code != "not_found" or number == len(tried) - 1:
+                    raise
+                continue
+            ctx.cache[key] = root
+            break
         if not isinstance(found, list):
             raise AdapterError("This address answers, but not the way Arcane does.", code="not_arcane")
         return [one for one in found if isinstance(one, dict) and str(one.get("id") or "") != ""]
@@ -301,14 +348,14 @@ class ArcaneAdapter(Adapter):
     async def _list(self, config: dict[str, Any], ctx: Context, environment: dict[str, Any], what: str) -> list[dict[str, Any]]:
         # ⚠️ Twenty per page otherwise.
         env = path_segment(environment.get("id"), "The environment")
-        found = await self._get(config, ctx, f"/environments/{env}/{what}", params={"limit": -1})
+        found = await self._get(config, ctx, f"{await self._root(config, ctx)}/{env}/{what}", params={"limit": -1})
         if not isinstance(found, list):
             raise AdapterError("This address answers, but not the way Arcane does.", code="not_arcane")
         return [one for one in found if isinstance(one, dict)]
 
     async def _count(self, config: dict[str, Any], ctx: Context, environment: dict[str, Any], what: str) -> dict[str, Any]:
         env = path_segment(environment.get("id"), "The environment")
-        found = await self._get(config, ctx, f"/environments/{env}/{what}")
+        found = await self._get(config, ctx, f"{await self._root(config, ctx)}/{env}/{what}")
         return found if isinstance(found, dict) else {}
 
     # -- the hooks -----------------------------------------------------------
@@ -316,8 +363,9 @@ class ArcaneAdapter(Adapter):
     async def test(self, config: dict[str, Any], ctx: Context) -> str:
         environments = await self._environments(config, ctx, cache=0)
         # The one answer without the envelope around it, and without a key.
+        where = "/app/version" if ctx.cache.get(self._root_key(config)) == AGENTS else "/app-version"
         try:
-            version = (await self._send(config, ctx, "GET", "/app-version")).json()
+            version = (await self._send(config, ctx, "GET", where)).json()
         except (AdapterError, ValueError):
             version = {}
         number = str(version.get("displayVersion") or version.get("currentVersion") or "") if isinstance(version, dict) else ""
@@ -377,14 +425,19 @@ class ArcaneAdapter(Adapter):
     async def action(self, widget_kind: str, action_id: str, params: dict[str, Any],
                      config: dict[str, Any], options: dict[str, Any], ctx: Context) -> str:
         env = path_segment(params.get("environment"), "The environment")
+        root = await self._root(config, ctx)
+        three = root == AGENTS
         if action_id in ("start", "stop", "restart", "update"):
             container = path_segment(params.get("id"), "The container")
-            path = f"/environments/{env}/containers/{container}/{action_id}"
+            base = f"{root}/{env}/containers/{container}"
             if action_id != "update":
-                await self._data(config, ctx, "POST", path, timeout=60)
+                if three:
+                    await self._data(config, ctx, "POST", base, params={"action": action_id}, timeout=60)
+                else:
+                    await self._data(config, ctx, "POST", f"{base}/{action_id}", timeout=60)
                 ctx.forget_answers()
                 return DONE[action_id]
-            result = await self._data(config, ctx, "POST", path, timeout=ACTION_SECONDS)
+            result = await self._data(config, ctx, "POST", f"{base}/update", timeout=ACTION_SECONDS)
             ctx.forget_answers()
             # ⚠️ success is true either way; the item says what happened.
             items = result.get("items") if isinstance(result, dict) else None
@@ -400,17 +453,23 @@ class ArcaneAdapter(Adapter):
         if action_id not in ("up", "down", "redeploy", "update_project"):
             raise AdapterError("Arcane has no such action.", code="no_such_action")
         project = path_segment(params.get("project"), "The project")
-        base = f"/environments/{env}/projects/{project}"
+        base = f"{root}/{env}/projects/{project}"
         if action_id in ("up", "redeploy"):
             # ⚠️ A stream, and a failure is a line in a 200.
-            response = await self._send(config, ctx, "POST", f"{base}/{action_id}", timeout=ACTION_SECONDS)
+            if three:
+                response = await self._send(config, ctx, "POST", f"{base}/deploy", params={"action": action_id}, timeout=ACTION_SECONDS)
+            else:
+                response = await self._send(config, ctx, "POST", f"{base}/{action_id}", timeout=ACTION_SECONDS)
             ctx.forget_answers()
             reason = _stream_error(response.text)
             if reason:
                 what = "start" if action_id == "up" else "redeploy"
                 raise AdapterError(f"Arcane could not {what} the project: {reason}", code="action_failed")
             return DONE[action_id]
-        if action_id == "down":
+        if three:
+            await self._data(config, ctx, "POST", base, params={"action": "down" if action_id == "down" else "updateservices"},
+                             timeout=120 if action_id == "down" else ACTION_SECONDS)
+        elif action_id == "down":
             await self._data(config, ctx, "POST", f"{base}/down", timeout=120)
         else:
             await self._data(config, ctx, "POST", f"{base}/update-services", json_body={}, timeout=ACTION_SECONDS)

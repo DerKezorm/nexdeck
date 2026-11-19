@@ -1,4 +1,8 @@
-"""Arcane, against the answers of a live Arcane 2.14.0 (26.09.2026), manager plus one agent."""
+"""Arcane, against the answers of a live Arcane 2.14.0 (26.09.2026), manager plus one agent.
+
+Arcane 3 moved every ``/environments`` route to ``/agents`` (issue #74); its tests are at the end of the file. The
+ones before them are Arcane 2, which answers 404 for ``/agents``.
+"""
 
 from __future__ import annotations
 
@@ -92,7 +96,17 @@ def ctx() -> Context:
     return Context(httpx.AsyncClient(), integration_id=1, widget_id=1, cache={})
 
 
+#: How Arcane 2 answers a path it does not know under ``/api``.
+NOT_FOUND = {"message": "Not Found"}
+
+
+def two() -> respx.Route:
+    """Arcane 2: no ``/agents`` yet."""
+    return respx.get(f"{API}/agents").mock(return_value=httpx.Response(404, json=NOT_FOUND))
+
+
 def environments() -> respx.Route:
+    two()
     return respx.get(f"{API}/environments").mock(return_value=httpx.Response(200, json=page(ENVIRONMENTS)))
 
 
@@ -121,6 +135,7 @@ async def test_the_test_names_the_version_and_the_environments_the_key_sees(ctx:
 
 @respx.mock
 async def test_a_wrong_key_is_a_refusal_and_a_web_page_is_not_arcane(ctx: Context) -> None:
+    two()
     route = respx.get(f"{API}/environments").mock(return_value=httpx.Response(
         401, json={"title": "Unauthorized", "status": 401, "detail": "Unauthorized: invalid API key"}))
     with pytest.raises(AuthFailed, match="rejected the API key"):
@@ -190,6 +205,7 @@ async def test_an_environment_that_does_not_answer_leaves_the_others_standing(ct
 async def test_environments_believe_the_answer_not_the_flag(ctx: Context) -> None:
     switched_off = {**ENVIRONMENTS[0], "id": "e3", "name": "old-box", "enabled": False}
     locked = {**ENVIRONMENTS[0], "id": "e4", "name": "locked"}
+    two()
     respx.get(f"{API}/environments").mock(return_value=httpx.Response(200, json=page([*ENVIRONMENTS, switched_off, locked])))
     respx.get(f"{API}/environments/{LOCAL}/containers/counts").mock(return_value=httpx.Response(
         200, json=envelope({"runningContainers": 3, "stoppedContainers": 1, "totalContainers": 4})))
@@ -285,6 +301,7 @@ async def test_the_overview_does_not_ask_for_counts_it_does_not_show(ctx: Contex
 
 @respx.mock
 async def test_container_buttons_reach_their_environment_and_forget_the_old_answer(ctx: Context) -> None:
+    environments()
     route = respx.post(f"{API}/environments/{REMOTE}/containers/{OLD}/start").mock(return_value=httpx.Response(
         200, json=envelope({"message": "Container started successfully", "activityId": "0000"})))
     ctx.cache["resp:stale"] = (float("inf"), None)
@@ -301,6 +318,7 @@ async def test_container_buttons_reach_their_environment_and_forget_the_old_answ
 
 @respx.mock
 async def test_an_update_reports_what_arcane_did_not_what_it_says(ctx: Context) -> None:
+    environments()
     def result(status: str, error: str = "") -> httpx.Response:
         item = {"resourceId": SITE, "resourceName": "web-site-1", "resourceType": "container", "status": status,
                 "updateAvailable": status == "updated", "updateApplied": status == "updated", **({"error": error} if error else {})}
@@ -322,6 +340,7 @@ async def test_an_update_reports_what_arcane_did_not_what_it_says(ctx: Context) 
 
 @respx.mock
 async def test_a_failed_start_is_found_inside_the_stream(ctx: Context) -> None:
+    environments()
     lines = [{"type": "activity", "activityId": "0000"},
              {"error": "failed to prepare project images for deploy: failed to pull image registry.example.invalid/nope:1"}]
     respx.post(f"{API}/environments/{LOCAL}/projects/{BROKEN}/up").mock(return_value=httpx.Response(
@@ -338,6 +357,7 @@ async def test_a_failed_start_is_found_inside_the_stream(ctx: Context) -> None:
 
 @respx.mock
 async def test_stopping_and_updating_a_project(ctx: Context) -> None:
+    environments()
     down = respx.post(f"{API}/environments/{REMOTE}/projects/{MEDIA}/down").mock(return_value=httpx.Response(
         200, json=envelope({"message": "Project brought down successfully", "activityId": "0000"})))
     assert await get_adapter("arcane").action("projects", "down", {"environment": REMOTE, "project": MEDIA}, CONFIG, {}, ctx) == \
@@ -358,3 +378,121 @@ async def test_stopping_and_updating_a_project(ctx: Context) -> None:
 def test_demo_has_every_card(kind: str) -> None:
     data = get_adapter("arcane").demo(kind, {}, 3)
     assert data.primary or data.items
+
+
+
+# -- Arcane 3 (issue #74) ---------------------------------------------------------------------------------------------
+# Taken from the code of Arcane 3.1.0: every route under /agents, actions in the query.
+
+
+def agents(listed: list[dict[str, Any]] | None = None) -> respx.Route:
+    return respx.get(f"{API}/agents").mock(return_value=httpx.Response(200, json=page(ENVIRONMENTS if listed is None else listed)))
+
+
+def agent_lists(what: str, local: list[dict[str, Any]], remote: list[dict[str, Any]]) -> tuple[respx.Route, respx.Route]:
+    return (respx.get(f"{API}/agents/{LOCAL}/{what}").mock(return_value=httpx.Response(200, json=page(local))),
+            respx.get(f"{API}/agents/{REMOTE}/{what}").mock(return_value=httpx.Response(200, json=page(remote))))
+
+
+def stream(*lines: dict[str, Any]) -> httpx.Response:
+    return httpx.Response(200, text="\n".join(json.dumps(line) for line in lines) + "\n", headers={"content-type": "application/x-json-stream"})
+
+
+@respx.mock
+async def test_arcane_3_is_asked_under_agents_with_its_version_moved(ctx: Context) -> None:
+    route = agents()
+    old = respx.get(f"{API}/environments")
+    respx.get(f"{API}/app/version").mock(return_value=httpx.Response(200, json={"currentVersion": "v3.1.0", "displayVersion": "v3.1.0"}))
+    assert await get_adapter("arcane").test(CONFIG, ctx) == "Arcane v3.1.0 answers; this key sees 2 environment(s)."
+    assert route.calls.last.request.url.params["limit"] == "-1"
+    assert not old.called
+
+
+@respx.mock
+async def test_arcane_3_cards_read_from_agents(ctx: Context) -> None:
+    agents()
+    local, remote = agent_lists("containers", LOCAL_CONTAINERS, REMOTE_CONTAINERS)
+    data = await get_adapter("arcane").fetch("containers", CONFIG, {}, ctx)
+    assert [row["title"] for row in data.items] == ["media-who-1", "sick-sick-1", "web-site-1", "web-who-1"]
+    assert local.calls.last.request.url.params["limit"] == "-1" and remote.called
+    agent_lists("projects", LOCAL_PROJECTS, REMOTE_PROJECTS)
+    assert [row["title"] for row in (await get_adapter("arcane").fetch("projects", CONFIG, {}, ctx)).items] == ["media", "broken", "web"]
+    respx.get(f"{API}/agents/{LOCAL}/containers/counts").mock(return_value=httpx.Response(
+        200, json=envelope({"runningContainers": 3, "stoppedContainers": 1, "totalContainers": 4, "unhealthyContainers": 1})))
+    respx.get(f"{API}/agents/{REMOTE}/containers/counts").mock(return_value=httpx.Response(
+        200, json=envelope({"runningContainers": 0, "stoppedContainers": 1, "totalContainers": 1, "unhealthyContainers": 0})))
+    data = await get_adapter("arcane").fetch("environments", CONFIG, {}, ctx)
+    assert [(row["title"], row.get("value")) for row in data.items] == [("Local Docker", "3 / 4"), ("remote-box", "0 / 1")]
+
+
+@respx.mock
+async def test_arcane_3_buttons_name_the_action_in_the_query(ctx: Context) -> None:
+    agents()
+    start = respx.post(f"{API}/agents/{REMOTE}/containers/{OLD}", params={"action": "start"}).mock(return_value=httpx.Response(
+        200, json=envelope({"message": "Container started successfully"})))
+    stop = respx.post(f"{API}/agents/{LOCAL}/containers/{SITE}", params={"action": "stop"}).mock(return_value=httpx.Response(
+        200, json=envelope({"message": "Container stopped successfully"})))
+    assert await get_adapter("arcane").action("containers", "start", {"environment": REMOTE, "id": OLD}, CONFIG, {}, ctx) == \
+        "Arcane has started the container."
+    assert await get_adapter("arcane").action("containers", "stop", {"environment": LOCAL, "id": SITE}, CONFIG, {}, ctx) == \
+        "Arcane has stopped the container."
+    assert start.called and stop.called
+    update = respx.post(f"{API}/agents/{LOCAL}/containers/{SITE}/update").mock(return_value=httpx.Response(200, json=envelope(
+        {"success": True, "checked": 1, "updated": 1, "items": [{"resourceId": SITE, "status": "updated"}]})))
+    assert await get_adapter("arcane").action("updates", "update", {"environment": LOCAL, "id": SITE}, CONFIG, {}, ctx) == \
+        "Arcane has pulled the new image and recreated the container."
+    assert update.called
+
+
+@respx.mock
+async def test_arcane_3_projects_deploy_and_act_through_the_query(ctx: Context) -> None:
+    agents()
+    up = respx.post(f"{API}/agents/{LOCAL}/projects/{BROKEN}/deploy", params={"action": "up"}).mock(
+        return_value=stream({"activityId": "0000"}, {"log": "Container web-site-1 Started"}, {"done": True}))
+    redeploy = respx.post(f"{API}/agents/{LOCAL}/projects/{WEB}/deploy", params={"action": "redeploy"}).mock(
+        return_value=stream({"activityId": "0000"}, {"error": "failed to pull image nope:1"}))
+    down = respx.post(f"{API}/agents/{REMOTE}/projects/{MEDIA}", params={"action": "down"}).mock(return_value=httpx.Response(
+        200, json=envelope({"message": "Project brought down successfully"})))
+    services = respx.post(f"{API}/agents/{LOCAL}/projects/{WEB}", params={"action": "updateservices"}).mock(return_value=httpx.Response(
+        200, json=envelope({"message": "Project services updated successfully"})))
+    assert await get_adapter("arcane").action("projects", "up", {"environment": LOCAL, "project": BROKEN}, CONFIG, {}, ctx) == \
+        "Arcane has started the project."
+    with pytest.raises(AdapterError, match="could not redeploy the project: failed to pull image nope:1"):
+        await get_adapter("arcane").action("projects", "redeploy", {"environment": LOCAL, "project": WEB}, CONFIG, {}, ctx)
+    assert await get_adapter("arcane").action("projects", "down", {"environment": REMOTE, "project": MEDIA}, CONFIG, {}, ctx) == \
+        "Arcane has stopped the project."
+    assert await get_adapter("arcane").action("projects", "update_project", {"environment": LOCAL, "project": WEB}, CONFIG, {}, ctx) == \
+        "Arcane has pulled the new images and recreated the project."
+    assert up.called and redeploy.called and down.called and services.called
+    assert services.calls.last.request.content == b""
+
+
+@respx.mock
+async def test_the_generation_is_remembered_and_asked_again_after_an_upgrade(ctx: Context) -> None:
+    old_agents = two()
+    old = respx.get(f"{API}/environments").mock(return_value=httpx.Response(200, json=page(ENVIRONMENTS)))
+    respx.get(f"{API}/app-version").mock(return_value=httpx.Response(200, json={"displayVersion": "v2.17.3"}))
+    await get_adapter("arcane").choices("environment", CONFIG, ctx)
+    await get_adapter("arcane").test(CONFIG, ctx)
+    # ⚠️ Arcane 2 is asked for /agents once, not on every refresh.
+    assert old_agents.call_count == 1 and old.call_count == 2
+    # Upgraded to 3 under a running nexdeck: the old path is gone.
+    old.mock(return_value=httpx.Response(404, json={"title": "Not Found", "status": 404, "detail": "Not Found"}))
+    new = agents()
+    later = Context(httpx.AsyncClient(), integration_id=1, widget_id=1, cache=ctx.cache)
+    later.forget_answers()  # Thirty seconds on.
+    assert await get_adapter("arcane").choices("environment", CONFIG, later) == [(LOCAL, "Local Docker"), (REMOTE, "remote-box")]
+    assert new.called
+    respx.post(f"{API}/agents/{LOCAL}/containers/{SITE}", params={"action": "restart"}).mock(return_value=httpx.Response(
+        200, json=envelope({"message": "Container restarted successfully"})))
+    assert await get_adapter("arcane").action("containers", "restart", {"environment": LOCAL, "id": SITE}, CONFIG, {}, later) == \
+        "Arcane has restarted the container."
+
+
+@respx.mock
+async def test_a_refusal_of_agents_is_not_mistaken_for_arcane_2(ctx: Context) -> None:
+    respx.get(f"{API}/agents").mock(return_value=httpx.Response(401, json={"title": "Unauthorized", "status": 401, "detail": "invalid API key"}))
+    old = respx.get(f"{API}/environments")
+    with pytest.raises(AuthFailed):
+        await get_adapter("arcane").fetch("environments", CONFIG, {}, ctx)
+    assert not old.called
