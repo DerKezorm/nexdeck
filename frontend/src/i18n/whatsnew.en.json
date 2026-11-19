@@ -2085,6 +2085,18 @@
       "small": [
         "The nexpaper Deadlines card names a follow-up instead of showing follow_up."
       ]
+    },
+    "1.9.1": {
+      "lead": "TrueNAS 24.10 is recognised again.",
+      "sections": [
+        {
+          "title": "TrueNAS 24.10",
+          "body": "TrueNAS before 25.04 has no current API, and 24.10 answers a request for it with its login page instead of saying it does not exist. nexdeck took that for a newer TrueNAS and refused to read it. It now reads 24.10 over its REST API as before, with the System, Pools and Alerts cards.",
+          "path": "A TrueNAS connection"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": []
     }
   }
 }

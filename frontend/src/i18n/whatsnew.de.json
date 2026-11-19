@@ -2085,6 +2085,18 @@
       "small": [
         "Die Fristen-Karte von nexpaper nennt eine Wiedervorlage beim Namen statt follow_up zu zeigen."
       ]
+    },
+    "1.9.1": {
+      "lead": "TrueNAS 24.10 wird wieder erkannt.",
+      "sections": [
+        {
+          "title": "TrueNAS 24.10",
+          "body": "TrueNAS vor 25.04 hat die neue API noch nicht, und 24.10 antwortet auf eine Anfrage danach mit seiner Anmeldeseite, statt zu sagen, dass es sie nicht gibt. nexdeck hielt das für ein neueres TrueNAS und las es nicht. Jetzt liest es 24.10 wie früher über die REST-API, mit den Karten System, Pools und Alerts.",
+          "path": "Eine TrueNAS-Anbindung"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": []
     }
   }
 }
