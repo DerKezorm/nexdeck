@@ -2097,6 +2097,23 @@
       ],
       "smallTitle": "Also in this version",
       "small": []
+    },
+    "1.9.2": {
+      "lead": "Two small fixes for TrueNAS and for adding cards.",
+      "sections": [
+        {
+          "title": "SMB sessions on TrueNAS 25.10",
+          "body": "TrueNAS 25.10 keeps the SMB sessions to itself. The card said so, but in red, as if something were wrong, and stood among the cards that need attention. It now stays grey and says the sessions show from TrueNAS 26 on.",
+          "path": "The SMB sessions card of a TrueNAS connection"
+        },
+        {
+          "title": "Adding a card",
+          "body": "With two connections of a kind, a click on a card asks which one to use. That question stood at the top of the card library, out of sight for whoever had scrolled down. It now comes into view, and so does any error when a card cannot be added.",
+          "path": "Edit a board, then Add a card"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": []
     }
   }
 }

@@ -2097,6 +2097,23 @@
       ],
       "smallTitle": "Außerdem in dieser Version",
       "small": []
+    },
+    "1.9.2": {
+      "lead": "Zwei kleine Korrekturen für TrueNAS und beim Hinzufügen von Karten.",
+      "sections": [
+        {
+          "title": "SMB-Sitzungen unter TrueNAS 25.10",
+          "body": "TrueNAS 25.10 behält die SMB-Sitzungen für sich. Die Karte sagte das, aber in Rot, als wäre etwas kaputt, und stand bei den Karten, die Aufmerksamkeit brauchen. Jetzt bleibt sie grau und sagt, dass die Sitzungen ab TrueNAS 26 erscheinen.",
+          "path": "Die Karte SMB-Sitzungen einer TrueNAS-Anbindung"
+        },
+        {
+          "title": "Karte hinzufügen",
+          "body": "Gibt es zwei Anbindungen derselben Art, fragt ein Klick auf eine Karte, welche sie nutzen soll. Die Frage stand ganz oben in der Kartenauswahl, außer Sicht für alle, die nach unten gescrollt hatten. Jetzt rückt sie ins Bild, ebenso eine Fehlermeldung, wenn sich eine Karte nicht hinzufügen lässt.",
+          "path": "Board bearbeiten, dann Karte hinzufügen"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": []
     }
   }
 }
