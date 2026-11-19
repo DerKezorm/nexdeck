@@ -2066,6 +2066,25 @@
       "small": [
         "nextasks is out of beta."
       ]
+    },
+    "1.9.0": {
+      "lead": "Arcane 3, and who is connected to TrueNAS over SMB.",
+      "sections": [
+        {
+          "title": "Arcane 3",
+          "body": "Arcane 3 moved its whole API, and every Arcane card stayed empty. nexdeck now speaks both Arcane 2 and 3 and notices when Arcane is upgraded. On Arcane 3 the Update button of a container needs the permission image-updates:apply.",
+          "path": "An Arcane connection"
+        },
+        {
+          "title": "TrueNAS: SMB sessions",
+          "body": "The Services card counts the open SMB sessions, and a new card, SMB sessions, lists who is connected from which machine and for how long, so you know whom a restart would cut off. Needs TrueNAS 25.04, or 26 or later.",
+          "path": "A TrueNAS connection > Add card > SMB sessions"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "The nexpaper Deadlines card names a follow-up instead of showing follow_up."
+      ]
     }
   }
 }

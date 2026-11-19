@@ -3,12 +3,17 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
-## Unreleased
+## 1.9.0 (2026-11-19)
 
 ### Added
 
 - **TrueNAS: open SMB sessions.** The Services card shows how many SMB sessions are open while SMB runs, so you see whether anybody is connected; it can be switched off like any other part of a card. TrueNAS 25.04 and 26 or later tell the count to a Read-Only Administrator. TrueNAS 25.10 keeps it to itself (the method is private there and would write a warning into its log on every call), so on 25.10 the card shows the services as before (#73).
 - **TrueNAS: who is connected over SMB.** A new card, SMB sessions, lists each user with the machine they are on and how long they have been connected, so you know whom a restart would cut off. A Mac's several sessions to the NAS are one row. Like the count, it needs TrueNAS 25.04, or 26 or later; on 25.10 the card says why it stays empty (#73).
+
+### Fixed
+
+- **Arcane 3.** Arcane 3.0 moved every route of its API from `/environments` to `/agents` and names the action of a button in the query, so with Arcane 3 every Arcane card stayed empty and the connection test failed. nexdeck now asks for `/agents` first and falls back to `/environments`, so Arcane 2 and 3 both work, and it notices when Arcane is upgraded while nexdeck runs. On Arcane 3 the Update button of a container needs the permission `image-updates:apply` (#74).
+- **nexpaper: follow-ups have their name.** nexpaper 1.5.0 sends a day to look at a document again among the deadlines; the Deadlines card showed it as `follow_up` and now says Follow up.
 
 ### Security
 
