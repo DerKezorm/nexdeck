@@ -22,7 +22,7 @@ from websockets.http11 import Response
 
 from app.adapters import get_adapter
 from app.adapters.base import AdapterError, Context, WidgetData, ago
-from app.adapters.truenas import _smb_machine, _smb_opened, _version
+from app.adapters.truenas import _smb_machine, _smb_opened, _version, _web_ui
 
 KEY = "1-readonlykey"
 INFO = {"version": "25.10.7", "hostname": "truenas", "uptime_seconds": 3600.5, "loadavg": [0.5, 0.3, 0.1], "physmem": 8_333_570_048, "cores": 4}
@@ -415,6 +415,88 @@ async def test_a_404_in_front_of_a_current_truenas_is_not_remembered_as_an_old_o
             await adapter.fetch("pools", config, {}, ctx)
         assert "reverse proxy" in refused.value.hint
     assert len(attempts) == 2
+
+
+# -- TrueNAS 24.10 (issue #75) ---------------------------------------------------------------------------------------
+# Its nginx has no location for /api/current, and `location /` answers every unknown path with a 302 to /ui/
+# (nginx.conf.mako of TS-24.10.2.4). That is its 404.
+
+INFO_2410 = {**INFO, "version": "TrueNAS-SCALE-24.10.2.4"}
+
+
+def to_the_web_ui(status: int = 302):
+    async def open_socket(url: str, config: dict[str, Any]) -> Any:
+        raise InvalidStatus(Response(status, "Moved Temporarily", Headers({"Location": "https://truenas.example.com/ui/"})))
+
+    return open_socket
+
+
+@respx.mock
+async def test_truenas_2410_over_https_is_read_over_rest(ctx: Context, monkeypatch: pytest.MonkeyPatch) -> None:
+    """The handshake is sent to the login page; that says "no current API" as a 404 would, for the hour."""
+    adapter = get_adapter("truenas")
+    attempts: list[str] = []
+
+    async def gone(url: str, config: dict[str, Any]) -> Any:
+        attempts.append(url)
+        return await to_the_web_ui()(url, config)
+
+    monkeypatch.setattr(adapter, "_open_socket", gone)
+    look = respx.get("https://truenas.example.com/api/current").mock(
+        return_value=httpx.Response(302, headers={"Location": "https://truenas.example.com/ui/"}))
+    respx.get("https://truenas.example.com/api/v2.0/system/info").mock(return_value=httpx.Response(200, json=INFO_2410))
+    respx.get("https://truenas.example.com/api/v2.0/pool").mock(return_value=httpx.Response(200, json=[]))
+    config = {"url": "https://truenas.example.com", "api_key": "2-full"}
+    assert await adapter.test(config, ctx) == "TrueNAS TrueNAS-SCALE-24.10.2.4 on truenas answers."
+    await adapter.fetch("pools", config, {}, ctx)
+    assert len(attempts) == 1, "remembered as a TrueNAS without the current API for the hour"
+    assert not look.called, "the refused handshake said it already"
+
+
+@respx.mock
+async def test_truenas_2410_over_http_is_read_over_rest_when_the_client_follows_the_redirect(monkeypatch: pytest.MonkeyPatch) -> None:
+    """nexdeck's own client follows redirects, so the keyless look ends on the login page with 200."""
+    adapter = get_adapter("truenas")
+    monkeypatch.setattr(adapter, "_open_socket", no_socket)
+    respx.get("http://truenas.example.com/api/current").mock(
+        return_value=httpx.Response(302, headers={"Location": "http://truenas.example.com/ui/"}))
+    respx.get("http://truenas.example.com/ui/").mock(return_value=httpx.Response(200, text="<!doctype html><title>TrueNAS</title>"))
+    respx.get("http://truenas.example.com/api/v2.0/system/info").mock(return_value=httpx.Response(200, json=INFO_2410))
+    following = Context(httpx.AsyncClient(follow_redirects=True), integration_id=1, widget_id=1, cache={})
+    assert await adapter.test({"url": "http://truenas.example.com", "api_key": "2-full"}, following) ==         "TrueNAS TrueNAS-SCALE-24.10.2.4 on truenas answers."
+
+
+@respx.mock
+async def test_a_redirect_somewhere_else_is_no_sign_of_an_old_truenas(ctx: Context, monkeypatch: pytest.MonkeyPatch) -> None:
+    """A sign-in page in front of TrueNAS also redirects. Only TrueNAS' own web interface stands for a 404."""
+    adapter = get_adapter("truenas")
+
+    async def to_sign_in(url: str, config: dict[str, Any]) -> Any:
+        raise InvalidStatus(Response(302, "Found", Headers({"Location": "https://auth.example.com/login?next=/api/current"})))
+
+    monkeypatch.setattr(adapter, "_open_socket", to_sign_in)
+    respx.get("https://truenas.example.com/api/current").mock(
+        return_value=httpx.Response(302, headers={"Location": "https://auth.example.com/login"}))
+    respx.get("https://auth.example.com/login").mock(return_value=httpx.Response(200, text="<!doctype html><title>Sign in</title>"))
+    rest = respx.get(url__startswith="https://truenas.example.com/api/v2.0/").mock(return_value=httpx.Response(200, json=INFO_2410))
+    with pytest.raises(AdapterError) as refused:
+        await adapter.fetch("pools", {"url": "https://truenas.example.com", "api_key": "2-full"}, {}, ctx)
+    assert refused.value.code == "deprecated_api"
+    assert not rest.called
+
+
+@pytest.mark.parametrize(("location", "expected"), [
+    ("/ui/", True),
+    ("/ui", True),
+    ("https://truenas.example.com/ui/", True),
+    ("http://10.0.0.20:81/ui/dashboard", True),
+    ("/uix/", False),
+    ("/api/current", False),
+    ("https://auth.example.com/login?next=/ui/", False),
+    ("", False),
+])
+def test_the_web_ui_is_told_from_other_redirects(location: str, expected: bool) -> None:
+    assert _web_ui(location) is expected
 
 
 @pytest.mark.parametrize(("label", "expected"), [

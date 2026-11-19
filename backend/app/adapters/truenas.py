@@ -35,6 +35,14 @@ count. Only a 404 there lets the REST API be asked, and what it says its
 version is remains the second line, for a proxy that says 404 on TrueNAS'
 behalf.
 
+⚠️ **TrueNAS 24.10 does not say 404 (issue #75).** Its nginx sends every path
+it has no ``location`` for to the web interface: ``location /`` answers 302
+to ``/ui/``, and ``/api`` has only ``/api/docs`` and ``/api/v2.0`` (read in
+``nginx.conf.mako`` of TS-24.10.2.4, not measured). The GET followed that to
+the login page and saw 200, the WebSocket handshake saw 302, and a 24.10 was
+taken for a TrueNAS with the current API and refused. A redirect to ``/ui``
+now counts as the 404 it stands for.
+
 The system card reads CPU and memory from the realtime event
 ``reporting.realtime`` on the same connection, as TrueNAS' own dashboard does.
 Measured on 25.10.7 on 22.09.2026 with a read-only administrator's key: the
@@ -209,23 +217,30 @@ class TruenasAdapter(Adapter):
         for TrueNAS' alert, and over http it would be the key in the clear on
         its way to an API that revokes it for that.
 
-        Only 404 means no. A redirect to https, a proxy's 502 and the 400 of
-        TrueNAS itself all belong to somebody who should not get REST calls.
+        Only 404 means no, or an answer that ended on the web interface: that
+        is how TrueNAS 24.10 says 404 (issue #75). A redirect to https is
+        followed; a proxy's 502 and the 400 of TrueNAS itself belong to
+        somebody who should not get REST calls.
         """
         now = time.monotonic()
         known = ctx.cache.get("truenas:current-api")
         if not fresh and known and known[0] > now:
             return known[1]
         answer = await ctx.request("GET", f"{base_url(config)}/api/current", verify=not config.get("insecure", True), timeout=10, auth_errors=False)
-        there = answer.status_code != 404
+        # Followed by the client to the login page, or handed back as the 302 itself.
+        on_ui = _web_ui(answer.url.path) or (300 <= answer.status_code < 400 and _web_ui(answer.headers.get("Location", "")))
+        there = answer.status_code != 404 and not on_ui
         ctx.cache["truenas:current-api"] = (now + VERSION_SECONDS, there)
         return there
 
-    async def _rest(self, config: dict[str, Any], ctx: Context, methods: list[str], cache: float, turned_down: int | None = None) -> dict[str, Any]:
+    async def _rest(self, config: dict[str, Any], ctx: Context, methods: list[str], cache: float, turned_down: int | None = None,
+                    known_missing: bool = False) -> dict[str, Any]:
         """The REST API, for a TrueNAS that has nothing newer; see the top.
 
         ``turned_down`` is the status the WebSocket handshake was refused with,
-        when that is why REST is asked at all.
+        when that is why REST is asked at all. ``known_missing`` says that
+        refusal meant "no current API" already (404, or TrueNAS 24.10's
+        redirect to its web interface), so it is not asked twice.
 
         ⚠️ Only the version is kept for the hour, never the answer it came in.
         The system card takes load and uptime from ``system/info`` too, and an
@@ -234,7 +249,7 @@ class TruenasAdapter(Adapter):
         """
         now = time.monotonic()
         # A handshake that said 404 has asked the question below already.
-        if turned_down != 404 and await self._has_current_api(config, ctx, fresh=not cache):
+        if not known_missing and await self._has_current_api(config, ctx, fresh=not cache):
             raise _rest_refused("", base_url(config), turned_down)
         fresh: dict[str, Any] = {}
         known = ctx.cache.get("truenas:version")
@@ -365,7 +380,7 @@ class TruenasAdapter(Adapter):
                 finally:
                     await socket.close()
         except InvalidStatus as error:
-            raise _NoCurrentApi(error.response.status_code) from error
+            raise _NoCurrentApi(error.response.status_code, error.response.headers.get("Location", "")) from error
         except TimeoutError as error:
             raise Unreachable("TrueNAS did not answer in time.") from error
         except (OSError, WebSocketException) as error:
@@ -409,10 +424,10 @@ class TruenasAdapter(Adapter):
                 # change within the hour. Anything else is more likely a
                 # reverse proxy that does not pass WebSockets on, and that
                 # gets fixed; it is asked again every time.
-                if gone.status == 404:
+                if gone.missing:
                     ctx.cache["truenas:legacy"] = now + LEGACY_SECONDS
                 try:
-                    fresh = await self._rest(config, ctx, missing, cache, turned_down=gone.status)
+                    fresh = await self._rest(config, ctx, missing, cache, turned_down=gone.status, known_missing=gone.missing)
                 except AuthFailed as error:
                     raise AdapterError(
                         f"TrueNAS turned the WebSocket at /api/current down with HTTP {gone.status}, "
@@ -422,10 +437,10 @@ class TruenasAdapter(Adapter):
                     ) from error
         else:
             # Over https this branch is only reached within the hour after a
-            # handshake that said 404, and that answer still stands.
-            remembered = 404 if base_url(config).startswith("https://") else None
+            # handshake that said "no current API", and that answer still stands.
+            over_https = base_url(config).startswith("https://")
             try:
-                fresh = await self._rest(config, ctx, missing, cache, turned_down=remembered)
+                fresh = await self._rest(config, ctx, missing, cache, turned_down=404 if over_https else None, known_missing=over_https)
             except AuthFailed as error:
                 if base_url(config).startswith("http://"):
                     raise AdapterError("TrueNAS refused the API key on its REST API.", code="auth_failed",
@@ -738,11 +753,23 @@ ADAPTER = TruenasAdapter()
 
 
 class _NoCurrentApi(Exception):
-    """The WebSocket at ``/api/current`` was turned down before it opened."""
+    """The WebSocket at ``/api/current`` was turned down before it opened.
 
-    def __init__(self, status: int) -> None:
+    ``missing`` is whether that refusal says there is no current API: 404, or
+    a redirect to the web interface, which is how TrueNAS 24.10 answers a path
+    it does not know (issue #75).
+    """
+
+    def __init__(self, status: int, location: str = "") -> None:
         super().__init__(status)
         self.status = status
+        self.missing = status == 404 or (300 <= status < 400 and _web_ui(location))
+
+
+def _web_ui(location: str) -> bool:
+    """Whether an address, or just its path, is TrueNAS' web interface under ``/ui``."""
+    path = re.sub(r"^[a-z][a-z0-9+.-]*://[^/]*", "", location.strip(), flags=re.IGNORECASE)
+    return path == "/ui" or path.startswith(("/ui/", "/ui?", "/ui#"))
 
 
 def _version(label: str) -> tuple[int, int]:

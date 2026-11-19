@@ -3,6 +3,12 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## Unreleased
+
+### Fixed
+
+- **TrueNAS 24.10 is recognised again.** TrueNAS before 25.04 has no `/api/current`, and 24.10 does not answer it with 404 but sends it to its login page. nexdeck took that for a newer TrueNAS behind a proxy and refused to read it. A redirect to TrueNAS' web interface now counts as the 404 it stands for, so 24.10 is read over its REST API as before, with the system, pools and alerts cards (#75).
+
 ## 1.9.0 (2026-11-19)
 
 ### Added
