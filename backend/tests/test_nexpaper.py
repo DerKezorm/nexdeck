@@ -152,6 +152,16 @@ async def test_a_contracts_last_day_to_cancel_is_named_beside_its_end(ctx: Conte
 def test_the_demo_shows_a_last_day_to_cancel() -> None:
     data = get_adapter("nexpaper").demo("deadlines", {}, 0)
     assert any(item["subtitle"].startswith("Last day to cancel · ") for item in data.items)
+    assert any(item["subtitle"].startswith("Follow up · ") for item in data.items)
+
+
+@respx.mock
+async def test_a_follow_up_is_named_not_shown_as_its_raw_word(ctx: Context) -> None:
+    # nexpaper 1.5.0 sends a day to look at a document again as ``follow_up``.
+    rows = [{"id": 12, "title": "Heating repair quote", "date": "2026-10-16", "kind": "follow_up", "url": "https://paper.example.com/dokument/12"}]
+    respx.get(f"{BASE}/dashboard").mock(return_value=httpx.Response(200, json={"deadlines": rows}))
+    data = await get_adapter("nexpaper").fetch("deadlines", CONFIG, {}, ctx)
+    assert [item["subtitle"] for item in data.items] == ["Follow up · 2026-10-16"]
 
 
 @respx.mock
