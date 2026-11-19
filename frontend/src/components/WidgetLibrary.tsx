@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { Search } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 
@@ -99,6 +99,13 @@ export function WidgetLibrary({ open, onClose, pageId, onCreated, numbersOnly = 
   const [integrationId, setIntegrationId] = useState<string>('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  // ⚠️ The connection to pick and any refusal stand above the list. Somebody
+  // who scrolled down to TrueNAS clicked and saw nothing happen (issue #76),
+  // so they are brought into sight whenever they appear.
+  const asking = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (picking || pickingCard || error) asking.current?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' })
+  }, [picking, pickingCard, error])
 
   const groups = useMemo(() => {
     const needle = query.trim().toLowerCase()
@@ -268,48 +275,50 @@ export function WidgetLibrary({ open, onClose, pageId, onCreated, numbersOnly = 
         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
         <input className="input input-icon" aria-label={t('library.search')} placeholder={t('library.search')} value={query} onChange={(e) => setQuery(e.target.value)} autoFocus />
       </div>
-      {error && (
-        <p className="text-sm text-bad mb-2" role="alert">
-          {error}
-        </p>
-      )}
-      {picking && (
-        <div className="glass rounded-xl p-3 mb-3">
-          <div className="text-sm font-medium mb-2">{t('library.pickIntegration', { name: picking.adapter.label })}</div>
-          {(integrations.data ?? []).filter((i) => i.kind === picking.adapter.kind).length > 0 ? (
-            <Select value={integrationId} onChange={setIntegrationId} options={(integrations.data ?? []).filter((i) => i.kind === picking.adapter.kind).map((i) => ({ value: String(i.id), label: i.name }))} />
-          ) : (
-            <p className="text-xs text-muted">
-              {t('library.noIntegration')}{' '}
-              <Link to={`/system/integrations?add=${picking.adapter.kind}`} className="text-accent">
-                {t('library.addIntegration')}
-              </Link>
-            </p>
-          )}
-          <div className="flex justify-end gap-2 mt-3">
-            <button className="btn" onClick={() => setPicking(null)}>
-              {t('common.cancel')}
-            </button>
-            <button className="btn btn-accent" disabled={!integrationId || busy} onClick={() => void create(picking.adapter, picking.widget, Number(integrationId))}>
-              {t('common.add')}
-            </button>
+      <div ref={asking} className="scroll-mt-4">
+        {error && (
+          <p className="text-sm text-bad mb-2" role="alert">
+            {error}
+          </p>
+        )}
+        {picking && (
+          <div className="glass rounded-xl p-3 mb-3">
+            <div className="text-sm font-medium mb-2">{t('library.pickIntegration', { name: picking.adapter.label })}</div>
+            {(integrations.data ?? []).filter((i) => i.kind === picking.adapter.kind).length > 0 ? (
+              <Select value={integrationId} onChange={setIntegrationId} options={(integrations.data ?? []).filter((i) => i.kind === picking.adapter.kind).map((i) => ({ value: String(i.id), label: i.name }))} />
+            ) : (
+              <p className="text-xs text-muted">
+                {t('library.noIntegration')}{' '}
+                <Link to={`/system/integrations?add=${picking.adapter.kind}`} className="text-accent">
+                  {t('library.addIntegration')}
+                </Link>
+              </p>
+            )}
+            <div className="flex justify-end gap-2 mt-3">
+              <button className="btn" onClick={() => setPicking(null)}>
+                {t('common.cancel')}
+              </button>
+              <button className="btn btn-accent" disabled={!integrationId || busy} onClick={() => void create(picking.adapter, picking.widget, Number(integrationId))}>
+                {t('common.add')}
+              </button>
+            </div>
           </div>
-        </div>
-      )}
-      {pickingCard && (
-        <div className="glass rounded-xl p-3 mb-3">
-          <div className="text-sm font-medium mb-2">{t('library.pickCard', { name: pickText(pickingCard.name, i18n.language) })}</div>
-          <Select value={cardConnection} onChange={setCardConnection} options={pickingCard.fits.map((one) => ({ value: String(one.id), label: one.name }))} />
-          <div className="flex justify-end gap-2 mt-3">
-            <button className="btn" onClick={() => setPickingCard(null)}>
-              {t('common.cancel')}
-            </button>
-            <button className="btn btn-accent" disabled={!cardConnection || busy} onClick={() => void placeCard(pickingCard, Number(cardConnection))}>
-              {t('common.add')}
-            </button>
+        )}
+        {pickingCard && (
+          <div className="glass rounded-xl p-3 mb-3">
+            <div className="text-sm font-medium mb-2">{t('library.pickCard', { name: pickText(pickingCard.name, i18n.language) })}</div>
+            <Select value={cardConnection} onChange={setCardConnection} options={pickingCard.fits.map((one) => ({ value: String(one.id), label: one.name }))} />
+            <div className="flex justify-end gap-2 mt-3">
+              <button className="btn" onClick={() => setPickingCard(null)}>
+                {t('common.cancel')}
+              </button>
+              <button className="btn btn-accent" disabled={!cardConnection || busy} onClick={() => void placeCard(pickingCard, Number(cardConnection))}>
+                {t('common.add')}
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
       {customCards.ready.length > 0 && (
         <section className="mb-4">
           <h3 className="text-[11px] uppercase tracking-wide text-faint mb-1.5">{t('library.customCards')}</h3>

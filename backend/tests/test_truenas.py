@@ -922,17 +922,26 @@ async def test_the_count_and_the_list_of_sessions_are_kept_apart(ctx: Context, m
 
 
 @pytest.mark.parametrize(("version", "code"), [
-    ("25.10.8", "smb_sessions_private"), ("25.10.2.1", "smb_sessions_private"), ("", "smb_sessions_private"),
-    ("TrueNAS-SCALE-24.10.2", "needs_current_api"),
+    ("", "smb_sessions_private"), ("TrueNAS-SCALE-24.10.2", "needs_current_api"),
 ])
 async def test_the_smb_sessions_card_says_why_a_version_does_not_tell_them(version: str, code: str, monkeypatch: pytest.MonkeyPatch) -> None:
-    """25.10 refuses a read-only key and logs every call from a full one: the card says so instead of asking."""
     adapter, fake = fake_on(monkeypatch)
     monkeypatch.setitem(ANSWERS, "system.info", {**INFO, "version": version})
     with pytest.raises(AdapterError) as closed:
         await adapter.fetch("smb_sessions", HTTPS, {}, fresh())
     assert closed.value.code == code
     assert "smb.status" not in fake.methods()
+
+
+@pytest.mark.parametrize("version", ["25.10.8", "25.10.2.1", "TrueNAS-SCALE-25.10.0"])
+async def test_on_25_10_the_smb_sessions_card_is_grey_and_says_why(version: str, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Issue #76: 25.10 keeps the sessions private. Nothing is wrong, so no red card and no question asked."""
+    adapter, fake = fake_on(monkeypatch)
+    monkeypatch.setitem(ANSWERS, "system.info", {**INFO, "version": version})
+    card = await adapter.fetch("smb_sessions", HTTPS, {}, fresh())
+    assert (card.status, card.error, card.items) == ("unknown", None, [])
+    assert card.meta == {"empty": "TrueNAS 25.10 keeps the SMB sessions to itself. They show from TrueNAS 26 on."}
+    assert "smb.status" not in fake.methods(), "a full key would write a warning into TrueNAS' log on every call"
 
 
 async def test_a_stopped_smb_is_said_and_not_shown_as_nobody_connected(monkeypatch: pytest.MonkeyPatch) -> None:

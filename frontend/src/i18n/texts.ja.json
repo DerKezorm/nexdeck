@@ -1991,6 +1991,7 @@
     "Snapshot, replication, cloud sync, rsync and cloud backup tasks with their last run. Needs TrueNAS 25.04 or later.": "スナップショット、レプリケーション、クラウド同期、rsync、クラウドバックアップのタスクと、その最後の実行。TrueNAS 25.04以降が必要です。",
     "The services that start with TrueNAS, such as SMB, NFS and SSH, whether they run, and how many SMB sessions are open. Needs TrueNAS 25.04 or later; TrueNAS 25.10 does not tell the sessions.": "SMB、NFS、SSHなど、TrueNASとともに起動するサービスと、それが稼働しているか、開いているSMBセッションの数。TrueNAS 25.04以降が必要です。TrueNAS 25.10ではセッション数は分かりません。",
     "Who is connected over SMB: the user, the machine and for how long. Needs TrueNAS 25.04, or 26 or later; TrueNAS 25.10 does not tell the sessions.": "SMB で接続しているのは誰か：ユーザー、マシン、接続している時間。TrueNAS 25.04、または 26 以降が必要です。TrueNAS 25.10 はセッションを伝えません。",
+    "TrueNAS 25.10 keeps the SMB sessions to itself. They show from TrueNAS 26 on.": "TrueNAS 25.10 は SMB セッションを公開していません。TrueNAS 26 以降で表示されます。",
     "Update available": "アップデートあり",
     "SMB sessions": "SMBセッション",
     "Virtual machines and containers with their state. Needs TrueNAS 25.04 or later.": "仮想マシンとコンテナの状態。TrueNAS 25.04以降が必要です。",

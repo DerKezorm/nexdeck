@@ -3,6 +3,13 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## Unreleased
+
+### Fixed
+
+- **The SMB sessions card is grey on TrueNAS 25.10, not red.** TrueNAS 25.10 keeps the sessions to itself, which is no fault of the NAS, yet the card showed it as a failure and stood among the cards that need attention. It now says so in grey, and the sessions show from TrueNAS 26 on (#76).
+- **Adding a card asks where you can see it.** With two connections of a kind, a click on a card asks which one to use, and that question, like any refusal, stood at the top of the card library. Whoever had scrolled down to the card saw nothing happen. Both are now brought into sight (#76).
+
 ## 1.9.1 (2026-11-19)
 
 ### Fixed

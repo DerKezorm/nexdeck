@@ -1991,6 +1991,7 @@
     "Snapshot, replication, cloud sync, rsync and cloud backup tasks with their last run. Needs TrueNAS 25.04 or later.": "Attività di snapshot, replica, sincronizzazione cloud, rsync e backup cloud con l'ultima esecuzione. Richiede TrueNAS 25.04 o successivo.",
     "The services that start with TrueNAS, such as SMB, NFS and SSH, whether they run, and how many SMB sessions are open. Needs TrueNAS 25.04 or later; TrueNAS 25.10 does not tell the sessions.": "I servizi che partono con TrueNAS, come SMB, NFS e SSH, se sono in esecuzione e quante sessioni SMB sono aperte. Richiede TrueNAS 25.04 o successivo; TrueNAS 25.10 non indica le sessioni.",
     "Who is connected over SMB: the user, the machine and for how long. Needs TrueNAS 25.04, or 26 or later; TrueNAS 25.10 does not tell the sessions.": "Chi è connesso via SMB: l'utente, la macchina e da quanto tempo. Richiede TrueNAS 25.04, oppure 26 o successivo; TrueNAS 25.10 non comunica le sessioni.",
+    "TrueNAS 25.10 keeps the SMB sessions to itself. They show from TrueNAS 26 on.": "TrueNAS 25.10 tiene per sé le sessioni SMB. Compaiono da TrueNAS 26 in poi.",
     "Update available": "Aggiornamento disponibile",
     "SMB sessions": "Sessioni SMB",
     "Virtual machines and containers with their state. Needs TrueNAS 25.04 or later.": "Macchine virtuali e container con il loro stato. Richiede TrueNAS 25.04 o successivo.",

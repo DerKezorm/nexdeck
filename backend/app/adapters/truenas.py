@@ -138,6 +138,8 @@ SMB_COUNT = ["SESSIONS", [], {"count": True}, {"fast": True}]
 #: a list that somebody reads before a restart must not show a client whose
 #: process is gone.
 SMB_LIST = ["SESSIONS", [], {}, {}]
+#: What the SMB sessions card says on 25.10, where they are private.
+SMB_SESSIONS_2510 = "TrueNAS 25.10 keeps the SMB sessions to itself. They show from TrueNAS 26 on."
 #: Methods whose answer only adds to a card. Any refusal, a missing role as
 #: well, is an empty answer: the card shows what it showed before.
 EXTRA = {SMB_STATUS}
@@ -598,8 +600,14 @@ class TruenasAdapter(Adapter):
         The versions are those of the count on the services card; see
         ``_service_rows``. Here a version that does not tell the sessions is
         said on the card, which has nothing else to show.
+
+        ⚠️ 25.10 is said in grey, not as a failure (issue #76): nothing is
+        wrong there, that release keeps them private, and a red card would
+        stand in "Needs attention" for as long as the NAS runs 25.10.
         """
         release = await self._release(config, ctx)
+        if (25, 10) <= release < (26, 0):
+            return WidgetData(status="unknown", meta={"empty": SMB_SESSIONS_2510})
         if not _smb_sessions_open(release):
             raise _smb_sessions_closed(release)
         read = await self._read(config, ctx, ["service.query", SMB_STATUS], cache=30, params={SMB_STATUS: SMB_LIST})
@@ -1168,13 +1176,10 @@ def _smb_sessions_open(release: tuple[int, int]) -> bool:
 
 
 def _smb_sessions_closed(release: tuple[int, int]) -> AdapterError:
-    """Why this TrueNAS' SMB sessions are not asked; see ``_service_rows``."""
-    if (25, 10) <= release < (26, 0):
-        return AdapterError(
-            f"TrueNAS {release[0]}.{release[1]} does not tell the SMB sessions.", code="smb_sessions_private",
-            hint="On 25.10 the method is private: a read-only key is refused, and a full key would write a warning "
-                 "into TrueNAS' log on every call. The card shows the sessions from TrueNAS 26 on.",
-        )
+    """Why this TrueNAS' SMB sessions are not asked; see ``_service_rows``.
+
+    25.10 never gets here: the card says it in grey (``SMB_SESSIONS_2510``).
+    """
     if release == (0, 0):
         return AdapterError(
             "TrueNAS did not say its version, so the SMB sessions are not asked.", code="smb_sessions_private",
