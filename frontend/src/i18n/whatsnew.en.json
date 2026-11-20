@@ -2114,6 +2114,18 @@
       ],
       "smallTitle": "Also in this version",
       "small": []
+    },
+    "1.9.3": {
+      "lead": "A fix for TrueNAS 24.10.",
+      "sections": [
+        {
+          "title": "TrueNAS 24.10 over https",
+          "body": "1.9.1 taught nexdeck that TrueNAS 24.10's redirect to its login page means it has no current API. Over https that redirect never got that far: the connection followed it on its own, could not, and the card said TrueNAS could not be reached. The redirect now gets through, and 24.10 is read over its REST API with the System, Pools and Alerts cards.",
+          "path": "A TrueNAS connection with an https:// address"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": []
     }
   }
 }

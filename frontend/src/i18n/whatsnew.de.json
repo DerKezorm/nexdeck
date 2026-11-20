@@ -2114,6 +2114,18 @@
       ],
       "smallTitle": "Außerdem in dieser Version",
       "small": []
+    },
+    "1.9.3": {
+      "lead": "Eine Korrektur für TrueNAS 24.10.",
+      "sections": [
+        {
+          "title": "TrueNAS 24.10 über https",
+          "body": "Seit 1.9.1 weiß nexdeck, dass die Weiterleitung von TrueNAS 24.10 auf seine Anmeldeseite heißt: keine aktuelle API. Über https kam die Weiterleitung dort nie an. Die Verbindung folgte ihr von selbst, scheiterte daran, und die Karte meldete, TrueNAS sei nicht erreichbar. Jetzt kommt die Weiterleitung durch, und 24.10 wird über seine REST-API gelesen, mit den Karten System, Pools und Warnungen.",
+          "path": "Eine TrueNAS-Anbindung mit einer https://-Adresse"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": []
     }
   }
 }
