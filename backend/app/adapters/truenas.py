@@ -292,7 +292,7 @@ class TruenasAdapter(Adapter):
             relaxed.check_hostname = False
             relaxed.verify_mode = ssl.CERT_NONE
             options["ssl"] = relaxed
-        return await websockets.connect(url, open_timeout=10, max_size=16 * 1024 * 1024, **options)
+        return await _Connect(url, open_timeout=10, max_size=16 * 1024 * 1024, **options)
 
     async def _rpc(self, config: dict[str, Any], methods: list[str], params: dict[str, list[Any]] | None = None) -> dict[str, Any]:
         """Log in with the key and call each method once, on one connection.
@@ -758,6 +758,24 @@ class TruenasAdapter(Adapter):
 
 
 ADAPTER = TruenasAdapter()
+
+
+class _Connect(websockets.connect):
+    """``websockets.connect`` without following redirects.
+
+    ⚠️ **websockets follows a redirect of the handshake itself (issue #75).**
+    TrueNAS 24.10 answers ``/api/current`` with a 302 to ``https://…/ui/``,
+    and websockets 15 can only follow to ``ws://`` or ``wss://``: it raised
+    ``InvalidURI``, which read as "could not be reached", and the 302 that
+    says "no current API" never arrived. Measured by the reporter on
+    24.10.2.4 on 20.11.2026, behind 1.9.1. A relative ``/ui/`` would have been
+    followed to the login page and come back as a 200 without the address.
+    Not followed, the redirect is the ``InvalidStatus`` that ``_NoCurrentApi``
+    reads.
+    """
+
+    def process_redirect(self, exc: Exception) -> Exception | str:
+        return exc
 
 
 class _NoCurrentApi(Exception):

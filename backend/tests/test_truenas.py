@@ -453,6 +453,57 @@ async def test_truenas_2410_over_https_is_read_over_rest(ctx: Context, monkeypat
     assert not look.called, "the refused handshake said it already"
 
 
+async def _redirecting_server(location: str):
+    """A plain HTTP server that answers every request, the WebSocket handshake too, as TrueNAS 24.10's nginx does."""
+
+    async def answer(reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
+        await reader.readuntil(b"\r\n\r\n")
+        writer.write(f"HTTP/1.1 302 Moved Temporarily\r\nServer: nginx\r\nLocation: {location}\r\n"
+                     "Content-Length: 0\r\nConnection: close\r\n\r\n".encode())
+        await writer.drain()
+        writer.close()
+
+    return await asyncio.start_server(answer, "127.0.0.1", 0)
+
+
+@respx.mock
+async def test_truenas_2410_is_read_over_rest_through_the_real_websocket_client(ctx: Context, monkeypatch: pytest.MonkeyPatch) -> None:
+    """websockets follows a redirect itself and cannot follow one to https://: that read as "could not be reached".
+
+    The handshake goes to a real server here; only TLS is left out. What the reporter of #75 measured on 24.10.2.4
+    behind 1.9.1: 302 with ``Location: https://<address>/ui/``.
+    """
+    adapter = get_adapter("truenas")
+    server = await _redirecting_server("https://truenas.example.com:444/ui/")
+    port = server.sockets[0].getsockname()[1]
+    real_open = type(adapter)._open_socket
+    opened: list[str] = []
+
+    async def without_tls(url: str, config: dict[str, Any]) -> Any:
+        opened.append(url)
+        assert url == "wss://truenas.example.com:444/api/current"
+        return await real_open(adapter, f"ws://127.0.0.1:{port}/api/current", {**config, "insecure": False})
+
+    monkeypatch.setattr(adapter, "_open_socket", without_tls)
+    respx.get("https://truenas.example.com:444/api/v2.0/system/info").mock(return_value=httpx.Response(200, json=INFO_2410))
+    look = respx.get("https://truenas.example.com:444/api/current")
+    async with server:
+        assert await adapter.test({"url": "https://truenas.example.com:444", "api_key": "2-full"}, ctx) == \
+            "TrueNAS TrueNAS-SCALE-24.10.2.4 on truenas answers."
+    assert opened == ["wss://truenas.example.com:444/api/current"]
+    assert not look.called, "the refused handshake said it already"
+
+
+async def test_the_websocket_client_hands_a_redirect_back_instead_of_following_it() -> None:
+    server = await _redirecting_server("/ui/")
+    port = server.sockets[0].getsockname()[1]
+    async with server:
+        with pytest.raises(InvalidStatus) as refused:
+            await get_adapter("truenas")._open_socket(f"ws://127.0.0.1:{port}/api/current", {"insecure": False})
+    assert refused.value.response.status_code == 302
+    assert refused.value.response.headers["Location"] == "/ui/"
+
+
 @respx.mock
 async def test_truenas_2410_over_http_is_read_over_rest_when_the_client_follows_the_redirect(monkeypatch: pytest.MonkeyPatch) -> None:
     """nexdeck's own client follows redirects, so the keyless look ends on the login page with 200."""

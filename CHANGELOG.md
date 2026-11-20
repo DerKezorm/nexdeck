@@ -3,6 +3,12 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## Unreleased
+
+### Fixed
+
+- **TrueNAS 24.10 over https connects.** 1.9.1 taught nexdeck that TrueNAS 24.10's redirect to its login page means "no current API", but the WebSocket client followed that redirect on its own, could not follow it to an `https://` address and gave up, so the card said TrueNAS could not be reached. The client no longer follows redirects, the redirect reaches the check made for it, and 24.10 is read over its REST API (#75).
+
 ## 1.9.2 (2026-11-19)
 
 ### Fixed
