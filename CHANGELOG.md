@@ -3,6 +3,17 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## 1.10.0 (2026-11-21)
+
+### Changed
+
+- **A new mark.** nexdeck's logo is now three stacked cards with a chart, in cyan, on a white tile in light mode and a dark one in dark mode. The favicon follows the system, and the icons of the installed app, the notification badge and the pictures in the README are new. A logo of your own under Appearance still takes its place.
+- **The nexapps logos are new too.** The logos nexdeck brings along for the apps of the nexapps family, for tiles and containers, are their new marks.
+
+### Fixed
+
+- **An installed app shows the new mark.** The icons and the favicon came without a cache header, so a browser kept them as long as it liked and could install the web app with an old icon. They are now asked for again before use, and their addresses carry a version that passes old copies by.
+
 ## 1.9.3 (2026-11-20)
 
 ### Fixed

@@ -2126,6 +2126,25 @@
       ],
       "smallTitle": "Außerdem in dieser Version",
       "small": []
+    },
+    "1.10.0": {
+      "lead": "nexdeck hat ein neues Zeichen.",
+      "sections": [
+        {
+          "title": "Drei Karten, ein Diagramm",
+          "body": "Das Logo sind jetzt drei gestapelte Karten mit einem Diagramm, der Stoff, aus dem ein Board besteht. Im hellen Modus ist es weiß, im dunklen dunkel, und der Browser-Tab folgt deinem System. Auch das Symbol der installierten App und der Mitteilungen ist neu. Ein eigenes Logo steht weiter an seiner Stelle.",
+          "path": "System > Aussehen > Name und Logo"
+        },
+        {
+          "title": "Auch die Familie sieht neu aus",
+          "body": "Die Logos, die nexdeck für die anderen nexapps mitbringt, für App-Kacheln und Container, sind ihre neuen Zeichen.",
+          "path": "Eine App-Kachel für nexview, nexcrate, nexlore und die anderen"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Die Symbole werden vor dem Benutzen neu nachgefragt, damit eine installierte App das neue zeigt. Unter Windows kann die Taskleiste das alte Symbol noch eine Weile zeigen; die App neu anheften hilft."
+      ]
     }
   }
 }

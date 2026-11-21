@@ -1,3 +1,3 @@
 """nexdeck: the live homelab dashboard of the nexapps family."""
 
-__version__ = "1.9.3"
+__version__ = "1.10.0"

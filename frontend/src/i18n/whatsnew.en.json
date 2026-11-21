@@ -2126,6 +2126,25 @@
       ],
       "smallTitle": "Also in this version",
       "small": []
+    },
+    "1.10.0": {
+      "lead": "nexdeck has a new mark.",
+      "sections": [
+        {
+          "title": "Three cards, one chart",
+          "body": "The logo is now three stacked cards with a chart, the stuff a board is made of. It is white in light mode and dark in dark mode, and the browser tab follows your system. The icon of the installed app and of notifications is new as well. A logo of your own still takes its place.",
+          "path": "System > Appearance > Name and logo"
+        },
+        {
+          "title": "The family looks new too",
+          "body": "The logos nexdeck brings for the other nexapps, for app tiles and containers, are their new marks.",
+          "path": "An app tile for nexview, nexcrate, nexlore and the others"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "The icons are asked for again before use, so an installed app shows the new one. On Windows the taskbar may keep the old icon for a while; pinning the app again helps."
+      ]
     }
   }
 }
