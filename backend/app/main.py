@@ -449,6 +449,28 @@ def app_manifest(db: DbSession) -> Response:
     return Response(json.dumps(body), media_type="application/manifest+json", headers={"Cache-Control": "no-cache"})
 
 
+#: Files without a hash in their name that a browser asks the server about again before each use: the service worker,
+#: its registration and everything at the top of ``frontend/public`` (the mark and the icons). ``no-cache`` does not mean
+#: "do not keep", it means "ask first"; an unchanged file comes back as 304.
+#:
+#: ⚠️ The icons belong here: without a header the browser guesses how long it may keep them, and after a sister app's
+#: new mark Chrome installed the web app with the old icon from its own storage. test_static.py checks that every file
+#: at the top of public/ is listed.
+FRESH = frozenset(
+    {
+        "sw.js",
+        "registerSW.js",
+        "icon.svg",
+        "icon-192.png",
+        "icon-512.png",
+        "icon-maskable-512.png",
+        "apple-touch-icon.png",
+        "badge-96.png",
+    }
+)
+_ASK_FIRST = {"Cache-Control": "no-cache"}
+
+
 @app.get("/{path:path}", include_in_schema=False)
 async def spa(path: str) -> Response:
     """Every non-API address is the single-page app.
@@ -465,5 +487,5 @@ async def spa(path: str) -> Response:
     if directory is not None and path and not path.startswith("api/"):
         candidate = (directory / path).resolve()
         if candidate.is_file() and str(candidate).startswith(str(directory.resolve())):
-            return FileResponse(candidate)
+            return FileResponse(candidate, headers=_ASK_FIRST if path in FRESH else None)
     return _index()

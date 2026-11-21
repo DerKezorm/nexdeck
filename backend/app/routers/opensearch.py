@@ -57,7 +57,7 @@ def opensearch(request: Request, db: DbSession) -> Response:
     if brand["app_icons"]:
         image, kind = brand["app_icons"]["192"], "image/png"
     else:
-        image, kind = "/icon-192.png", "image/png"
+        image, kind = "/icon-192.png?v=2", "image/png"
     body = (
         '<?xml version="1.0" encoding="UTF-8"?>\n'
         '<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/" '

@@ -35,7 +35,7 @@ def test_the_description_names_nexdeck_and_its_two_addresses(client: TestClient)
         "text/html": "http://testserver/go?q={searchTerms}",
         "application/x-suggestions+json": "http://testserver/api/v1/go/suggestions?q={searchTerms}",
     }
-    assert root.findtext("os:Image", namespaces=NS) == "http://testserver/icon-192.png"
+    assert root.findtext("os:Image", namespaces=NS) == "http://testserver/icon-192.png?v=2"
 
 
 def test_the_description_carries_the_installations_own_name_and_logo(client: TestClient) -> None:

@@ -1,13 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="nexpulse">
-  <defs>
-    <linearGradient id="nexpulse-g" gradientUnits="userSpaceOnUse" x1="8" y1="8" x2="56" y2="56">
-      <stop offset="0" stop-color="#ecfccb"/><stop offset=".5" stop-color="#a3e635"/><stop offset="1" stop-color="#4d7c0f"/>
-    </linearGradient>
-  </defs>
-  <rect x="2" y="2" width="60" height="60" rx="16" fill="#0d110a"/>
-  <rect x="2" y="2" width="60" height="60" rx="16" fill="none" stroke="url(#nexpulse-g)" stroke-width="2.5" stroke-opacity=".55"/>
-  <path d="M16.4 47A18 18 0 1 1 47.6 47" fill="none" stroke="#a3e635" stroke-opacity=".2" stroke-width="5" stroke-linecap="round"/>
-  <path d="M16.4 47A18 18 0 0 1 44.7 25.3" fill="none" stroke="url(#nexpulse-g)" stroke-width="5" stroke-linecap="round"/>
-  <circle cx="44.7" cy="25.3" r="4" fill="#ecfccb"/>
-  <circle cx="32" cy="40" r="2.6" fill="#a3e635"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64"><defs><linearGradient id="g" gradientUnits="userSpaceOnUse" x1="10" y1="10" x2="54" y2="54"><stop offset="0" stop-color="#bef264"/><stop offset=".5" stop-color="#65a30d"/><stop offset="1" stop-color="#365314"/></linearGradient></defs><rect x="2" y="2" width="60" height="60" rx="16" fill="#fff"/><rect x="2.75" y="2.75" width="58.5" height="58.5" rx="15.3" fill="none" stroke="#65a30d" stroke-opacity="0.35" stroke-width="1.5"/><g transform="translate(0 -3)"><path d="M14.4 47.5A19 19 0 1 1 49.6 47.5" fill="none" stroke="url(#g)" stroke-opacity=".3" stroke-width="4.6" stroke-linecap="round"/><path d="M14.4 47.5A19 19 0 0 1 45.4 26.6" fill="none" stroke="url(#g)" stroke-width="4.6" stroke-linecap="round"/><path d="M32 40 42 28.5" stroke="#4d8f0a" stroke-width="3.8" stroke-linecap="round"/><circle cx="32" cy="40" r="4.6" fill="#4d8f0a" stroke="#fff" stroke-width="2"/></g></svg>

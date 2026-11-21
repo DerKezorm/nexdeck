@@ -79,8 +79,9 @@ self.addEventListener('push', (event) => {
     self.registration.showNotification(payload.title || 'nexdeck', {
       body: payload.body || '',
       tag: payload.tag,
-      icon: '/icon-192.png',
-      badge: '/icon-192.png',
+      icon: '/icon-192.png?v=2',
+      // Read as a mask by Android: white on clear, or the badge is a plain square.
+      badge: '/badge-96.png?v=2',
       data: { url: payload.url || '/' },
     }),
   )

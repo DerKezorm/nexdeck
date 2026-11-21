@@ -6,8 +6,13 @@
     <meta name="theme-color" content="#0a0d12" media="(prefers-color-scheme: dark)" />
     <meta name="theme-color" content="#eef1f5" media="(prefers-color-scheme: light)" />
     <meta name="color-scheme" content="dark light" />
-    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <!--
+      ?v=2 since the new mark (1.10.0): browsers had kept the old icons, served without a cache header, and
+      kept showing them. A new address passes that entry by. Raise the number with a new mark, here, in the
+      manifest (vite.config.ts) and in src/sw.ts.
+    -->
+    <link rel="icon" type="image/svg+xml" href="/icon.svg?v=2" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2" />
     <link rel="search" type="application/opensearchdescription+xml" href="/opensearch.xml" title="nexdeck" />
     <title>nexdeck</title>
   </head>

@@ -1,8 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-label="nexapps">
-  <rect width="32" height="32" rx="7" fill="#0b0f0f"></rect>
-  <g fill="none" stroke-linecap="round" stroke-width="4.5">
-    <path d="M10 24V12" stroke="#edf1f1"></path>
-    <path d="M22 24V8" stroke="#edf1f1"></path>
-    <path d="M10 12l12 12" stroke="#23d19e"></path>
-  </g>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64"><defs><linearGradient id="g" gradientUnits="userSpaceOnUse" x1="10" y1="10" x2="54" y2="54"><stop offset="0" stop-color="#34c795"/><stop offset=".5" stop-color="#0e8f68"/><stop offset="1" stop-color="#06513d"/></linearGradient></defs><rect x="2" y="2" width="60" height="60" rx="16" fill="#fff"/><rect x="2.75" y="2.75" width="58.5" height="58.5" rx="15.3" fill="none" stroke="#0e8f68" stroke-opacity="0.35" stroke-width="1.5"/><rect x="12" y="18" width="40" height="28" rx="5" fill="none" stroke="url(#g)" stroke-width="4.2"/><path d="M15 21.5 32 34.5 49 21.5" fill="none" stroke="#12b886" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
