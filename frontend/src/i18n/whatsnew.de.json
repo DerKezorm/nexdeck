@@ -2145,6 +2145,26 @@
       "small": [
         "Die Symbole werden vor dem Benutzen neu nachgefragt, damit eine installierte App das neue zeigt. Unter Windows kann die Taskleiste das alte Symbol noch eine Weile zeigen; die App neu anheften hilft."
       ]
+    },
+    "1.11.0": {
+      "lead": "nexdeck zeigt jetzt deine Notizen aus nexnotes, und eine Checkliste hakst du direkt auf der Karte ab.",
+      "sections": [
+        {
+          "title": "Eine Checkliste an der Wand",
+          "body": "Die Karte „Eine Notiz oder Checkliste“ zeigt eine Notiz aus nexnotes: die offenen Punkte zuerst, wie viele erledigt sind und wie viele noch folgen. Mit einem API-Token, der schreiben darf, hakt ein Tipp einen Punkt ab, auch am Küchen-Tablet; ein Tipp auf den Titel öffnet die Notiz in nexnotes. Eine Notiz ohne Checkliste zeigt ihre ersten Zeilen.",
+          "path": "Karte hinzufügen > nexnotes > Eine Notiz oder Checkliste"
+        },
+        {
+          "title": "Die angehefteten Notizen auf einen Blick",
+          "body": "Die Karte „Angeheftete Notizen“ listet, was du in nexnotes angeheftet hast, mit der ersten Zeile und wie weit die Checklisten sind. Jede öffnet sich in nexnotes.",
+          "path": "Karte hinzufügen > nexnotes > Angeheftete Notizen"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Ist nexnotes nicht erreichbar, behalten beide Karten ihren letzten Stand mit einer orangen Zeile, seit wann; abhaken geht erst wieder, wenn nexnotes antwortet.",
+        "Eine Notiz, die gelöscht, gesperrt oder nicht mehr mit dir geteilt ist, sagt die Karte, ohne etwas von ihrem Inhalt zu zeigen."
+      ]
     }
   }
 }

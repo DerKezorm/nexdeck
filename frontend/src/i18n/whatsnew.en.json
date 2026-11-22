@@ -2145,6 +2145,26 @@
       "small": [
         "The icons are asked for again before use, so an installed app shows the new one. On Windows the taskbar may keep the old icon for a while; pinning the app again helps."
       ]
+    },
+    "1.11.0": {
+      "lead": "nexdeck now shows your notes from nexnotes, and you tick off a checklist right on the card.",
+      "sections": [
+        {
+          "title": "A checklist on the wall",
+          "body": "The card A note or checklist shows one note of nexnotes: the open items first, how many are done and how many more there are. With an API token that may write, a tap ticks an item off, on the kitchen tablet too; a tap on the title opens the note in nexnotes. A note without a checklist shows its first lines.",
+          "path": "Add a card > nexnotes > A note or checklist"
+        },
+        {
+          "title": "The pinned notes at a glance",
+          "body": "The card Pinned notes lists what you pinned in nexnotes, with its first line and how far its checklists are. Each opens itself in nexnotes.",
+          "path": "Add a card > nexnotes > Pinned notes"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "When nexnotes cannot be reached, both cards keep their last state with an orange line saying since when, and nothing can be ticked until nexnotes answers again.",
+        "A note that was deleted, locked or is no longer shared with you is said on the card, without anything of what it showed."
+      ]
     }
   }
 }
