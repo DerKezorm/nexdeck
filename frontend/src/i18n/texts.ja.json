@@ -2719,7 +2719,17 @@
     "Most photos first": "写真の多い順",
     "Newest photo first": "新しい写真の順",
     "By name": "名前順",
-    "The users of the gallery and when each came last. Needs an administrator's key.": "ギャラリーのユーザーと、それぞれが最後に来た日。管理者のキーが必要です。"
+    "The users of the gallery and when each came last. Needs an administrator's key.": "ギャラリーのユーザーと、それぞれが最後に来た日。管理者のキーが必要です。",
+    "Quick notes and checklists in nexnotes: the pinned notes, or one note or checklist that can be ticked off right on the card.": "nexnotes のクイックメモとチェックリスト: ピン留めしたメモ、またはカード上で直接チェックできるメモやチェックリスト。",
+    "Settings > Connections > API tokens > New API token in nexnotes. It starts with nn_api_; Read only fills the cards, Read and write also ticks items off. An older key for nexdeck (nn_deck_) works too.": "nexnotes の 設定 > 接続 > API トークン > 新しい API トークン。nn_api_ で始まります。「読み取りのみ」でカードを表示、「読み取りと書き込み」で項目のチェックも可能。nexdeck 用の古いキー (nn_deck_) も使えます。",
+    "Pinned notes": "ピン留めしたメモ",
+    "The notes pinned in nexnotes, newest change first: title, first line and how far their checklists are. A tap opens the note.": "nexnotes でピン留めしたメモ (最新の変更順): タイトル、最初の行、チェックリストの進み具合。タップでメモを開きます。",
+    "A note or checklist": "メモまたはチェックリスト",
+    "One note of nexnotes: its checklist with the open items first and how many are done, or its first lines. With a token that may write, a tap ticks an item off.": "nexnotes のメモ 1 件: 未完了の項目を先頭にしたチェックリストと完了数、または最初の数行。書き込み可能なトークンなら、タップで項目をチェックします。",
+    "Note": "メモ",
+    "The notes this token sees, newest change first. Locked notes are never offered.": "このトークンが見られるメモ (最新の変更順)。ロックされたメモは表示されません。",
+    "Show ticked items": "チェック済みの項目を表示",
+    "Below the open ones, struck through.": "未完了の項目の下に取り消し線付きで。"
   },
   "labels": {
     "Private resources": "プライベートリソース",
@@ -4232,6 +4242,25 @@
     "Webmaster": "ウェブマスター",
     "Generic": "共有",
     "No albums.": "アルバムはありません。",
-    "No users.": "ユーザーはいません。"
+    "No users.": "ユーザーはいません。",
+    "Open again": "未完了に戻す",
+    "Ticked off.": "チェックしました。",
+    "Opened again.": "未完了に戻しました。",
+    "No note is pinned.": "ピン留めされたメモはありません。",
+    "Everything is ticked off.": "すべてチェック済みです。",
+    "This note is empty.": "このメモは空です。",
+    "This note is shared with you to read only.": "このメモは読み取り専用で共有されています。",
+    "Read only: ticking off needs an API token with Read and write.": "読み取りのみ: チェックするには「読み取りと書き込み」の API トークンが必要です。",
+    "Untitled note": "無題のメモ",
+    "This older key of nexnotes reaches the card's own routes only.": "この古い nexnotes のキーはカード用のルートにしか届きません。",
+    "This token may only read; ticking off needs an API token with Read and write.": "このトークンは読み取りのみです。チェックするには「読み取りと書き込み」の API トークンが必要です。",
+    "This note is shared with you to read only; it cannot be ticked off here.": "このメモは読み取り専用で共有されているため、ここではチェックできません。",
+    "nexnotes has no such note, or this token may not see it.": "nexnotes にそのメモはないか、このトークンでは見られません。",
+    "This note is locked in the vault; the card shows nothing of it.": "このメモは金庫でロックされています。カードには何も表示しません。",
+    "This note is in the trash.": "このメモはゴミ箱にあります。",
+    "This item changed in nexnotes meanwhile; the card shows it anew.": "この項目は nexnotes で変更されました。カードを更新して表示します。",
+    "nexnotes could not take this request.": "nexnotes はこのリクエストを受け付けられませんでした。",
+    "Pick a note in the card's settings.": "カードの設定でメモを選んでください。",
+    "The item is not a number this can be used with.": "この項目は使用できる番号ではありません。"
   }
 }

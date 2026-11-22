@@ -3251,5 +3251,14 @@
       "leadSkin": "你的皮肤会以你的 GitHub 名义，作为 Workshop 中的 issue 提交到 Card shop。Workshop 会检查它，全部通过后会自动加入。你发送的一切都是公开的，并采用 MIT 许可证。",
       "descriptionHelpSkin": "用英文写几句话说明它的样子。纯文本。"
     }
+  },
+  "checklist": {
+    "progress": "{{done}} / {{total}}",
+    "more": "另有 {{count}} 项",
+    "offline": "{{name}} 暂时无法访问 · 截至 {{time}}",
+    "from": "来自 {{name}}",
+    "tick": "勾选 {{text}}",
+    "untick": "重新打开 {{text}}",
+    "untitled": "无标题笔记"
   }
 }

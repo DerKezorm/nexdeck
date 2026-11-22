@@ -2719,7 +2719,17 @@
     "Most photos first": "Le plus de photos d'abord",
     "Newest photo first": "Photo la plus récente d'abord",
     "By name": "Par nom",
-    "The users of the gallery and when each came last. Needs an administrator's key.": "Les utilisateurs de la galerie et quand chacun est venu pour la dernière fois. Demande la clé d'un administrateur."
+    "The users of the gallery and when each came last. Needs an administrator's key.": "Les utilisateurs de la galerie et quand chacun est venu pour la dernière fois. Demande la clé d'un administrateur.",
+    "Quick notes and checklists in nexnotes: the pinned notes, or one note or checklist that can be ticked off right on the card.": "Notes rapides et listes de contrôle dans nexnotes : les notes épinglées, ou une note ou une liste à cocher directement sur la carte.",
+    "Settings > Connections > API tokens > New API token in nexnotes. It starts with nn_api_; Read only fills the cards, Read and write also ticks items off. An older key for nexdeck (nn_deck_) works too.": "Réglages > Connexions > Jetons d'API > Nouveau jeton d'API dans nexnotes. Il commence par nn_api_ ; Lecture seule remplit les cartes, Lecture et écriture coche aussi les éléments. Une ancienne clé pour nexdeck (nn_deck_) fonctionne aussi.",
+    "Pinned notes": "Notes épinglées",
+    "The notes pinned in nexnotes, newest change first: title, first line and how far their checklists are. A tap opens the note.": "Les notes épinglées dans nexnotes, la dernière modifiée d'abord : titre, première ligne et avancement de leurs listes. Un appui ouvre la note.",
+    "A note or checklist": "Une note ou une liste",
+    "One note of nexnotes: its checklist with the open items first and how many are done, or its first lines. With a token that may write, a tap ticks an item off.": "Une note de nexnotes : sa liste avec les éléments ouverts d'abord et combien sont faits, ou ses premières lignes. Avec un jeton qui peut écrire, un appui coche un élément.",
+    "Note": "Note",
+    "The notes this token sees, newest change first. Locked notes are never offered.": "Les notes que voit ce jeton, la dernière modifiée d'abord. Les notes verrouillées ne sont jamais proposées.",
+    "Show ticked items": "Afficher les éléments cochés",
+    "Below the open ones, struck through.": "Sous les éléments ouverts, barrés."
   },
   "labels": {
     "Private resources": "Ressources privées",
@@ -4232,6 +4242,25 @@
     "Webmaster": "Webmaster",
     "Generic": "Générique",
     "No albums.": "Aucun album.",
-    "No users.": "Aucun utilisateur."
+    "No users.": "Aucun utilisateur.",
+    "Open again": "Rouvrir",
+    "Ticked off.": "Coché.",
+    "Opened again.": "Rouvert.",
+    "No note is pinned.": "Aucune note n'est épinglée.",
+    "Everything is ticked off.": "Tout est coché.",
+    "This note is empty.": "Cette note est vide.",
+    "This note is shared with you to read only.": "Cette note est partagée avec toi en lecture seule.",
+    "Read only: ticking off needs an API token with Read and write.": "Lecture seule : pour cocher, il faut un jeton d'API en Lecture et écriture.",
+    "Untitled note": "Note sans titre",
+    "This older key of nexnotes reaches the card's own routes only.": "Cette ancienne clé de nexnotes n'atteint que les routes de la carte.",
+    "This token may only read; ticking off needs an API token with Read and write.": "Ce jeton ne peut que lire ; pour cocher, il faut un jeton d'API en Lecture et écriture.",
+    "This note is shared with you to read only; it cannot be ticked off here.": "Cette note est partagée avec toi en lecture seule ; rien ne peut être coché ici.",
+    "nexnotes has no such note, or this token may not see it.": "nexnotes n'a pas cette note, ou ce jeton ne peut pas la voir.",
+    "This note is locked in the vault; the card shows nothing of it.": "Cette note est verrouillée dans le coffre ; la carte n'en montre rien.",
+    "This note is in the trash.": "Cette note est dans la corbeille.",
+    "This item changed in nexnotes meanwhile; the card shows it anew.": "Cet élément a changé entre-temps dans nexnotes ; la carte l'affiche à nouveau.",
+    "nexnotes could not take this request.": "nexnotes n'a pas pu accepter cette demande.",
+    "Pick a note in the card's settings.": "Choisis une note dans les réglages de la carte.",
+    "The item is not a number this can be used with.": "L'élément n'est pas un numéro utilisable."
   }
 }

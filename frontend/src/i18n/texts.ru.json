@@ -2719,7 +2719,17 @@
     "Most photos first": "Больше всего фото сначала",
     "Newest photo first": "Новое фото сначала",
     "By name": "По имени",
-    "The users of the gallery and when each came last. Needs an administrator's key.": "Пользователи галереи и когда каждый заходил последний раз. Нужен ключ администратора."
+    "The users of the gallery and when each came last. Needs an administrator's key.": "Пользователи галереи и когда каждый заходил последний раз. Нужен ключ администратора.",
+    "Quick notes and checklists in nexnotes: the pinned notes, or one note or checklist that can be ticked off right on the card.": "Быстрые заметки и чек-листы в nexnotes: закреплённые заметки или одна заметка либо чек-лист, которые можно отмечать прямо на карточке.",
+    "Settings > Connections > API tokens > New API token in nexnotes. It starts with nn_api_; Read only fills the cards, Read and write also ticks items off. An older key for nexdeck (nn_deck_) works too.": "Настройки > Подключения > API-токены > Новый API-токен в nexnotes. Начинается с nn_api_; «Только чтение» заполняет карточки, «Чтение и запись» также отмечает пункты. Старый ключ для nexdeck (nn_deck_) тоже подходит.",
+    "Pinned notes": "Закреплённые заметки",
+    "The notes pinned in nexnotes, newest change first: title, first line and how far their checklists are. A tap opens the note.": "Заметки, закреплённые в nexnotes, сначала изменённые последними: заголовок, первая строка и прогресс чек-листов. Нажатие открывает заметку.",
+    "A note or checklist": "Заметка или чек-лист",
+    "One note of nexnotes: its checklist with the open items first and how many are done, or its first lines. With a token that may write, a tap ticks an item off.": "Одна заметка из nexnotes: её чек-лист с открытыми пунктами в начале и числом выполненных или её первые строки. С токеном на запись нажатие отмечает пункт.",
+    "Note": "Заметка",
+    "The notes this token sees, newest change first. Locked notes are never offered.": "Заметки, которые видит этот токен, сначала изменённые последними. Заблокированные заметки никогда не предлагаются.",
+    "Show ticked items": "Показывать отмеченные пункты",
+    "Below the open ones, struck through.": "Под открытыми, зачёркнутыми."
   },
   "labels": {
     "Private resources": "Частные ресурсы",
@@ -4232,6 +4242,25 @@
     "Webmaster": "Веб-мастер",
     "Generic": "Общий",
     "No albums.": "Нет альбомов.",
-    "No users.": "Нет пользователей."
+    "No users.": "Нет пользователей.",
+    "Open again": "Снова открыть",
+    "Ticked off.": "Отмечено.",
+    "Opened again.": "Снова открыто.",
+    "No note is pinned.": "Нет закреплённых заметок.",
+    "Everything is ticked off.": "Всё отмечено.",
+    "This note is empty.": "Эта заметка пуста.",
+    "This note is shared with you to read only.": "Эта заметка доступна вам только для чтения.",
+    "Read only: ticking off needs an API token with Read and write.": "Только чтение: чтобы отмечать, нужен API-токен с правом «Чтение и запись».",
+    "Untitled note": "Заметка без названия",
+    "This older key of nexnotes reaches the card's own routes only.": "Этот старый ключ nexnotes достигает только маршрутов карточки.",
+    "This token may only read; ticking off needs an API token with Read and write.": "Этот токен может только читать; чтобы отмечать, нужен API-токен с правом «Чтение и запись».",
+    "This note is shared with you to read only; it cannot be ticked off here.": "Эта заметка доступна вам только для чтения; здесь ничего нельзя отметить.",
+    "nexnotes has no such note, or this token may not see it.": "В nexnotes нет такой заметки, или этот токен не может её видеть.",
+    "This note is locked in the vault; the card shows nothing of it.": "Эта заметка заблокирована в сейфе; карточка ничего из неё не показывает.",
+    "This note is in the trash.": "Эта заметка в корзине.",
+    "This item changed in nexnotes meanwhile; the card shows it anew.": "Этот пункт тем временем изменился в nexnotes; карточка показывает его заново.",
+    "nexnotes could not take this request.": "nexnotes не смог принять этот запрос.",
+    "Pick a note in the card's settings.": "Выберите заметку в настройках карточки.",
+    "The item is not a number this can be used with.": "Пункт не является пригодным номером."
   }
 }

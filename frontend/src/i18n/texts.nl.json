@@ -2719,7 +2719,17 @@
     "Most photos first": "Meeste foto's eerst",
     "Newest photo first": "Nieuwste foto eerst",
     "By name": "Op naam",
-    "The users of the gallery and when each came last. Needs an administrator's key.": "De gebruikers van de galerij en wanneer elk het laatst kwam. Vraagt de sleutel van een beheerder."
+    "The users of the gallery and when each came last. Needs an administrator's key.": "De gebruikers van de galerij en wanneer elk het laatst kwam. Vraagt de sleutel van een beheerder.",
+    "Quick notes and checklists in nexnotes: the pinned notes, or one note or checklist that can be ticked off right on the card.": "Snelle notities en checklists in nexnotes: de vastgezette notities, of één notitie of checklist die je direct op de kaart afvinkt.",
+    "Settings > Connections > API tokens > New API token in nexnotes. It starts with nn_api_; Read only fills the cards, Read and write also ticks items off. An older key for nexdeck (nn_deck_) works too.": "Instellingen > Verbindingen > API-tokens > Nieuwe API-token in nexnotes. Hij begint met nn_api_; Alleen lezen vult de kaarten, Lezen en schrijven vinkt ook punten af. Een oudere sleutel voor nexdeck (nn_deck_) werkt ook.",
+    "Pinned notes": "Vastgezette notities",
+    "The notes pinned in nexnotes, newest change first: title, first line and how far their checklists are. A tap opens the note.": "De in nexnotes vastgezette notities, laatst gewijzigde eerst: titel, eerste regel en hoe ver hun checklists zijn. Tikken opent de notitie.",
+    "A note or checklist": "Een notitie of checklist",
+    "One note of nexnotes: its checklist with the open items first and how many are done, or its first lines. With a token that may write, a tap ticks an item off.": "Eén notitie uit nexnotes: haar checklist met de open punten eerst en hoeveel er klaar zijn, of haar eerste regels. Met een token die mag schrijven vinkt tikken een punt af.",
+    "Note": "Notitie",
+    "The notes this token sees, newest change first. Locked notes are never offered.": "De notities die deze token ziet, laatst gewijzigde eerst. Vergrendelde notities worden nooit aangeboden.",
+    "Show ticked items": "Afgevinkte punten tonen",
+    "Below the open ones, struck through.": "Onder de open punten, doorgestreept."
   },
   "labels": {
     "Private resources": "Privé-resources",
@@ -4232,6 +4242,25 @@
     "Webmaster": "Webmaster",
     "Generic": "Gedeeld",
     "No albums.": "Geen albums.",
-    "No users.": "Geen gebruikers."
+    "No users.": "Geen gebruikers.",
+    "Open again": "Weer openen",
+    "Ticked off.": "Afgevinkt.",
+    "Opened again.": "Weer geopend.",
+    "No note is pinned.": "Er is geen notitie vastgezet.",
+    "Everything is ticked off.": "Alles is afgevinkt.",
+    "This note is empty.": "Deze notitie is leeg.",
+    "This note is shared with you to read only.": "Deze notitie is alleen-lezen met je gedeeld.",
+    "Read only: ticking off needs an API token with Read and write.": "Alleen lezen: afvinken vraagt een API-token met Lezen en schrijven.",
+    "Untitled note": "Notitie zonder titel",
+    "This older key of nexnotes reaches the card's own routes only.": "Deze oudere sleutel van nexnotes bereikt alleen de routes van de kaart.",
+    "This token may only read; ticking off needs an API token with Read and write.": "Deze token mag alleen lezen; afvinken vraagt een API-token met Lezen en schrijven.",
+    "This note is shared with you to read only; it cannot be ticked off here.": "Deze notitie is alleen-lezen met je gedeeld; hier valt niets af te vinken.",
+    "nexnotes has no such note, or this token may not see it.": "nexnotes heeft deze notitie niet, of deze token mag haar niet zien.",
+    "This note is locked in the vault; the card shows nothing of it.": "Deze notitie is vergrendeld in de kluis; de kaart toont er niets van.",
+    "This note is in the trash.": "Deze notitie ligt in de prullenbak.",
+    "This item changed in nexnotes meanwhile; the card shows it anew.": "Dit punt is intussen in nexnotes veranderd; de kaart toont het opnieuw.",
+    "nexnotes could not take this request.": "nexnotes kon dit verzoek niet aannemen.",
+    "Pick a note in the card's settings.": "Kies een notitie in de instellingen van de kaart.",
+    "The item is not a number this can be used with.": "Het punt is geen nummer waarmee te werken valt."
   }
 }

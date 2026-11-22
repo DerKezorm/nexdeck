@@ -1809,6 +1809,20 @@
    ]
   }
  ],
+ "nexnotes": [
+  {
+   "path": "/api/v1/dashboard?limit=8",
+   "widgets": [
+    "pinned"
+   ]
+  },
+  {
+   "path": "/api/v1/notes/{note_id}?markdown=false",
+   "widgets": [
+    "note"
+   ]
+  }
+ ],
  "nexpaper": [
   {
    "path": "/api/v1/dashboard",

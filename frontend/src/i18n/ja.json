@@ -3251,5 +3251,14 @@
       "leadSkin": "スキンは、WorkshopのIssueとして、あなたのGitHub名義でCard shopに送られます。Workshopが検証し、すべて通過すると自動的に追加されます。送信する内容はすべて公開され、MITライセンスが適用されます。",
       "descriptionHelpSkin": "見た目を、英語で数文で記述してください。プレーンテキストです。"
     }
+  },
+  "checklist": {
+    "progress": "{{done}} / {{total}}",
+    "more": "他{{count}}件",
+    "offline": "{{name}} に現在接続できません · {{time}} 時点",
+    "from": "{{name}} より",
+    "tick": "{{text}} を完了にする",
+    "untick": "{{text}} を未完了に戻す",
+    "untitled": "無題のメモ"
   }
 }

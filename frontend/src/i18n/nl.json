@@ -3251,5 +3251,14 @@
       "leadSkin": "Je skin gaat de Card shop in als issue in de Workshop, onder je GitHub-naam. De Workshop controleert hem en als alles slaagt, wordt hij vanzelf toegevoegd. Alles wat je verstuurt is openbaar en valt onder de MIT-licentie.",
       "descriptionHelpSkin": "Hoe hij eruitziet, in het Engels, in een paar zinnen. Platte tekst."
     }
+  },
+  "checklist": {
+    "progress": "{{done}} van {{total}}",
+    "more": "+{{count}} meer",
+    "offline": "{{name}} is nu niet bereikbaar · stand van {{time}}",
+    "from": "van {{name}}",
+    "tick": "{{text}} afvinken",
+    "untick": "{{text}} weer openen",
+    "untitled": "Notitie zonder titel"
   }
 }

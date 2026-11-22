@@ -3251,5 +3251,14 @@
       "leadSkin": "Tu skin llega al Card shop como una incidencia en el Workshop, con tu nombre de GitHub. El Workshop lo revisa y, si todo está bien, se añade solo. Todo lo que envías es público y va bajo la licencia MIT.",
       "descriptionHelpSkin": "Cómo se ve, en inglés, en unas frases. Solo texto."
     }
+  },
+  "checklist": {
+    "progress": "{{done}} de {{total}}",
+    "more": "+{{count}} más",
+    "offline": "{{name}} no está disponible ahora · estado de las {{time}}",
+    "from": "de {{name}}",
+    "tick": "Marcar {{text}}",
+    "untick": "Volver a abrir {{text}}",
+    "untitled": "Nota sin título"
   }
 }

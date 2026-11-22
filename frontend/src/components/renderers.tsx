@@ -125,6 +125,17 @@ function AttentionCard(props: RenderProps) {
   )
 }
 
+/** A checklist or pinned notes (nexnotes); loaded only when a board has one. */
+const LazyChecklistCard = lazy(() => import('./ChecklistCard').then((module) => ({ default: module.ChecklistCard })))
+
+function ChecklistCard(props: RenderProps) {
+  return (
+    <Suspense fallback={<div className="flex-1" />}>
+      <LazyChecklistCard {...props} />
+    </Suspense>
+  )
+}
+
 /** The chronicle's two cards load only when a board has one. */
 const LazyChronicleCard = lazy(() => import('./ChronicleCards').then((module) => ({ default: module.ChronicleCard })))
 const LazyReportCard = lazy(() => import('./ChronicleCards').then((module) => ({ default: module.ReportCard })))
@@ -197,6 +208,7 @@ const RENDERERS: Record<string, ComponentType<RenderProps>> = {
   group: (props: RenderProps) => <GroupCard {...props} />,
   figures: FiguresCard,
   attention: AttentionCard,
+  checklist: ChecklistCard,
   chronicle: ChronicleCard,
   report: ReportCard,
   // Wrapped for the same reason as the holders: it draws its buttons with `ActionButtons` of this file.

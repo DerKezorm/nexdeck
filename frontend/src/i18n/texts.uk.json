@@ -1510,7 +1510,26 @@
     "Webmaster": "Вебмайстер",
     "Generic": "Спільний",
     "No albums.": "Немає альбомів.",
-    "No users.": "Немає користувачів."
+    "No users.": "Немає користувачів.",
+    "Open again": "Знову відкрити",
+    "Ticked off.": "Позначено.",
+    "Opened again.": "Знову відкрито.",
+    "No note is pinned.": "Немає закріплених нотаток.",
+    "Everything is ticked off.": "Усе позначено.",
+    "This note is empty.": "Ця нотатка порожня.",
+    "This note is shared with you to read only.": "Ця нотатка доступна вам лише для читання.",
+    "Read only: ticking off needs an API token with Read and write.": "Лише читання: щоб позначати, потрібен API-токен із правом «Читання й запис».",
+    "Untitled note": "Нотатка без назви",
+    "This older key of nexnotes reaches the card's own routes only.": "Цей старий ключ nexnotes досягає лише маршрутів картки.",
+    "This token may only read; ticking off needs an API token with Read and write.": "Цей токен може лише читати; щоб позначати, потрібен API-токен із правом «Читання й запис».",
+    "This note is shared with you to read only; it cannot be ticked off here.": "Ця нотатка доступна вам лише для читання; тут нічого не можна позначити.",
+    "nexnotes has no such note, or this token may not see it.": "У nexnotes немає такої нотатки, або цей токен не може її бачити.",
+    "This note is locked in the vault; the card shows nothing of it.": "Ця нотатка заблокована в сейфі; картка нічого з неї не показує.",
+    "This note is in the trash.": "Ця нотатка в кошику.",
+    "This item changed in nexnotes meanwhile; the card shows it anew.": "Цей пункт тим часом змінився в nexnotes; картка показує його заново.",
+    "nexnotes could not take this request.": "nexnotes не зміг прийняти цей запит.",
+    "Pick a note in the card's settings.": "Виберіть нотатку в налаштуваннях картки.",
+    "The item is not a number this can be used with.": "Пункт не є придатним номером."
   },
   "adapter": {
     "Team > Service users > a user > Access tokens. A service user with the User role reads every peer and can change nothing.": "Team > Service users > користувач > Access tokens. Service user із роллю User читає кожного піра й нічого не може змінити.",
@@ -4232,6 +4251,16 @@
     "Most photos first": "Найбільше фото спершу",
     "Newest photo first": "Найновіше фото спершу",
     "By name": "За назвою",
-    "The users of the gallery and when each came last. Needs an administrator's key.": "Користувачі галереї і коли кожен заходив востаннє. Потрібен ключ адміністратора."
+    "The users of the gallery and when each came last. Needs an administrator's key.": "Користувачі галереї і коли кожен заходив востаннє. Потрібен ключ адміністратора.",
+    "Quick notes and checklists in nexnotes: the pinned notes, or one note or checklist that can be ticked off right on the card.": "Швидкі нотатки та чек-листи в nexnotes: закріплені нотатки або одна нотатка чи чек-лист, які можна позначати просто на картці.",
+    "Settings > Connections > API tokens > New API token in nexnotes. It starts with nn_api_; Read only fills the cards, Read and write also ticks items off. An older key for nexdeck (nn_deck_) works too.": "Налаштування > Підключення > API-токени > Новий API-токен у nexnotes. Починається з nn_api_; «Лише читання» заповнює картки, «Читання й запис» також позначає пункти. Старий ключ для nexdeck (nn_deck_) теж підходить.",
+    "Pinned notes": "Закріплені нотатки",
+    "The notes pinned in nexnotes, newest change first: title, first line and how far their checklists are. A tap opens the note.": "Нотатки, закріплені в nexnotes, спершу змінені останніми: заголовок, перший рядок і поступ чек-листів. Дотик відкриває нотатку.",
+    "A note or checklist": "Нотатка або чек-лист",
+    "One note of nexnotes: its checklist with the open items first and how many are done, or its first lines. With a token that may write, a tap ticks an item off.": "Одна нотатка з nexnotes: її чек-лист із відкритими пунктами спершу та кількістю виконаних або її перші рядки. З токеном на запис дотик позначає пункт.",
+    "Note": "Нотатка",
+    "The notes this token sees, newest change first. Locked notes are never offered.": "Нотатки, які бачить цей токен, спершу змінені останніми. Заблоковані нотатки ніколи не пропонуються.",
+    "Show ticked items": "Показувати позначені пункти",
+    "Below the open ones, struck through.": "Під відкритими, закресленими."
   }
 }

@@ -19,7 +19,9 @@ const ATTENTION = 'core.problems'
  * room turns red only for what a card shows as red.
  */
 export function cardStatus(widget: WidgetView, data: WidgetData | undefined): Status {
-  if (data?.error) return 'bad'
+  // A card that keeps its last state while its service is away (``meta.offline``) is yellow, as its line says:
+  // the list on it is still right as of then, and a red one would call it broken.
+  if (data?.error) return data.meta?.offline === true ? 'warn' : 'bad'
   const reported = data?.status ?? 'unknown'
   const showFindings = widget.options?.show_findings === true || widget.kind === ATTENTION
   return !showFindings && (reported === 'warn' || reported === 'bad') ? 'ok' : reported

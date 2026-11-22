@@ -2719,7 +2719,17 @@
     "Most photos first": "Mais fotos primeiro",
     "Newest photo first": "Foto mais recente primeiro",
     "By name": "Por nome",
-    "The users of the gallery and when each came last. Needs an administrator's key.": "Os usuários da galeria e quando cada um veio pela última vez. Precisa da chave de um administrador."
+    "The users of the gallery and when each came last. Needs an administrator's key.": "Os usuários da galeria e quando cada um veio pela última vez. Precisa da chave de um administrador.",
+    "Quick notes and checklists in nexnotes: the pinned notes, or one note or checklist that can be ticked off right on the card.": "Notas rápidas e listas de verificação no nexnotes: as notas fixadas, ou uma nota ou lista para marcar direto no cartão.",
+    "Settings > Connections > API tokens > New API token in nexnotes. It starts with nn_api_; Read only fills the cards, Read and write also ticks items off. An older key for nexdeck (nn_deck_) works too.": "Configurações > Conexões > Tokens de API > Novo token de API no nexnotes. Começa com nn_api_; Somente leitura preenche os cartões, Leitura e escrita também marca itens. Uma chave antiga para o nexdeck (nn_deck_) também funciona.",
+    "Pinned notes": "Notas fixadas",
+    "The notes pinned in nexnotes, newest change first: title, first line and how far their checklists are. A tap opens the note.": "As notas fixadas no nexnotes, a última alterada primeiro: título, primeira linha e o andamento das listas. Um toque abre a nota.",
+    "A note or checklist": "Uma nota ou lista",
+    "One note of nexnotes: its checklist with the open items first and how many are done, or its first lines. With a token that may write, a tap ticks an item off.": "Uma nota do nexnotes: sua lista com os itens abertos primeiro e quantos estão feitos, ou suas primeiras linhas. Com um token que pode escrever, um toque marca um item.",
+    "Note": "Nota",
+    "The notes this token sees, newest change first. Locked notes are never offered.": "As notas que este token vê, a última alterada primeiro. Notas bloqueadas nunca são oferecidas.",
+    "Show ticked items": "Mostrar itens marcados",
+    "Below the open ones, struck through.": "Abaixo dos abertos, riscados."
   },
   "labels": {
     "Private resources": "Recursos privados",
@@ -4232,6 +4242,25 @@
     "Webmaster": "Webmaster",
     "Generic": "Genérico",
     "No albums.": "Nenhum álbum.",
-    "No users.": "Nenhum usuário."
+    "No users.": "Nenhum usuário.",
+    "Open again": "Reabrir",
+    "Ticked off.": "Marcado.",
+    "Opened again.": "Reaberto.",
+    "No note is pinned.": "Nenhuma nota está fixada.",
+    "Everything is ticked off.": "Tudo está marcado.",
+    "This note is empty.": "Esta nota está vazia.",
+    "This note is shared with you to read only.": "Esta nota foi compartilhada com você só para leitura.",
+    "Read only: ticking off needs an API token with Read and write.": "Somente leitura: para marcar é preciso um token de API com Leitura e escrita.",
+    "Untitled note": "Nota sem título",
+    "This older key of nexnotes reaches the card's own routes only.": "Esta chave antiga do nexnotes só alcança as rotas do cartão.",
+    "This token may only read; ticking off needs an API token with Read and write.": "Este token só pode ler; para marcar é preciso um token de API com Leitura e escrita.",
+    "This note is shared with you to read only; it cannot be ticked off here.": "Esta nota foi compartilhada com você só para leitura; aqui não dá para marcar.",
+    "nexnotes has no such note, or this token may not see it.": "O nexnotes não tem essa nota, ou este token não pode vê-la.",
+    "This note is locked in the vault; the card shows nothing of it.": "Esta nota está bloqueada no cofre; o cartão não mostra nada dela.",
+    "This note is in the trash.": "Esta nota está na lixeira.",
+    "This item changed in nexnotes meanwhile; the card shows it anew.": "Este item mudou no nexnotes nesse meio-tempo; o cartão o mostra de novo.",
+    "nexnotes could not take this request.": "O nexnotes não pôde aceitar esta solicitação.",
+    "Pick a note in the card's settings.": "Escolha uma nota nas configurações do cartão.",
+    "The item is not a number this can be used with.": "O item não é um número utilizável."
   }
 }

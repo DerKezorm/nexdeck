@@ -65,6 +65,30 @@ RECOVERY_INTERVAL = 60.0
 REFRESH_NOW_GAP = 5.0
 
 #: Cards that repeat what other cards say. Their colour changes are not news of their own.
+#: What a card that asks for it (``meta.offline_note``) rides out with its last state and a quiet note: the service
+#: is away, not refusing. Every other failure covers the card as before.
+OFFLINE_CODES = frozenset({"unreachable", "timeout"})
+#: A press refused because what it acts on changed at the service meanwhile: the card is read anew at once.
+REREAD_CODES = frozenset({"item_changed", "task_changed"})
+
+
+def held_offline(previous: WidgetData, data: WidgetData) -> WidgetData:
+    """The last state of a card whose service cannot be reached, kept for as long as that lasts.
+
+    ⚠️ Kept from one failure to the next, unlike the greyed values of other cards, which go with the second failure:
+    a checklist on a kitchen wall must not empty itself because the server restarts. Nothing on it can be pressed
+    (the rows' buttons go), and ``as_of`` stays the moment of the last answer the service gave.
+    """
+    data.items = [{key: value for key, value in item.items() if key != "actions"} for item in previous.items]
+    data.primary = previous.primary
+    data.secondary = previous.secondary
+    data.link = previous.link
+    data.meta = {**{key: value for key, value in previous.meta.items() if key not in ("code", "hint", "stale_since")},
+                 "code": data.meta.get("code"), "hint": data.meta.get("hint"), "offline": True,
+                 "stale_since": previous.meta.get("stale_since") or previous.updated_at}
+    return data
+
+
 REPEATING_CARDS = frozenset({"core.problems", "core.chronicle", "core.report", "core.status", "core.notices"})
 
 
@@ -385,7 +409,7 @@ class Collector:
             data.updated_at = time.time()
             self._mark_integration(integration_id, ok=True)
         except AdapterError as error:
-            data = self._failure(widget_id, error.message, hint=error.hint, code=error.code)
+            data = self._failure(widget_id, error.message, hint=error.hint, code=error.code, forget=error.forget)
             self._mark_integration(integration_id, ok=False, error=error.message)
         except TimeoutError:
             data = self._failure(widget_id, "The service did not answer within a minute.", code="timeout")
@@ -431,11 +455,15 @@ class Collector:
             return min(MAX_BACKOFF, interval * (2 ** min(failures, 6)))
         return interval
 
-    def _failure(self, widget_id: int, message: str, *, code: str, hint: str = "") -> WidgetData:
+    def _failure(self, widget_id: int, message: str, *, code: str, hint: str = "", forget: bool = False) -> WidgetData:
         self._failures[widget_id] = self._failures.get(widget_id, 0) + 1
         previous = live.get(widget_id)
         data = WidgetData(status="unknown", error=message, meta={"code": code, "hint": hint})
-        if previous is not None and not previous.error:
+        if forget or previous is None:
+            return data
+        if code in OFFLINE_CODES and previous.meta.get("offline_note") is True:
+            return held_offline(previous, data)
+        if not previous.error:
             # Keep the last good numbers visible, greyed out by the error.
             data.primary = previous.primary
             data.secondary = previous.secondary
@@ -735,6 +763,7 @@ class Collector:
         params = self._refuse_unless_offered(widget_id, action_id, params)
         adapter, widget_kind = split_widget_kind(kind)
         ok = True
+        reread = False
         try:
             if demo:
                 message = f"Demo mode: {action_id} would have run now."
@@ -750,6 +779,7 @@ class Collector:
         except AdapterError as error:
             ok = False
             message = error.message
+            reread = error.code in REREAD_CODES
             # A button of a custom card says why in its own code (no_answer, auth_failed, bad_value ...); the built-in cards
             # answer with action_failed as they always did.
             code = error.code if action_id.startswith(buttons.ACTION_PREFIX) else "action_failed"
@@ -761,6 +791,9 @@ class Collector:
                 )
             )
         if not ok:
+            if reread:
+                # What was pressed changed at the service meanwhile: the card is read anew now, not at its next turn.
+                spawn(lambda: self.refresh(widget_id), name=f"refresh-{widget_id}")
             raise AdapterError(message, code=code)
         # Show the effect right away instead of waiting for the next interval.
         spawn(lambda: self.refresh(widget_id), name=f"refresh-{widget_id}")

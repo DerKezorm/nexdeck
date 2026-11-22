@@ -3413,5 +3413,14 @@
       "leadSkin": "Twoja skórka trafia do Card shop jako zgłoszenie (issue) w Workshop, pod Twoją nazwą GitHub. Workshop ją sprawdza, a jeśli wszystko przejdzie, zostaje dodana automatycznie. Wszystko, co wysyłasz, jest publiczne i na licencji MIT.",
       "descriptionHelpSkin": "Jak wygląda, po angielsku, w kilku zdaniach. Zwykły tekst."
     }
+  },
+  "checklist": {
+    "progress": "{{done}} z {{total}}",
+    "more": "+{{count}} więcej",
+    "offline": "{{name}} jest teraz nieosiągalny · stan z {{time}}",
+    "from": "od {{name}}",
+    "tick": "Odhacz {{text}}",
+    "untick": "Otwórz ponownie {{text}}",
+    "untitled": "Notatka bez tytułu"
   }
 }

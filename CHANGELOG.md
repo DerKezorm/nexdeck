@@ -3,6 +3,12 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## Unreleased
+
+### Added
+
+- **nexnotes, in beta.** Two cards for the notes app of the nexapps family, read with an API token: Pinned notes shows the pinned notes with their first line and how far their checklists are, each opening in nexnotes; A note or checklist shows one note with its open items first, "3 of 8" and "+n more", or its first lines. With a token that may write, a tap ticks an item off right on the card, also on a wall tablet. Both cards ask every 30 seconds and draw anew only when the note changed. While nexnotes cannot be reached, they keep the last state with an orange line saying since when, and nothing can be ticked until it answers again. A note that was deleted, locked or is no longer shared is said on the card without anything of what it showed.
+
 ## 1.10.0 (2026-11-21)
 
 ### Changed

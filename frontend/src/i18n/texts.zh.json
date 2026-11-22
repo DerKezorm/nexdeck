@@ -2719,7 +2719,17 @@
     "Most photos first": "照片最多的在前",
     "Newest photo first": "最新照片在前",
     "By name": "按名称",
-    "The users of the gallery and when each came last. Needs an administrator's key.": "图库的用户以及每人最后一次来访的时间。需要管理员的密钥。"
+    "The users of the gallery and when each came last. Needs an administrator's key.": "图库的用户以及每人最后一次来访的时间。需要管理员的密钥。",
+    "Quick notes and checklists in nexnotes: the pinned notes, or one note or checklist that can be ticked off right on the card.": "nexnotes 中的快速笔记和清单：已置顶的笔记，或一条可直接在卡片上勾选的笔记或清单。",
+    "Settings > Connections > API tokens > New API token in nexnotes. It starts with nn_api_; Read only fills the cards, Read and write also ticks items off. An older key for nexdeck (nn_deck_) works too.": "nexnotes 中的 设置 > 连接 > API 令牌 > 新建 API 令牌。以 nn_api_ 开头；“只读”可填充卡片，“读写”还能勾选项目。nexdeck 的旧密钥 (nn_deck_) 也可使用。",
+    "Pinned notes": "置顶笔记",
+    "The notes pinned in nexnotes, newest change first: title, first line and how far their checklists are. A tap opens the note.": "nexnotes 中置顶的笔记，最近修改的在前：标题、第一行以及清单的进度。点按可打开笔记。",
+    "A note or checklist": "一条笔记或清单",
+    "One note of nexnotes: its checklist with the open items first and how many are done, or its first lines. With a token that may write, a tap ticks an item off.": "nexnotes 中的一条笔记：未完成项在前的清单及已完成数量，或其开头几行。使用可写入的令牌时，点按即可勾选项目。",
+    "Note": "笔记",
+    "The notes this token sees, newest change first. Locked notes are never offered.": "此令牌可见的笔记，最近修改的在前。已锁定的笔记从不提供。",
+    "Show ticked items": "显示已勾选的项目",
+    "Below the open ones, struck through.": "在未完成项下方，带删除线。"
   },
   "labels": {
     "Private resources": "私有资源",
@@ -4232,6 +4242,25 @@
     "Webmaster": "网站管理员",
     "Generic": "通用",
     "No albums.": "没有相册。",
-    "No users.": "没有用户。"
+    "No users.": "没有用户。",
+    "Open again": "重新打开",
+    "Ticked off.": "已勾选。",
+    "Opened again.": "已重新打开。",
+    "No note is pinned.": "没有置顶的笔记。",
+    "Everything is ticked off.": "全部已勾选。",
+    "This note is empty.": "此笔记为空。",
+    "This note is shared with you to read only.": "此笔记以只读方式与你共享。",
+    "Read only: ticking off needs an API token with Read and write.": "只读：勾选需要具有“读写”权限的 API 令牌。",
+    "Untitled note": "无标题笔记",
+    "This older key of nexnotes reaches the card's own routes only.": "此 nexnotes 旧密钥只能访问卡片的路由。",
+    "This token may only read; ticking off needs an API token with Read and write.": "此令牌只能读取；勾选需要具有“读写”权限的 API 令牌。",
+    "This note is shared with you to read only; it cannot be ticked off here.": "此笔记以只读方式与你共享，无法在此勾选。",
+    "nexnotes has no such note, or this token may not see it.": "nexnotes 中没有此笔记，或此令牌无法查看。",
+    "This note is locked in the vault; the card shows nothing of it.": "此笔记已在保险库中锁定；卡片不显示其任何内容。",
+    "This note is in the trash.": "此笔记在回收站中。",
+    "This item changed in nexnotes meanwhile; the card shows it anew.": "此项目在 nexnotes 中已被修改；卡片将重新显示。",
+    "nexnotes could not take this request.": "nexnotes 无法接受此请求。",
+    "Pick a note in the card's settings.": "请在卡片设置中选择一条笔记。",
+    "The item is not a number this can be used with.": "该项目不是可用的编号。"
   }
 }

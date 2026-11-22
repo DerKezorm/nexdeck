@@ -55,7 +55,9 @@ export function WidgetCard({ widget, data, series, editing, canAct, canWrite, on
   // English shows the server's own sentence with its specifics. A code without
   // a sentence of its own is translated by its wording, so a sentence with a
   // name in it (a missing scope, for one) keeps the name in every language.
-  const failed = Boolean(data?.error)
+  // A card that keeps its last state while its service cannot be reached (``meta.offline``, a checklist on a
+  // kitchen wall) says so itself, in a quiet line; the red cover would hide the very list it keeps.
+  const failed = Boolean(data?.error) && data?.meta?.offline !== true
   // With findings switched off, the card keeps its numbers and drops the alarm:
   // a Findings card next to it says what is wrong, once instead of on every card.
   const showFindings = widget.options?.show_findings === true

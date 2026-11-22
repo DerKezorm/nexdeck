@@ -121,6 +121,8 @@ RENDERER_MIN: dict[str, tuple[int, int]] = {
     # Digits and nothing else; one row holds them.
     "segments": (2, 1),
     "list": (2, 2),
+    # A checklist: the title with its progress, then rows a finger can hit.
+    "checklist": (2, 2),
     # One row holds the sentence ("3 things need attention"); the rows come with the height.
     "attention": (2, 1),
     # A few lines of the chronicle, each with its time.
@@ -1116,11 +1118,14 @@ def shape_for_display(data: WidgetData, adapter: Adapter, widget_kind: str, opti
 class AdapterError(Exception):
     """A readable failure: what went wrong, and what the operator can do."""
 
-    def __init__(self, message: str, *, code: str = "adapter_error", hint: str = "") -> None:
+    def __init__(self, message: str, *, code: str = "adapter_error", hint: str = "", forget: bool = False) -> None:
         super().__init__(message)
         self.message = message
         self.code = code
         self.hint = hint
+        #: The card shows nothing of what it showed before: what it showed is not to be seen any more (a note
+        #: locked, deleted or no longer shared). Without it the last good values stay visible under the failure.
+        self.forget = forget
 
 
 class AuthFailed(AdapterError):

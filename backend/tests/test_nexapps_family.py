@@ -2,7 +2,8 @@
 
 nexcanvas, nexbrand, nexpaper, nexdiary and nextasks answer ``/me`` with the same
 few fields, and nexcanvas and nexdiary hand out tokens with the same prefix.
-nextasks names its ``spaces`` as nexcanvas does; its ``features`` tell it apart. Run
+nextasks names its ``spaces`` as nexcanvas does; its ``features`` tell it apart. nexnotes names its ``features`` and
+itself (``app``). Run
 against real instances on 11.10.2026, a nexbrand card at the address of
 nexcanvas said "nexbrand 0.4.1 answers", and a nexdiary card with a nexcanvas
 token drew a streak of nought. Each now says that another app answers.
@@ -28,6 +29,8 @@ ME = {
     "nexdiary": {"name": "alex", "display_name": "Alex", "level": "read", "version": "0.8.0"},
     "nextasks": {"name": "alex", "display_name": "Alex", "level": "read", "time_zone": "Europe/Berlin",
                  "spaces": [{"id": "s1", "name": "Home"}], "version": "0.1.0", "features": ["tasks", "dashboard"]},
+    "nexnotes": {"app": "nexnotes", "name": "alex", "display_name": "Alex", "level": "read", "version": "0.9.0",
+                 "features": ["pinned", "notes", "check"], "token": {"id": 1, "name": "Wall"}, "folders": None},
 }
 #: The card routes of those whose cards read ``/dashboard``, by app.
 DASHBOARD = {
@@ -39,6 +42,7 @@ DASHBOARD = {
     "nextasks": ("today", {"counts": {"overdue": 0, "today": 1, "upcoming": 0, "assigned_to_me": 0, "flagged": 0, "open": 3},
                            "overdue": [], "today": [], "upcoming": [], "link": None, "time_zone": "Europe/Berlin",
                            "as_of": "2026-11-07T08:00:00.000Z"}),
+    "nexnotes": ("pinned", {"pinned": [], "more": 0, "link": BASE, "stamp": "", "as_of": "2026-11-22T08:00:00+00:00"}),
 }
 
 
