@@ -33,6 +33,7 @@ import type { TFunction } from 'i18next'
 import { fileUrl, get, mediaUrl } from '../api/client'
 import { tLabel } from '../i18n/texts'
 import { appTarget, keyOf, useKeyMarks } from '../lib/appKeys'
+import { curveColour } from '../lib/cardLook'
 import { actionText, isCustom, labelOf, localizeCustom } from '../lib/customCard'
 import { formatValue, serviceLogo, timeAgo } from '../lib/format'
 import { toggleTask } from '../lib/notes'
@@ -45,6 +46,7 @@ import { AskCard } from './AskCard'
 import { BuilderCard } from './BuilderCard'
 import { ButtonCard } from './ButtonCard'
 import { ChartHover } from './ChartHover'
+import { TimelineHover } from './TimelineHover'
 import { HeadingCard } from './HeadingCard'
 import { FlowCard } from './FlowCard'
 import { HeatmapCard } from './HeatmapCard'
@@ -2061,6 +2063,16 @@ interface Line {
   label: string
   /** [seconds since the epoch, value]; a null value is a gap. */
   points: [number, number | null][]
+  /** A colour of its own, by name or #rrggbb (Prometheus' chart, #81); without one the line takes the card's next. */
+  colour?: string
+  /** The line's own unit, when the lines of a card measure different things. */
+  unit?: string
+}
+
+/** A threshold drawn across the chart as a dashed line, in the colour it turns the card. */
+interface Mark {
+  value: number
+  status: 'warn' | 'bad'
 }
 
 /**
@@ -2073,12 +2085,15 @@ interface Line {
  */
 export function TimelineCard({ data }: RenderProps) {
   const { t, i18n } = useTranslation()
-  const meta = (data?.meta ?? {}) as { shape?: string; unit?: string; lines?: Line[] }
+  const meta = (data?.meta ?? {}) as { shape?: string; unit?: string; lines?: Line[]; marks?: Mark[]; failed?: { label: string; error: string }[] }
   const lines = (meta.lines ?? []).filter((line) => line.points?.length)
   const values = lines.flatMap((line) => line.points.map(([, v]) => v)).filter((v): v is number => v !== null)
   if (!lines.length || !values.length) {
     return <Empty>{tLabel(String(data?.meta?.empty ?? '')) || t('card.nothing')}</Empty>
   }
+  const marks = (meta.marks ?? []).filter((mark) => typeof mark.value === 'number' && Number.isFinite(mark.value))
+  const failed = meta.failed ?? []
+  const colourOf = (line: Line, index: number) => curveColour(line.colour) ?? SLICE_COLOURS[index % SLICE_COLOURS.length]
   const times = lines.flatMap((line) => line.points.map(([at]) => at))
   const first = Math.min(...times)
   const last = Math.max(...times)
@@ -2086,15 +2101,26 @@ export function TimelineCard({ data }: RenderProps) {
   // ⚠️ From nought, not from the lowest reading. A line that starts at its own
   // minimum turns a 5% dip into a cliff, and this card exists to answer "is my
   // connection holding up", which is a question about the distance to zero.
-  const top = Math.max(...values) * 1.08 || 1
+  // Below nought only when a reading is: a rate of change can be negative.
+  // A threshold is part of the picture, so the scale reaches it.
+  const scaled = [...values, ...marks.map((mark) => mark.value)]
+  const highest = Math.max(...scaled)
+  const lowest = Math.min(0, ...scaled)
+  const top = highest > 0 ? highest * 1.08 : 0
+  const bottom = lowest < 0 ? lowest * 1.08 : 0
+  const height = top - bottom || 1
   const W = 100
   const H = 46
   const at = (time: number) => ((time - first) / span) * W
-  const up = (value: number) => H - (value / top) * H
+  const up = (value: number) => H - ((value - bottom) / height) * H
+  // A stretch of hours is told by the clock, one of days by the calendar.
+  const short = span <= 12 * 3600
   const bars = meta.shape === 'bars'
   const width = bars ? Math.max(0.6, (W / Math.max(1, lines[0].points.length)) * (lines.length > 1 ? 0.38 : 0.8)) : 0
   const when = (seconds: number) =>
-    new Date(seconds * 1000).toLocaleDateString(i18n.language, { day: 'numeric', month: 'short' })
+    short
+      ? new Date(seconds * 1000).toLocaleTimeString(i18n.language, { hour: '2-digit', minute: '2-digit' })
+      : new Date(seconds * 1000).toLocaleDateString(i18n.language, { day: 'numeric', month: 'short' })
 
   return (
     <div className="flex-1 flex flex-col min-h-0 px-3 pb-2.5">
@@ -2108,11 +2134,16 @@ export function TimelineCard({ data }: RenderProps) {
           {t('card.min')} {formatValue(Math.min(...values))} · {t('card.max')} {formatValue(Math.max(...values))}
         </span>
       </div>
-      <div className="flex-1 min-h-[40px] mt-1">
+      <div className="relative flex-1 min-h-[40px] mt-1">
         <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="w-full h-full" role="img"
              aria-label={lines.map((line) => tLabel(line.label)).join(', ')}>
+          {marks.map((mark) => (
+            <line key={`${mark.status}-${mark.value}`} x1={0} x2={W} y1={up(mark.value)} y2={up(mark.value)} data-testid="timeline-mark"
+                  stroke={mark.status === 'bad' ? 'var(--nd-bad)' : 'var(--nd-warn)'} strokeWidth="1" strokeDasharray="3 3"
+                  vectorEffect="non-scaling-stroke" opacity={0.8} />
+          ))}
           {lines.map((line, index) => {
-            const colour = SLICE_COLOURS[index % SLICE_COLOURS.length]
+            const colour = colourOf(line, index)
             if (bars) {
               return line.points.map(([time, value], point) =>
                 value === null ? null : (
@@ -2148,12 +2179,27 @@ export function TimelineCard({ data }: RenderProps) {
             ))
           })}
         </svg>
+        <TimelineHover
+          lines={lines.map((line, index) => ({ key: line.key, label: tLabel(line.label), colour: colourOf(line, index), unit: line.unit ?? meta.unit ?? '', points: line.points }))}
+          first={first}
+          last={last}
+          down={(value) => (up(value) / H) * 100}
+          short={short}
+        />
       </div>
       <div className="flex items-center gap-x-3 gap-y-0.5 flex-wrap mt-0.5">
         {lines.map((line, index) => (
           <span key={line.key} className="flex items-center gap-1.5 text-[10px] text-muted">
-            <span className="rounded-full" style={{ width: 7, height: 7, background: SLICE_COLOURS[index % SLICE_COLOURS.length] }} />
+            <span className="rounded-full" style={{ width: 7, height: 7, background: colourOf(line, index) }} />
             {tLabel(line.label)}
+          </span>
+        ))}
+        {/* A query that failed keeps its place in the legend, struck through, with Prometheus' reason on hover. */}
+        {failed.map((one) => (
+          <span key={one.label} className="flex items-center gap-1 text-[10px] text-warn" title={one.error} data-testid="timeline-failed">
+            <span aria-hidden="true">!</span>
+            <span className="line-through">{one.label}</span>
+            <span className="sr-only">{one.error}</span>
           </span>
         ))}
         <span className="ml-auto num text-[10px] text-faint whitespace-nowrap">{when(first)} – {when(last)}</span>

@@ -7,7 +7,7 @@
  * bar of 40 out of 40 is drawn full and one of 3 is drawn short is the sort
  * of thing only the browser test can hold, and it does.
  */
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 
 import type { WidgetData, WidgetView } from '../lib/types'
@@ -286,5 +286,80 @@ describe('the timeline', () => {
   it('says so when the period holds nothing', () => {
     draw({ status: 'unknown', meta: { empty: 'No measurement in this period' } }, undefined, 'timeline')
     expect(screen.getByText('No measurement in this period')).toBeInTheDocument()
+  })
+
+  // Prometheus' chart of several queries (#81): its own colours and units, thresholds, a query that failed.
+  const step = 90
+  const curve = (values: (number | null)[]): [number, number | null][] => values.map((value, index) => [now - (values.length - 1 - index) * step, value])
+  const PROM: WidgetData = {
+    status: 'warn',
+    primary: { label: 'CPU', value: 42, unit: '%' },
+    meta: {
+      shape: 'line',
+      unit: '%',
+      lines: [
+        { key: 'q0s0', label: 'CPU', points: curve([40, 41, 42]), colour: 'violet', unit: '%' },
+        { key: 'q1s0', label: 'Load', points: curve([1.5, 1.2, 2]), colour: '#12ab9f', unit: '' },
+        { key: 'q1s1', label: 'Other', points: curve([3, 4, 5]), colour: 'red;background:url(x)', unit: 'B/s' },
+      ],
+      marks: [{ value: 80, status: 'warn' }, { value: 90, status: 'bad' }],
+      failed: [{ label: 'Broken', error: '1:9: parse error' }],
+    },
+  }
+
+  it('draws each line in the colour it was given, and the next of the card for one that is no colour', () => {
+    const { container } = draw(PROM, undefined, 'timeline')
+    const strokes = [...container.querySelectorAll('polyline')].map((line) => line.getAttribute('stroke'))
+    expect(strokes).toEqual(['var(--nd-c-violet)', '#12ab9f', 'var(--nd-warn)'])
+  })
+
+  it('draws the thresholds as dashed lines, and the scale reaches them', () => {
+    const { container } = draw(PROM, undefined, 'timeline')
+    const marks = [...container.querySelectorAll('[data-testid="timeline-mark"]')]
+    expect(marks.map((mark) => mark.getAttribute('stroke'))).toEqual(['var(--nd-warn)', 'var(--nd-bad)'])
+    // 90 is the highest thing on the chart: its line sits near the top, inside the box.
+    const y = Number(marks[1].getAttribute('y1'))
+    expect(y).toBeGreaterThan(0)
+    expect(y).toBeLessThan(6)
+  })
+
+  it('names a query that failed, with the reason', () => {
+    draw(PROM, undefined, 'timeline')
+    const failed = screen.getByTestId('timeline-failed')
+    expect(failed.textContent).toContain('Broken')
+    expect(failed.getAttribute('title')).toBe('1:9: parse error')
+  })
+
+  it('tells a short stretch by the clock', () => {
+    const { container } = draw(PROM, undefined, 'timeline')
+    const range = [...container.querySelectorAll('span')].find((one) => one.children.length === 0 && (one.textContent ?? '').includes(' – '))
+    expect(range?.textContent).toMatch(/^\d{1,2}:\d{2}\D* – \d{1,2}:\d{2}\D*$/)
+    // A stretch of days keeps the calendar.
+    const days = draw(DATA, undefined, 'timeline').container
+    const dated = [...days.querySelectorAll('span')].find((one) => one.children.length === 0 && (one.textContent ?? '').includes(' – '))
+    expect(dated?.textContent).not.toMatch(/:/)
+  })
+
+  it('goes below nought only when a reading does', () => {
+    const { container } = draw({ ...PROM, meta: { lines: [{ key: 'a', label: 'Change', points: curve([-10, 0, 10]) }] } }, undefined, 'timeline')
+    const heights = (container.querySelector('polyline')?.getAttribute('points') ?? '').split(' ').map((pair) => Number(pair.split(',')[1]))
+    // -10 at the bottom, 0 in the middle, 10 at the top, all inside the box of 46.
+    expect(heights[0]).toBeGreaterThan(heights[1])
+    expect(heights[1]).toBeGreaterThan(heights[2])
+    expect(Math.min(...heights)).toBeGreaterThanOrEqual(0)
+    expect(Math.max(...heights)).toBeLessThanOrEqual(46)
+  })
+
+  it('shows every line at the moment under the pointer, with its unit, and leaves out a line that has a gap there', () => {
+    const lines = (PROM.meta?.lines as object[]).slice(0, 2)
+    draw({ ...PROM, meta: { ...PROM.meta, lines: [...lines, { key: 'g', label: 'Gap', points: curve([1, null, 3]), unit: 'x' }] } }, undefined, 'timeline')
+    const layer = screen.getByTestId('timeline-hover')
+    layer.getBoundingClientRect = () => ({ left: 0, top: 0, width: 200, height: 60, right: 200, bottom: 60, x: 0, y: 0, toJSON: () => ({}) })
+    fireEvent.pointerMove(layer, { clientX: 100 })
+    expect(screen.getAllByTestId('timeline-tip-line').map((row) => row.textContent)).toEqual(['CPU41 %', 'Load1.2'])
+    fireEvent.pointerMove(layer, { clientX: 200 })
+    expect(screen.getAllByTestId('timeline-tip-line').map((row) => row.textContent)).toEqual(['CPU42 %', 'Load2', 'Gap3 x'])
+    fireEvent.pointerLeave(layer)
+    expect(screen.queryByTestId('timeline-tip')).toBeNull()
   })
 })

@@ -36,6 +36,12 @@ export function colourKind(value: unknown): 'none' | 'palette' | 'icon' | 'own' 
   return HEX.test(value) ? 'own' : 'none'
 }
 
+/** The colour of one curve on a chart, given by name from the list or as #rrggbb; anything else is no colour. */
+export function curveColour(value: unknown): string | null {
+  const kind = colourKind(value)
+  return kind === 'palette' ? VARIABLE[value as PaletteColour] : kind === 'own' ? (value as string) : null
+}
+
 export function effectOf(value: unknown): Effect {
   return (EFFECTS as readonly string[]).includes(value as string) ? (value as Effect) : 'tint'
 }
