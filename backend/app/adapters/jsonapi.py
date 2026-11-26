@@ -227,9 +227,13 @@ class JsonApiAdapter(Adapter):
         if number is not None:
             metrics["value"] = number
             status = threshold_status(number, options)
+        primary = {"label": options.get("label") or "", "value": value, "unit": options.get("unit") or ""}
+        if number is not None and isinstance(value, (int, float)):
+            # Without it the card wrote 0.07 as 0.1 and 12.5 as 13, whatever the card was set to (#78).
+            primary["decimals"] = int(options.get("decimals") or 0)
         return WidgetData(
             status=status,
-            primary={"label": options.get("label") or "", "value": value, "unit": options.get("unit") or ""},
+            primary=primary,
             secondary=badges(payload, options),
             metrics=metrics,
             meta=wrapped(options),

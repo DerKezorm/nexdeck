@@ -2729,7 +2729,8 @@
     "Note": "Notitie",
     "The notes this token sees, newest change first. Locked notes are never offered.": "De notities die deze token ziet, laatst gewijzigde eerst. Vergrendelde notities worden nooit aangeboden.",
     "Show ticked items": "Afgevinkte punten tonen",
-    "Below the open ones, struck through.": "Onder de open punten, doorgestreept."
+    "Below the open ones, struck through.": "Onder de open punten, doorgestreept.",
+    "Leave empty for as many as the value needs, one below 10.": "Leeg laten voor zoveel als de waarde nodig heeft, één onder de 10."
   },
   "labels": {
     "Private resources": "Privé-resources",

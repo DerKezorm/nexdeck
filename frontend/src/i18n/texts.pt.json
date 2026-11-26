@@ -2729,7 +2729,8 @@
     "Note": "Nota",
     "The notes this token sees, newest change first. Locked notes are never offered.": "As notas que este token vê, a última alterada primeiro. Notas bloqueadas nunca são oferecidas.",
     "Show ticked items": "Mostrar itens marcados",
-    "Below the open ones, struck through.": "Abaixo dos abertos, riscados."
+    "Below the open ones, struck through.": "Abaixo dos abertos, riscados.",
+    "Leave empty for as many as the value needs, one below 10.": "Deixe vazio para mostrar quantas o valor precisar, uma abaixo de 10."
   },
   "labels": {
     "Private resources": "Recursos privados",

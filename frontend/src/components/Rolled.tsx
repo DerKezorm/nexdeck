@@ -30,7 +30,7 @@ export function between(from: number, to: number, share: number): number {
  * The first reading is shown as it is. Anything that is not a number, and
  * every number when less motion is asked for, changes at once.
  */
-export function Rolled({ value, unit = '' }: { value: number | string | null | undefined; unit?: string }) {
+export function Rolled({ value, unit = '', decimals }: { value: number | string | null | undefined; unit?: string; decimals?: number }) {
   const [shown, setShown] = useState(value)
   // Where the number stands on screen right now, which is where the next roll
   // starts: a reading that arrives mid-roll carries on from there.
@@ -54,5 +54,5 @@ export function Rolled({ value, unit = '' }: { value: number | string | null | u
     frame = requestAnimationFrame(step)
     return () => cancelAnimationFrame(frame)
   }, [value])
-  return <>{formatValue(shown, unit)}</>
+  return <>{formatValue(shown, unit, decimals)}</>
 }

@@ -11,6 +11,18 @@ describe('formatValue', () => {
     expect(formatValue(null)).toBe('—')
     expect(formatValue('closed')).toBe('closed')
   })
+
+  it('shows as many decimals as the card was set to (#78)', () => {
+    expect(formatValue(0.07, '', 2)).toBe('0.07')
+    expect(formatValue(5.04, '', 2)).toBe('5.04')
+    expect(formatValue(0.1, '', 2)).toBe('0.10')
+    expect(formatValue(12.5, '°C', 1)).toBe('12.5°C')
+    expect(formatValue(12.46, '', 0)).toBe('12')
+    // A whole number stays whole, and without the setting nothing changes.
+    expect(formatValue(5, '', 2)).toBe('5')
+    expect(formatValue(0.07)).toBe('0.1')
+    expect(formatValue(1284.5, '', 1)).toBe((1284.5).toLocaleString(undefined, { maximumFractionDigits: 1 }))
+  })
 })
 
 describe('timeAgo', () => {

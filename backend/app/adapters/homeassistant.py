@@ -42,6 +42,17 @@ def actions_for(entity_id: str, state: str) -> list[Action]:
     return []
 
 
+def decimals(options: dict[str, Any]) -> int | None:
+    """How many decimals the card was asked to show, or None for the usual way (#78). A form stores numbers as floats."""
+    raw = options.get("decimals")
+    if raw is None or raw == "":
+        return None
+    try:
+        return max(0, min(6, int(float(raw))))
+    except (TypeError, ValueError):
+        return None
+
+
 class HomeAssistantAdapter(Adapter):
     kind = "homeassistant"
     #: Confirmed against a live instance on 2026-09-05.
@@ -70,6 +81,7 @@ class HomeAssistantAdapter(Adapter):
                 Field("entity_id", "Entity ID", required=True, placeholder="sensor.living_room_temperature"),
                 Field("label", "Label", placeholder="Living room"),
                 Field("attribute", "Attribute instead of state", placeholder="temperature", help="Leave empty to show the state."),
+                Field("decimals", "Decimals", type="number", help="Leave empty for as many as the value needs, one below 10."),
             ),
         ),
         WidgetType(
@@ -133,16 +145,21 @@ class HomeAssistantAdapter(Adapter):
         unit = attributes.get("unit_of_measurement", "") if not options.get("attribute") else ""
         metrics: dict[str, float] = {}
         value: Any = raw
+        places = decimals(options)
         try:
             number = float(raw)
             metrics["value"] = number
-            value = round(number, 2) if not float(number).is_integer() else int(number)
+            value = round(number, 2 if places is None else places)
+            value = int(value) if float(value).is_integer() else value
         except (TypeError, ValueError):
             value = str(raw)
         state = str(entity.get("state", ""))
+        primary = {"label": options.get("label") or attributes.get("friendly_name") or entity_id, "value": value, "unit": unit}
+        if places is not None and "value" in metrics:
+            primary["decimals"] = places
         return WidgetData(
             status=entity_status(entity_id.split(".", 1)[0], state),
-            primary={"label": options.get("label") or attributes.get("friendly_name") or entity_id, "value": value, "unit": unit},
+            primary=primary,
             secondary=[{"label": "Updated", "value": str(entity.get("last_changed", ""))[11:16]}],
             metrics=metrics,
             actions=actions_for(entity_id, state),

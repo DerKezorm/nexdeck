@@ -2729,7 +2729,8 @@
     "Note": "Nota",
     "The notes this token sees, newest change first. Locked notes are never offered.": "Le note che questo token vede, l'ultima modificata per prima. Le note bloccate non vengono mai proposte.",
     "Show ticked items": "Mostra voci spuntate",
-    "Below the open ones, struck through.": "Sotto quelle aperte, barrate."
+    "Below the open ones, struck through.": "Sotto quelle aperte, barrate.",
+    "Leave empty for as many as the value needs, one below 10.": "Lascia vuoto per mostrarne quanti ne servono al valore, uno sotto 10."
   },
   "labels": {
     "Private resources": "Risorse private",

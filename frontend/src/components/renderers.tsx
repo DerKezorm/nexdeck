@@ -298,7 +298,7 @@ function Shown({ value, unit, display }: { value: number | string | null | undef
 
 /** The number of a card as it reads: a custom card's is written out already (its unit stands apart), the others roll to it. */
 function Reading({ primary, withUnit }: { primary: Primary | null | undefined; withUnit?: boolean }) {
-  if (primary?.display === undefined) return <Rolled value={primary?.value} unit={withUnit ? primary?.unit : undefined} />
+  if (primary?.display === undefined) return <Rolled value={primary?.value} unit={withUnit ? primary?.unit : undefined} decimals={primary?.decimals} />
   return <>{withUnit ? beside(primary.display, primary.unit) : primary.display}</>
 }
 
@@ -740,7 +740,7 @@ export function SegmentsCard(props: RenderProps) {
           className="min-w-0 max-h-[64px] w-auto h-full flex-shrink"
           style={{ aspectRatio: `${width + 2} / ${CELL.h + 2}` }}
           role="img"
-          aria-label={primary?.display !== undefined ? `${primary.display} ${primary.unit ?? ''}`.trim() : `${formatValue(value, primary?.unit)}`}
+          aria-label={primary?.display !== undefined ? `${primary.display} ${primary.unit ?? ''}`.trim() : `${formatValue(value, primary?.unit, primary?.decimals)}`}
         >
           {/* A slant, as the displays have. */}
           <g transform="skewX(-6) translate(2 0)">
@@ -920,7 +920,7 @@ export function ListCard({ widget, data, onAction, canAct, series }: RenderProps
         // A total above its own rows, for a list whose rows add up to one
         // number: unread mail in all mailboxes, then each mailbox.
         <div className="px-3 pb-1.5 flex items-baseline gap-2" data-testid="list-headline">
-          <span className="num text-[26px] leading-none font-semibold tracking-tight"><Rolled value={data.primary.value} unit={data.primary.unit} /></span>
+          <span className="num text-[26px] leading-none font-semibold tracking-tight"><Rolled value={data.primary.value} unit={data.primary.unit} decimals={data.primary.decimals} /></span>
           {data.primary.label ? <span className="text-[11px] text-muted uppercase tracking-wide">{L(data.primary.label)}</span> : null}
         </div>
       ) : null}
@@ -2099,7 +2099,7 @@ export function TimelineCard({ data }: RenderProps) {
   return (
     <div className="flex-1 flex flex-col min-h-0 px-3 pb-2.5">
       <div className="flex items-baseline gap-2">
-        <span className="num text-2xl font-semibold"><Rolled value={data?.primary?.value} unit={data?.primary?.unit ?? ''} /></span>
+        <span className="num text-2xl font-semibold"><Rolled value={data?.primary?.value} unit={data?.primary?.unit ?? ''} decimals={data?.primary?.decimals} /></span>
         {/* Named once. With several lines the legend below carries the names,
             and repeating the first one up here made the card say "Download"
             twice with nothing to tell the two apart. */}
@@ -2273,7 +2273,7 @@ export function RingCard({ data }: RenderProps) {
         <div className="absolute inset-0 flex items-center justify-center">
           <span className="num text-lg font-semibold leading-none">
             {data?.primary?.value !== undefined && data?.primary?.value !== null
-              ? <Rolled value={data.primary.value} unit={data.primary.unit ?? ''} />
+              ? <Rolled value={data.primary.value} unit={data.primary.unit ?? ''} decimals={data.primary.decimals} />
               : <Rolled value={whole} />}
           </span>
         </div>

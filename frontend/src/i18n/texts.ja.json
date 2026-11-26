@@ -2729,7 +2729,8 @@
     "Note": "メモ",
     "The notes this token sees, newest change first. Locked notes are never offered.": "このトークンが見られるメモ (最新の変更順)。ロックされたメモは表示されません。",
     "Show ticked items": "チェック済みの項目を表示",
-    "Below the open ones, struck through.": "未完了の項目の下に取り消し線付きで。"
+    "Below the open ones, struck through.": "未完了の項目の下に取り消し線付きで。",
+    "Leave empty for as many as the value needs, one below 10.": "空欄にすると値に必要な桁数を表示し、10 未満は 1 桁です。"
   },
   "labels": {
     "Private resources": "プライベートリソース",

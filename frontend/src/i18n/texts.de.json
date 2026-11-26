@@ -2729,7 +2729,8 @@
     "Note": "Notiz",
     "The notes this token sees, newest change first. Locked notes are never offered.": "Die Notizen, die dieser Token sieht, die zuletzt geänderte zuerst. Gesperrte Notizen werden nie angeboten.",
     "Show ticked items": "Abgehakte Punkte zeigen",
-    "Below the open ones, struck through.": "Unter den offenen, durchgestrichen."
+    "Below the open ones, struck through.": "Unter den offenen, durchgestrichen.",
+    "Leave empty for as many as the value needs, one below 10.": "Leer lassen für so viele, wie der Wert braucht, unter 10 eine."
   },
   "labels": {
     "Private resources": "Private Ressourcen",

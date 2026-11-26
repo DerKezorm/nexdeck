@@ -4261,6 +4261,7 @@
     "Note": "Нотатка",
     "The notes this token sees, newest change first. Locked notes are never offered.": "Нотатки, які бачить цей токен, спершу змінені останніми. Заблоковані нотатки ніколи не пропонуються.",
     "Show ticked items": "Показувати позначені пункти",
-    "Below the open ones, struck through.": "Під відкритими, закресленими."
+    "Below the open ones, struck through.": "Під відкритими, закресленими.",
+    "Leave empty for as many as the value needs, one below 10.": "Залиште порожнім, щоб показувати стільки, скільки потрібно значенню, один нижче 10."
   }
 }

@@ -2729,7 +2729,8 @@
     "Note": "Note",
     "The notes this token sees, newest change first. Locked notes are never offered.": "Les notes que voit ce jeton, la dernière modifiée d'abord. Les notes verrouillées ne sont jamais proposées.",
     "Show ticked items": "Afficher les éléments cochés",
-    "Below the open ones, struck through.": "Sous les éléments ouverts, barrés."
+    "Below the open ones, struck through.": "Sous les éléments ouverts, barrés.",
+    "Leave empty for as many as the value needs, one below 10.": "Laisser vide pour en afficher autant que la valeur en demande, une en dessous de 10."
   },
   "labels": {
     "Private resources": "Ressources privées",

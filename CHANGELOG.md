@@ -5,8 +5,13 @@ project uses semantic versioning.
 
 ## Unreleased
 
+### Added
+
+- **Decimals for a Home Assistant entity.** The Entity card has a Decimals field. Empty keeps the usual way; a number shows that many, so a rate of 0.07 per kWh no longer reads 0.1 (#78).
+
 ### Fixed
 
+- **The JSON API card keeps the decimals it is set to.** Every number below 10 showed one decimal and every other none, whatever the card's Decimals said. A card set to 2 now shows 0.07, one set to 1 shows 23.4 instead of 23 (#78).
 - **MCP clients that ask for a newer protocol version connect.** A client that sent the MCP-Protocol-Version header already on its first message, with a version nexdeck does not speak (the Python SDK 2.x does), was turned away with 400 before the version could be agreed. Now the first message agrees on a version nexdeck speaks, and the header is checked on the messages after it (#79).
 
 ## 1.11.0 (2026-11-22)

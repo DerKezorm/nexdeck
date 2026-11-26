@@ -2729,7 +2729,8 @@
     "Note": "Заметка",
     "The notes this token sees, newest change first. Locked notes are never offered.": "Заметки, которые видит этот токен, сначала изменённые последними. Заблокированные заметки никогда не предлагаются.",
     "Show ticked items": "Показывать отмеченные пункты",
-    "Below the open ones, struck through.": "Под открытыми, зачёркнутыми."
+    "Below the open ones, struck through.": "Под открытыми, зачёркнутыми.",
+    "Leave empty for as many as the value needs, one below 10.": "Оставьте пустым, чтобы показывать столько, сколько нужно значению, один ниже 10."
   },
   "labels": {
     "Private resources": "Частные ресурсы",

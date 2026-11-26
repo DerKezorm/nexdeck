@@ -1,15 +1,22 @@
-export function formatValue(value: number | string | null | undefined, unit = ''): string {
+/**
+ * A value as a card writes it. Without `decimals` a number keeps one decimal below 10 and none above; with them, a
+ * number that is not whole shows that many (#78: a rate of 0.07 per kWh read 0.1). A whole number stays whole.
+ */
+export function formatValue(value: number | string | null | undefined, unit = '', decimals?: number): string {
   if (value === null || value === undefined || value === '') return '—'
   if (typeof value === 'number') {
-    const text = Math.abs(value) >= 1000 ? Math.round(value).toLocaleString() : trimNumber(value)
+    const places = typeof decimals === 'number' && Number.isFinite(decimals) ? Math.max(0, Math.min(6, Math.round(decimals))) : undefined
+    const text = Math.abs(value) >= 1000
+      ? (places === undefined ? Math.round(value).toLocaleString() : value.toLocaleString(undefined, { maximumFractionDigits: places }))
+      : trimNumber(value, places)
     return unit ? `${text}${unit.startsWith('/') || unit.startsWith(' ') ? ' ' : ''}${unit}` : text
   }
   return unit ? `${value} ${unit}` : String(value)
 }
 
-function trimNumber(value: number): string {
+function trimNumber(value: number, places?: number): string {
   if (Number.isInteger(value)) return String(value)
-  return value.toFixed(Math.abs(value) < 10 ? 1 : 0)
+  return value.toFixed(places ?? (Math.abs(value) < 10 ? 1 : 0))
 }
 
 export function timeAgo(seconds: number | null | undefined, now = Date.now() / 1000): string {

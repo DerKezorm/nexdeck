@@ -2729,7 +2729,8 @@
     "Note": "笔记",
     "The notes this token sees, newest change first. Locked notes are never offered.": "此令牌可见的笔记，最近修改的在前。已锁定的笔记从不提供。",
     "Show ticked items": "显示已勾选的项目",
-    "Below the open ones, struck through.": "在未完成项下方，带删除线。"
+    "Below the open ones, struck through.": "在未完成项下方，带删除线。",
+    "Leave empty for as many as the value needs, one below 10.": "留空则按数值所需显示，小于 10 时显示一位。"
   },
   "labels": {
     "Private resources": "私有资源",

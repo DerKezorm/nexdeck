@@ -86,6 +86,8 @@ export interface Primary {
    * invisible until somebody writes one out by hand.
    */
   part?: string
+  /** How many decimals the number shows, when the card was set to a number of them (#78). */
+  decimals?: number
 }
 
 export interface Secondary {
