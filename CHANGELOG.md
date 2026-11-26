@@ -3,6 +3,12 @@
 All notable changes to nexdeck. The format follows Keep a Changelog; the
 project uses semantic versioning.
 
+## Unreleased
+
+### Fixed
+
+- **MCP clients that ask for a newer protocol version connect.** A client that sent the MCP-Protocol-Version header already on its first message, with a version nexdeck does not speak (the Python SDK 2.x does), was turned away with 400 before the version could be agreed. Now the first message agrees on a version nexdeck speaks, and the header is checked on the messages after it (#79).
+
 ## 1.11.0 (2026-11-22)
 
 ### Added

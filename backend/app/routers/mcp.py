@@ -130,10 +130,6 @@ async def endpoint(request: Request) -> Response:
             return _refuse(status.HTTP_429_TOO_MANY_REQUESTS, "slow_down", "Too many requests with this key. Wait a minute.",
                            {"Retry-After": "60"})
         journal.set_actor(f"{caller.username} via MCP")
-        # After initialize a client names the version it agreed on; one not spoken here is refused (the transport's rule).
-        asked = request.headers.get("mcp-protocol-version")
-        if asked is not None and asked not in PROTOCOL_VERSIONS:
-            return _refuse(status.HTTP_400_BAD_REQUEST, "protocol_version", "This MCP protocol version is not spoken here.")
         body = await _read(request)
         if body is None:
             return _refuse(status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, "too_large", "One message holds at most 1 MB.")
@@ -142,6 +138,13 @@ async def endpoint(request: Request) -> Response:
         except (ValueError, UnicodeDecodeError, RecursionError):
             # RecursionError: JSON nested deeper than Python's stack, sent to break the server.
             return JSONResponse(_rpc_error(None, -32700, "Parse error."), status_code=status.HTTP_400_BAD_REQUEST)
+        # After initialize a client names the version it agreed on; one not spoken here is refused (the transport's
+        # rule). On initialize itself the version is still to be agreed: a client may already send the one it would
+        # like, and the answer names the one it gets.
+        asked = request.headers.get("mcp-protocol-version")
+        initializing = isinstance(message, dict) and message.get("method") == "initialize"
+        if asked is not None and asked not in PROTOCOL_VERSIONS and not initializing:
+            return _refuse(status.HTTP_400_BAD_REQUEST, "protocol_version", "This MCP protocol version is not spoken here.")
         answer = await handle(db, caller, message)
     if answer is None:
         return Response(status_code=status.HTTP_202_ACCEPTED)

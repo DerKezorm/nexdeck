@@ -65,6 +65,18 @@ def test_no_stream_and_no_strange_versions_or_bodies(ready: TestClient) -> None:
     assert batch.json()["error"]["code"] == -32600
 
 
+def test_initialize_with_a_version_in_the_header_not_spoken_here_is_answered_with_one_that_is(ready: TestClient) -> None:
+    # Issue #79: the Python SDK 2.x sends its newest version in the header from the first message on.
+    _key, token = make_key(ready)
+    params = {"protocolVersion": "2026-07-28", "capabilities": {}, "clientInfo": {"name": "p", "version": "1"}}
+    hello = rpc(ready, token, "initialize", params, headers={"MCP-Protocol-Version": "2026-07-28"})
+    assert hello.status_code == 200, hello.text
+    assert hello.json()["result"]["protocolVersion"] == "2025-06-18"
+    after = rpc(ready, token, "tools/list", headers={"MCP-Protocol-Version": "2026-07-28"})
+    assert after.status_code == 400 and after.json()["detail"]["code"] == "protocol_version", "after initialize the rule holds"
+    assert rpc(ready, token, "tools/list", headers={"MCP-Protocol-Version": "2025-06-18"}).status_code == 200
+
+
 def _padded(size: int) -> bytes:
     """A valid message of exactly ``size`` bytes: spaces after the JSON are whitespace."""
     message = b'{"jsonrpc":"2.0","id":1,"method":"ping"}'
