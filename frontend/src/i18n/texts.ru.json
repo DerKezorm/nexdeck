@@ -2747,7 +2747,22 @@
     "Several entities as lines over the last hour, six hours, day or week, from Home Assistant's history.": "Несколько сущностей линиями за последний час, шесть часов, день или неделю, из истории Home Assistant.",
     "One per line, up to eight. A name after a | labels the line.": "По одной в строке, до восьми. Имя после | подписывает линию.",
     "1 hour": "1 час",
-    "6 hours": "6 часов"
+    "6 hours": "6 часов",
+    "What the Bambu Lab printers in Bambuddy are doing, the spools in their AMS, and the print queue.": "Что делают принтеры Bambu Lab в Bambuddy, катушки в их AMS и очередь печати.",
+    "The address Bambuddy's web interface opens at.": "Адрес, по которому открывается веб-интерфейс Bambuddy.",
+    "Settings > API Keys in Bambuddy, with the permission to read status. Not needed while Bambuddy runs without sign-in.": "Settings > API Keys в Bambuddy, с правом читать состояние. Не нужен, пока Bambuddy работает без входа.",
+    "Whether a printer is idle, printing, paused or in trouble, its job with progress and time left, the nozzle and bed temperatures, and its last print.": "Свободен ли принтер, печатает, на паузе или с проблемой, его задание с прогрессом и оставшимся временем, температуры сопла и стола и его последняя печать.",
+    "Job": "Задание",
+    "Last print": "Последняя печать",
+    "Empty takes the first printer.": "Пусто берёт первый принтер.",
+    "AMS": "AMS",
+    "Each slot of a printer's AMS with its filament, colour and what is left on the spool.": "Каждый слот AMS принтера с филаментом, цветом и тем, сколько осталось на катушке.",
+    "External spool": "Внешняя катушка",
+    "Printers": "Принтеры",
+    "Every printer with its state, its job and how far the print has got.": "Каждый принтер с его состоянием, заданием и ходом печати.",
+    "Print queue": "Очередь печати",
+    "The jobs waiting in Bambuddy's queue, in the order they will start, and the ones printing now.": "Задания в очереди Bambuddy в том порядке, в котором они начнутся, и те, что печатаются сейчас.",
+    "Empty shows the queue of every printer.": "Пусто показывает очередь всех принтеров."
   },
   "labels": {
     "Private resources": "Частные ресурсы",
@@ -4289,6 +4304,18 @@
     "Count": "Количество",
     "Count of those on or open": "Сколько включено или открыто",
     "Indoor": "В помещении",
-    "Outdoor": "На улице"
+    "Outdoor": "На улице",
+    "Slicing": "Нарезка",
+    "Last print failed": "Последняя печать не удалась",
+    "Last print stopped": "Последняя печать остановлена",
+    "Last print cancelled": "Последняя печать отменена",
+    "Nozzle 1": "Сопло 1",
+    "Nozzle 2": "Сопло 2",
+    "Unknown filament": "Неизвестный филамент",
+    "The last print failed.": "Последняя печать не удалась.",
+    "Bambuddy is not connected to this printer.": "Bambuddy не подключён к этому принтеру.",
+    "This printer has no AMS and no external spool.": "У этого принтера нет AMS и внешней катушки.",
+    "Bambuddy has no printer, or the key may not see one.": "В Bambuddy нет принтеров, или ключ не может их видеть.",
+    "The queue is empty.": "Очередь пуста."
   }
 }

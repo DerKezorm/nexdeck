@@ -2747,7 +2747,22 @@
     "Several entities as lines over the last hour, six hours, day or week, from Home Assistant's history.": "Plusieurs entités en courbes sur la dernière heure, six heures, journée ou semaine, depuis l'historique de Home Assistant.",
     "One per line, up to eight. A name after a | labels the line.": "Une par ligne, huit au plus. Un nom après | nomme la courbe.",
     "1 hour": "1 heure",
-    "6 hours": "6 heures"
+    "6 hours": "6 heures",
+    "What the Bambu Lab printers in Bambuddy are doing, the spools in their AMS, and the print queue.": "Ce que font les imprimantes Bambu Lab de Bambuddy, les bobines de leur AMS et la file d’impression.",
+    "The address Bambuddy's web interface opens at.": "L’adresse à laquelle s’ouvre l’interface web de Bambuddy.",
+    "Settings > API Keys in Bambuddy, with the permission to read status. Not needed while Bambuddy runs without sign-in.": "Settings > API Keys dans Bambuddy, avec le droit de lire l’état. Inutile tant que Bambuddy fonctionne sans connexion.",
+    "Whether a printer is idle, printing, paused or in trouble, its job with progress and time left, the nozzle and bed temperatures, and its last print.": "Si une imprimante est libre, imprime, est en pause ou a un problème, sa tâche avec la progression et le temps restant, les températures de la buse et du plateau, et sa dernière impression.",
+    "Job": "Tâche",
+    "Last print": "Dernière impression",
+    "Empty takes the first printer.": "Vide prend la première imprimante.",
+    "AMS": "AMS",
+    "Each slot of a printer's AMS with its filament, colour and what is left on the spool.": "Chaque emplacement de l’AMS d’une imprimante avec son filament, sa couleur et ce qui reste sur la bobine.",
+    "External spool": "Bobine externe",
+    "Printers": "Imprimantes",
+    "Every printer with its state, its job and how far the print has got.": "Chaque imprimante avec son état, sa tâche et l’avancement de l’impression.",
+    "Print queue": "File d’impression",
+    "The jobs waiting in Bambuddy's queue, in the order they will start, and the ones printing now.": "Les tâches qui attendent dans la file de Bambuddy, dans l’ordre où elles démarreront, et celles qui s’impriment maintenant.",
+    "Empty shows the queue of every printer.": "Vide affiche la file de toutes les imprimantes."
   },
   "labels": {
     "Private resources": "Ressources privées",
@@ -4289,6 +4304,18 @@
     "Count": "Compter",
     "Count of those on or open": "Nombre d'allumées ou ouvertes",
     "Indoor": "Intérieur",
-    "Outdoor": "Extérieur"
+    "Outdoor": "Extérieur",
+    "Slicing": "Découpage",
+    "Last print failed": "Dernière impression échouée",
+    "Last print stopped": "Dernière impression arrêtée",
+    "Last print cancelled": "Dernière impression annulée",
+    "Nozzle 1": "Buse 1",
+    "Nozzle 2": "Buse 2",
+    "Unknown filament": "Filament inconnu",
+    "The last print failed.": "La dernière impression a échoué.",
+    "Bambuddy is not connected to this printer.": "Bambuddy n’est pas connecté à cette imprimante.",
+    "This printer has no AMS and no external spool.": "Cette imprimante n’a ni AMS ni bobine externe.",
+    "Bambuddy has no printer, or the key may not see one.": "Bambuddy n’a aucune imprimante, ou la clé ne peut en voir aucune.",
+    "The queue is empty.": "La file est vide."
   }
 }

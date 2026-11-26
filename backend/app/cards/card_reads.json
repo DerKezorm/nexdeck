@@ -125,6 +125,22 @@
    ]
   }
  ],
+ "bambuddy": [
+  {
+   "path": "/api/v1/printers/",
+   "widgets": [
+    "printer",
+    "ams",
+    "printers"
+   ]
+  },
+  {
+   "path": "/api/v1/queue/?status=pending%2Cprinting",
+   "widgets": [
+    "queue"
+   ]
+  }
+ ],
  "bazarr": [
   {
    "path": "/api/badges",

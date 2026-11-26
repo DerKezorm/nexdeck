@@ -904,6 +904,11 @@ export function CardNotice({ data }: { data: RenderProps['data'] }) {
   return <div className="mx-3 mb-1.5 text-[11px] text-muted border-l-2 border-[var(--nd-warn,theme(colors.amber.400))] pl-2" data-testid="card-notice">{tLabel(String(data.meta.notice))}</div>
 }
 
+/** A row's own colour as `#rrggbb`, or nothing: only that form reaches a style, whatever a service sends. */
+function swatchOf(value: unknown): string {
+  return typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value) ? value : ''
+}
+
 export function ListCard({ widget, data, onAction, canAct, series }: RenderProps) {
   const { t, i18n } = useTranslation()
   const disguise = useDisguise()
@@ -955,7 +960,11 @@ export function ListCard({ widget, data, onAction, canAct, series }: RenderProps
                   <ServiceIcon icon={String(item.icon)} size={20} />
                   <span className="dot absolute -right-1 -bottom-1 ring-2 ring-[var(--nd-card)] !w-2 !h-2" data-status={status} />
                 </span>
-              ) : item.icon ? <ServiceIcon icon={String(item.icon)} size={18} /> : <span className="dot" data-status={item.emphasis ? 'accent' : status} />}
+              ) : item.icon ? <ServiceIcon icon={String(item.icon)} size={18} /> : swatchOf(item.swatch) ? (
+                // The colour of the thing itself (the filament on a spool), in place of the dot; how it stands is
+                // still said by its bar. Ringed, so white filament on a white card can be seen.
+                <span className="dot" data-swatch="" style={{ background: swatchOf(item.swatch), boxShadow: 'inset 0 0 0 1px color-mix(in srgb, var(--nd-text) 30%, transparent)' }} />
+              ) : <span className="dot" data-status={item.emphasis ? 'accent' : status} />}
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   {/* `emphasis` marks a row that wants attention without being

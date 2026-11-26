@@ -21,6 +21,7 @@ UPSTREAM: dict[str, str] = {
     "aria2": "aria2/aria2",
     "authentik": "goauthentik/authentik",
     "autobrr": "autobrr/autobrr",
+    "bambuddy": "maziggy/bambuddy",
     "bazarr": "morpheus65535/bazarr",
     "bookstack": "BookStackApp/BookStack",
     "changedetection": "dgtlmoon/changedetection.io",

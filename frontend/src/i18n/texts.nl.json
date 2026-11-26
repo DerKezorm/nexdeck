@@ -2747,7 +2747,22 @@
     "Several entities as lines over the last hour, six hours, day or week, from Home Assistant's history.": "Meerdere entiteiten als lijnen over het laatste uur, zes uur, de dag of de week, uit de geschiedenis van Home Assistant.",
     "One per line, up to eight. A name after a | labels the line.": "Eén per regel, tot acht. Een naam na een | benoemt de lijn.",
     "1 hour": "1 uur",
-    "6 hours": "6 uur"
+    "6 hours": "6 uur",
+    "What the Bambu Lab printers in Bambuddy are doing, the spools in their AMS, and the print queue.": "Wat de Bambu Lab-printers in Bambuddy doen, de spoelen in hun AMS en de printwachtrij.",
+    "The address Bambuddy's web interface opens at.": "Het adres waarop de webinterface van Bambuddy opent.",
+    "Settings > API Keys in Bambuddy, with the permission to read status. Not needed while Bambuddy runs without sign-in.": "Settings > API Keys in Bambuddy, met het recht om de status te lezen. Niet nodig zolang Bambuddy zonder aanmelding draait.",
+    "Whether a printer is idle, printing, paused or in trouble, its job with progress and time left, the nozzle and bed temperatures, and its last print.": "Of een printer vrij is, print, gepauzeerd is of problemen heeft, zijn taak met voortgang en resterende tijd, de temperaturen van spuitmond en printbed, en zijn laatste print.",
+    "Job": "Taak",
+    "Last print": "Laatste print",
+    "Empty takes the first printer.": "Leeg neemt de eerste printer.",
+    "AMS": "AMS",
+    "Each slot of a printer's AMS with its filament, colour and what is left on the spool.": "Elke sleuf van het AMS van een printer met zijn filament, kleur en wat er nog op de spoel zit.",
+    "External spool": "Externe spoel",
+    "Printers": "Printers",
+    "Every printer with its state, its job and how far the print has got.": "Elke printer met zijn status, zijn taak en hoe ver de print is.",
+    "Print queue": "Printwachtrij",
+    "The jobs waiting in Bambuddy's queue, in the order they will start, and the ones printing now.": "De taken in de wachtrij van Bambuddy, in de volgorde waarin ze starten, en de taken die nu printen.",
+    "Empty shows the queue of every printer.": "Leeg toont de wachtrij van alle printers."
   },
   "labels": {
     "Private resources": "Privé-resources",
@@ -4289,6 +4304,18 @@
     "Count": "Aantal",
     "Count of those on or open": "Aantal dat aan of open is",
     "Indoor": "Binnen",
-    "Outdoor": "Buiten"
+    "Outdoor": "Buiten",
+    "Slicing": "Slicen",
+    "Last print failed": "Laatste print mislukt",
+    "Last print stopped": "Laatste print gestopt",
+    "Last print cancelled": "Laatste print geannuleerd",
+    "Nozzle 1": "Spuitmond 1",
+    "Nozzle 2": "Spuitmond 2",
+    "Unknown filament": "Onbekend filament",
+    "The last print failed.": "De laatste print is mislukt.",
+    "Bambuddy is not connected to this printer.": "Bambuddy is niet met deze printer verbonden.",
+    "This printer has no AMS and no external spool.": "Deze printer heeft geen AMS en geen externe spoel.",
+    "Bambuddy has no printer, or the key may not see one.": "Bambuddy heeft geen printer, of de sleutel mag er geen zien.",
+    "The queue is empty.": "De wachtrij is leeg."
   }
 }

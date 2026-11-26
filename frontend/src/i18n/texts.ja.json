@@ -2747,7 +2747,22 @@
     "Several entities as lines over the last hour, six hours, day or week, from Home Assistant's history.": "複数のエンティティを、Home Assistant の履歴から直近1時間、6時間、1日、1週間の線で表示します。",
     "One per line, up to eight. A name after a | labels the line.": "1行に1つ、最大8つ。| の後の名前が線のラベルになります。",
     "1 hour": "1時間",
-    "6 hours": "6時間"
+    "6 hours": "6時間",
+    "What the Bambu Lab printers in Bambuddy are doing, the spools in their AMS, and the print queue.": "Bambuddy にある Bambu Lab プリンターの状態、AMS のスプール、印刷キュー。",
+    "The address Bambuddy's web interface opens at.": "Bambuddy の Web 画面が開くアドレス。",
+    "Settings > API Keys in Bambuddy, with the permission to read status. Not needed while Bambuddy runs without sign-in.": "Bambuddy の Settings > API Keys で、状態を読む権限を付けて作成します。Bambuddy がログインなしで動いている間は不要です。",
+    "Whether a printer is idle, printing, paused or in trouble, its job with progress and time left, the nozzle and bed temperatures, and its last print.": "プリンターが待機中か、印刷中か、一時停止中か、問題があるか。ジョブの進捗と残り時間、ノズルとベッドの温度、最後の印刷。",
+    "Job": "ジョブ",
+    "Last print": "最後の印刷",
+    "Empty takes the first printer.": "空欄なら最初のプリンターを使います。",
+    "AMS": "AMS",
+    "Each slot of a printer's AMS with its filament, colour and what is left on the spool.": "プリンターの AMS の各スロットと、そのフィラメント、色、スプールの残量。",
+    "External spool": "外部スプール",
+    "Printers": "すべてのプリンター",
+    "Every printer with its state, its job and how far the print has got.": "すべてのプリンターの状態、ジョブ、印刷の進み具合。",
+    "Print queue": "印刷キュー",
+    "The jobs waiting in Bambuddy's queue, in the order they will start, and the ones printing now.": "Bambuddy のキューで待っているジョブを開始順に、そして今印刷中のジョブ。",
+    "Empty shows the queue of every printer.": "空欄ならすべてのプリンターのキューを表示します。"
   },
   "labels": {
     "Private resources": "プライベートリソース",
@@ -4289,6 +4304,18 @@
     "Count": "件数",
     "Count of those on or open": "オンまたは開いている数",
     "Indoor": "屋内",
-    "Outdoor": "屋外"
+    "Outdoor": "屋外",
+    "Slicing": "スライス中",
+    "Last print failed": "最後の印刷は失敗",
+    "Last print stopped": "最後の印刷は停止",
+    "Last print cancelled": "最後の印刷はキャンセル",
+    "Nozzle 1": "ノズル 1",
+    "Nozzle 2": "ノズル 2",
+    "Unknown filament": "不明なフィラメント",
+    "The last print failed.": "最後の印刷は失敗しました。",
+    "Bambuddy is not connected to this printer.": "Bambuddy はこのプリンターに接続していません。",
+    "This printer has no AMS and no external spool.": "このプリンターには AMS も外部スプールもありません。",
+    "Bambuddy has no printer, or the key may not see one.": "Bambuddy にプリンターがないか、このキーではどれも見えません。",
+    "The queue is empty.": "キューは空です。"
   }
 }

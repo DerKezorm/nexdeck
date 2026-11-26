@@ -1539,7 +1539,19 @@
     "Count": "Кількість",
     "Count of those on or open": "Скільки увімкнено чи відкрито",
     "Indoor": "У приміщенні",
-    "Outdoor": "Надворі"
+    "Outdoor": "Надворі",
+    "Slicing": "Нарізка",
+    "Last print failed": "Останній друк не вдався",
+    "Last print stopped": "Останній друк зупинено",
+    "Last print cancelled": "Останній друк скасовано",
+    "Nozzle 1": "Сопло 1",
+    "Nozzle 2": "Сопло 2",
+    "Unknown filament": "Невідомий філамент",
+    "The last print failed.": "Останній друк не вдався.",
+    "Bambuddy is not connected to this printer.": "Bambuddy не підключено до цього принтера.",
+    "This printer has no AMS and no external spool.": "У цього принтера немає AMS і зовнішньої котушки.",
+    "Bambuddy has no printer, or the key may not see one.": "У Bambuddy немає принтерів, або ключ не може їх бачити.",
+    "The queue is empty.": "Черга порожня."
   },
   "adapter": {
     "Team > Service users > a user > Access tokens. A service user with the User role reads every peer and can change nothing.": "Team > Service users > користувач > Access tokens. Service user із роллю User читає кожного піра й нічого не може змінити.",
@@ -4289,6 +4301,21 @@
     "Several entities as lines over the last hour, six hours, day or week, from Home Assistant's history.": "Кілька сутностей лініями за останню годину, шість годин, день або тиждень, з історії Home Assistant.",
     "One per line, up to eight. A name after a | labels the line.": "По одній у рядку, до восьми. Назва після | підписує лінію.",
     "1 hour": "1 година",
-    "6 hours": "6 годин"
+    "6 hours": "6 годин",
+    "What the Bambu Lab printers in Bambuddy are doing, the spools in their AMS, and the print queue.": "Що роблять принтери Bambu Lab у Bambuddy, котушки в їхньому AMS і черга друку.",
+    "The address Bambuddy's web interface opens at.": "Адреса, за якою відкривається вебінтерфейс Bambuddy.",
+    "Settings > API Keys in Bambuddy, with the permission to read status. Not needed while Bambuddy runs without sign-in.": "Settings > API Keys у Bambuddy, з правом читати стан. Не потрібен, поки Bambuddy працює без входу.",
+    "Whether a printer is idle, printing, paused or in trouble, its job with progress and time left, the nozzle and bed temperatures, and its last print.": "Чи принтер вільний, друкує, на паузі або має проблему, його завдання з поступом і залишком часу, температури сопла й столу та його останній друк.",
+    "Job": "Завдання",
+    "Last print": "Останній друк",
+    "Empty takes the first printer.": "Порожньо бере перший принтер.",
+    "AMS": "AMS",
+    "Each slot of a printer's AMS with its filament, colour and what is left on the spool.": "Кожен слот AMS принтера з філаментом, кольором і тим, скільки лишилося на котушці.",
+    "External spool": "Зовнішня котушка",
+    "Printers": "Принтери",
+    "Every printer with its state, its job and how far the print has got.": "Кожен принтер з його станом, завданням і тим, наскільки просунувся друк.",
+    "Print queue": "Черга друку",
+    "The jobs waiting in Bambuddy's queue, in the order they will start, and the ones printing now.": "Завдання в черзі Bambuddy в тому порядку, в якому вони почнуться, і ті, що друкуються зараз.",
+    "Empty shows the queue of every printer.": "Порожньо показує чергу всіх принтерів."
   }
 }

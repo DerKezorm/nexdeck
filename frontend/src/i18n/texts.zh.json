@@ -2747,7 +2747,22 @@
     "Several entities as lines over the last hour, six hours, day or week, from Home Assistant's history.": "多个实体以曲线显示最近一小时、六小时、一天或一周的数据，来自 Home Assistant 的历史记录。",
     "One per line, up to eight. A name after a | labels the line.": "每行一个，最多八个。| 后面的名称作为曲线标签。",
     "1 hour": "1 小时",
-    "6 hours": "6 小时"
+    "6 hours": "6 小时",
+    "What the Bambu Lab printers in Bambuddy are doing, the spools in their AMS, and the print queue.": "Bambuddy 中的拓竹打印机正在做什么、它们 AMS 中的线轴以及打印队列。",
+    "The address Bambuddy's web interface opens at.": "Bambuddy 网页界面打开的地址。",
+    "Settings > API Keys in Bambuddy, with the permission to read status. Not needed while Bambuddy runs without sign-in.": "Bambuddy 中的 Settings > API Keys，需有读取状态的权限。Bambuddy 未启用登录时不需要。",
+    "Whether a printer is idle, printing, paused or in trouble, its job with progress and time left, the nozzle and bed temperatures, and its last print.": "打印机是空闲、打印中、已暂停还是出了问题，它的任务及进度和剩余时间，喷嘴和热床温度，以及它的上一次打印。",
+    "Job": "任务",
+    "Last print": "上次打印",
+    "Empty takes the first printer.": "留空则使用第一台打印机。",
+    "AMS": "AMS",
+    "Each slot of a printer's AMS with its filament, colour and what is left on the spool.": "打印机 AMS 的每个槽位，及其耗材、颜色和线轴上剩余的量。",
+    "External spool": "外部线轴",
+    "Printers": "所有打印机",
+    "Every printer with its state, its job and how far the print has got.": "每台打印机的状态、任务和打印进度。",
+    "Print queue": "打印队列",
+    "The jobs waiting in Bambuddy's queue, in the order they will start, and the ones printing now.": "Bambuddy 队列中等待的任务，按开始顺序排列，以及正在打印的任务。",
+    "Empty shows the queue of every printer.": "留空则显示所有打印机的队列。"
   },
   "labels": {
     "Private resources": "私有资源",
@@ -4289,6 +4304,18 @@
     "Count": "数量",
     "Count of those on or open": "开启或打开的数量",
     "Indoor": "室内",
-    "Outdoor": "室外"
+    "Outdoor": "室外",
+    "Slicing": "切片中",
+    "Last print failed": "上次打印失败",
+    "Last print stopped": "上次打印已停止",
+    "Last print cancelled": "上次打印已取消",
+    "Nozzle 1": "喷嘴 1",
+    "Nozzle 2": "喷嘴 2",
+    "Unknown filament": "未知耗材",
+    "The last print failed.": "上次打印失败。",
+    "Bambuddy is not connected to this printer.": "Bambuddy 未连接到这台打印机。",
+    "This printer has no AMS and no external spool.": "这台打印机没有 AMS，也没有外部线轴。",
+    "Bambuddy has no printer, or the key may not see one.": "Bambuddy 中没有打印机，或者此密钥看不到任何打印机。",
+    "The queue is empty.": "队列为空。"
   }
 }

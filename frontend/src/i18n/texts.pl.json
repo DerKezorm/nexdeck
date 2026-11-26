@@ -2747,7 +2747,22 @@
     "Several entities as lines over the last hour, six hours, day or week, from Home Assistant's history.": "Kilka encji jako linie z ostatniej godziny, sześciu godzin, doby lub tygodnia, z historii Home Assistant.",
     "One per line, up to eight. A name after a | labels the line.": "Jedna w wierszu, do ośmiu. Nazwa po | opisuje linię.",
     "1 hour": "1 godzina",
-    "6 hours": "6 godzin"
+    "6 hours": "6 godzin",
+    "What the Bambu Lab printers in Bambuddy are doing, the spools in their AMS, and the print queue.": "Co robią drukarki Bambu Lab w Bambuddy, szpule w ich AMS i kolejka druku.",
+    "The address Bambuddy's web interface opens at.": "Adres, pod którym otwiera się interfejs webowy Bambuddy.",
+    "Settings > API Keys in Bambuddy, with the permission to read status. Not needed while Bambuddy runs without sign-in.": "Settings > API Keys w Bambuddy, z uprawnieniem do odczytu stanu. Niepotrzebny, dopóki Bambuddy działa bez logowania.",
+    "Whether a printer is idle, printing, paused or in trouble, its job with progress and time left, the nozzle and bed temperatures, and its last print.": "Czy drukarka jest bezczynna, drukuje, jest wstrzymana lub ma problem, jej zadanie z postępem i pozostałym czasem, temperatury dyszy i stołu oraz jej ostatni wydruk.",
+    "Job": "Zadanie",
+    "Last print": "Ostatni wydruk",
+    "Empty takes the first printer.": "Puste wybiera pierwszą drukarkę.",
+    "AMS": "AMS",
+    "Each slot of a printer's AMS with its filament, colour and what is left on the spool.": "Każde gniazdo AMS drukarki z filamentem, kolorem i tym, ile zostało na szpuli.",
+    "External spool": "Szpula zewnętrzna",
+    "Printers": "Drukarki",
+    "Every printer with its state, its job and how far the print has got.": "Każda drukarka z jej stanem, zadaniem i postępem wydruku.",
+    "Print queue": "Kolejka druku",
+    "The jobs waiting in Bambuddy's queue, in the order they will start, and the ones printing now.": "Zadania czekające w kolejce Bambuddy, w kolejności, w jakiej ruszą, oraz te drukowane teraz.",
+    "Empty shows the queue of every printer.": "Puste pokazuje kolejkę wszystkich drukarek."
   },
   "labels": {
     "Private resources": "Zasoby prywatne",
@@ -4289,6 +4304,18 @@
     "Count": "Liczba",
     "Count of those on or open": "Liczba włączonych lub otwartych",
     "Indoor": "Wewnątrz",
-    "Outdoor": "Na zewnątrz"
+    "Outdoor": "Na zewnątrz",
+    "Slicing": "Cięcie",
+    "Last print failed": "Ostatni wydruk nieudany",
+    "Last print stopped": "Ostatni wydruk zatrzymany",
+    "Last print cancelled": "Ostatni wydruk anulowany",
+    "Nozzle 1": "Dysza 1",
+    "Nozzle 2": "Dysza 2",
+    "Unknown filament": "Nieznany filament",
+    "The last print failed.": "Ostatni wydruk się nie udał.",
+    "Bambuddy is not connected to this printer.": "Bambuddy nie jest połączone z tą drukarką.",
+    "This printer has no AMS and no external spool.": "Ta drukarka nie ma AMS ani zewnętrznej szpuli.",
+    "Bambuddy has no printer, or the key may not see one.": "Bambuddy nie ma żadnej drukarki albo klucz nie może żadnej zobaczyć.",
+    "The queue is empty.": "Kolejka jest pusta."
   }
 }
