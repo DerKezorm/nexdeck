@@ -2730,7 +2730,18 @@
     "The notes this token sees, newest change first. Locked notes are never offered.": "Заметки, которые видит этот токен, сначала изменённые последними. Заблокированные заметки никогда не предлагаются.",
     "Show ticked items": "Показывать отмеченные пункты",
     "Below the open ones, struck through.": "Под открытыми, зачёркнутыми.",
-    "Leave empty for as many as the value needs, one below 10.": "Оставьте пустым, чтобы показывать столько, сколько нужно значению, один ниже 10."
+    "Leave empty for as many as the value needs, one below 10.": "Оставьте пустым, чтобы показывать столько, сколько нужно значению, один ниже 10.",
+    "Several entities as one number": "Несколько сущностей одним числом",
+    "The sum, average, lowest or highest of several entities, or how many of them are on or open.": "Сумма, среднее, минимум или максимум нескольких сущностей, или сколько из них включено или открыто.",
+    "One per line. A group stands for the entities in it.": "По одной в строке. Группа означает входящие в неё сущности.",
+    "Sum": "Сумма",
+    "Count of those on or open": "Сколько включено или открыто",
+    "Leave empty to take the unit of the entities, when they share one.": "Оставьте пустым, чтобы взять единицу сущностей, если она у них общая.",
+    "History chart": "График истории",
+    "Several entities as lines over the last hour, six hours, day or week, from Home Assistant's history.": "Несколько сущностей линиями за последний час, шесть часов, день или неделю, из истории Home Assistant.",
+    "One per line, up to eight. A name after a | labels the line.": "По одной в строке, до восьми. Имя после | подписывает линию.",
+    "1 hour": "1 час",
+    "6 hours": "6 часов"
   },
   "labels": {
     "Private resources": "Частные ресурсы",
@@ -4262,6 +4273,16 @@
     "This item changed in nexnotes meanwhile; the card shows it anew.": "Этот пункт тем временем изменился в nexnotes; карточка показывает его заново.",
     "nexnotes could not take this request.": "nexnotes не смог принять этот запрос.",
     "Pick a note in the card's settings.": "Выберите заметку в настройках карточки.",
-    "The item is not a number this can be used with.": "Пункт не является пригодным номером."
+    "The item is not a number this can be used with.": "Пункт не является пригодным номером.",
+    "Entities": "Сущности",
+    "Not found": "Не найдено",
+    "No history in this period": "Нет истории за этот период",
+    "Sum": "Сумма",
+    "Lowest": "Минимум",
+    "Highest": "Максимум",
+    "Count": "Количество",
+    "Count of those on or open": "Сколько включено или открыто",
+    "Indoor": "В помещении",
+    "Outdoor": "На улице"
   }
 }

@@ -7,6 +7,8 @@ project uses semantic versioning.
 
 ### Added
 
+- **Home Assistant: several entities as one number.** A new card adds up, averages or takes the lowest or highest of several entities, or counts how many of them there are or how many are on or open: the power of six plugs, the mean of four thermostats, the windows left open. A group stands for the entities in it. An entity that is unavailable is left out and the card says how many it counted (#82).
+- **Home Assistant: a history chart.** A new card draws up to eight entities as lines over the last hour, six hours, day or week, read from Home Assistant's own history, so it is full the moment it is placed. A name after a `|` labels a line (#82).
 - **Decimals for a Home Assistant entity.** The Entity card has a Decimals field. Empty keeps the usual way; a number shows that many, so a rate of 0.07 per kWh no longer reads 0.1 (#78).
 
 ### Fixed

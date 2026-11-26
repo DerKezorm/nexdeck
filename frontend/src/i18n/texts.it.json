@@ -2730,7 +2730,18 @@
     "The notes this token sees, newest change first. Locked notes are never offered.": "Le note che questo token vede, l'ultima modificata per prima. Le note bloccate non vengono mai proposte.",
     "Show ticked items": "Mostra voci spuntate",
     "Below the open ones, struck through.": "Sotto quelle aperte, barrate.",
-    "Leave empty for as many as the value needs, one below 10.": "Lascia vuoto per mostrarne quanti ne servono al valore, uno sotto 10."
+    "Leave empty for as many as the value needs, one below 10.": "Lascia vuoto per mostrarne quanti ne servono al valore, uno sotto 10.",
+    "Several entities as one number": "Più entità come un numero",
+    "The sum, average, lowest or highest of several entities, or how many of them are on or open.": "Somma, media, minimo o massimo di più entità, oppure quante sono accese o aperte.",
+    "One per line. A group stands for the entities in it.": "Una per riga. Un gruppo vale per le entità che contiene.",
+    "Sum": "Somma",
+    "Count of those on or open": "Quante sono accese o aperte",
+    "Leave empty to take the unit of the entities, when they share one.": "Lascia vuoto per usare l'unità delle entità, se ne hanno una in comune.",
+    "History chart": "Grafico dello storico",
+    "Several entities as lines over the last hour, six hours, day or week, from Home Assistant's history.": "Più entità come linee nell'ultima ora, sei ore, giorno o settimana, dallo storico di Home Assistant.",
+    "One per line, up to eight. A name after a | labels the line.": "Una per riga, fino a otto. Un nome dopo | dà il nome alla linea.",
+    "1 hour": "1 ora",
+    "6 hours": "6 ore"
   },
   "labels": {
     "Private resources": "Risorse private",
@@ -4262,6 +4273,16 @@
     "This item changed in nexnotes meanwhile; the card shows it anew.": "Questa voce è cambiata nel frattempo in nexnotes; la scheda la mostra di nuovo.",
     "nexnotes could not take this request.": "nexnotes non ha potuto accettare questa richiesta.",
     "Pick a note in the card's settings.": "Scegli una nota nelle impostazioni della scheda.",
-    "The item is not a number this can be used with.": "La voce non è un numero utilizzabile."
+    "The item is not a number this can be used with.": "La voce non è un numero utilizzabile.",
+    "Entities": "Entità",
+    "Not found": "Non trovato",
+    "No history in this period": "Nessuno storico in questo periodo",
+    "Sum": "Somma",
+    "Lowest": "Minimo",
+    "Highest": "Massimo",
+    "Count": "Contare",
+    "Count of those on or open": "Quante sono accese o aperte",
+    "Indoor": "Interno",
+    "Outdoor": "Esterno"
   }
 }

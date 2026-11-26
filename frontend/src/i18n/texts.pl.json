@@ -2730,7 +2730,18 @@
     "The notes this token sees, newest change first. Locked notes are never offered.": "Notatki widoczne dla tego tokena, ostatnio zmieniona najpierw. Zablokowane notatki nigdy nie są proponowane.",
     "Show ticked items": "Pokaż odhaczone punkty",
     "Below the open ones, struck through.": "Pod otwartymi, przekreślone.",
-    "Leave empty for as many as the value needs, one below 10.": "Zostaw puste, aby pokazać tyle, ile potrzebuje wartość, jedno poniżej 10."
+    "Leave empty for as many as the value needs, one below 10.": "Zostaw puste, aby pokazać tyle, ile potrzebuje wartość, jedno poniżej 10.",
+    "Several entities as one number": "Kilka encji jako jedna liczba",
+    "The sum, average, lowest or highest of several entities, or how many of them are on or open.": "Suma, średnia, najniższa lub najwyższa wartość kilku encji albo ile z nich jest włączonych lub otwartych.",
+    "One per line. A group stands for the entities in it.": "Jedna w wierszu. Grupa oznacza encje, które zawiera.",
+    "Sum": "Suma",
+    "Count of those on or open": "Liczba włączonych lub otwartych",
+    "Leave empty to take the unit of the entities, when they share one.": "Zostaw puste, aby użyć jednostki encji, jeśli mają wspólną.",
+    "History chart": "Wykres historii",
+    "Several entities as lines over the last hour, six hours, day or week, from Home Assistant's history.": "Kilka encji jako linie z ostatniej godziny, sześciu godzin, doby lub tygodnia, z historii Home Assistant.",
+    "One per line, up to eight. A name after a | labels the line.": "Jedna w wierszu, do ośmiu. Nazwa po | opisuje linię.",
+    "1 hour": "1 godzina",
+    "6 hours": "6 godzin"
   },
   "labels": {
     "Private resources": "Zasoby prywatne",
@@ -4262,6 +4273,16 @@
     "This item changed in nexnotes meanwhile; the card shows it anew.": "Ten punkt zmienił się w międzyczasie w nexnotes; karta pokazuje go na nowo.",
     "nexnotes could not take this request.": "nexnotes nie mógł przyjąć tego żądania.",
     "Pick a note in the card's settings.": "Wybierz notatkę w ustawieniach karty.",
-    "The item is not a number this can be used with.": "Ten punkt nie jest numerem, którego można użyć."
+    "The item is not a number this can be used with.": "Ten punkt nie jest numerem, którego można użyć.",
+    "Entities": "Encje",
+    "Not found": "Nie znaleziono",
+    "No history in this period": "Brak historii w tym okresie",
+    "Sum": "Suma",
+    "Lowest": "Najmniejsza",
+    "Highest": "Największa",
+    "Count": "Liczba",
+    "Count of those on or open": "Liczba włączonych lub otwartych",
+    "Indoor": "Wewnątrz",
+    "Outdoor": "Na zewnątrz"
   }
 }

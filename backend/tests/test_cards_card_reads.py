@@ -105,7 +105,7 @@ def test_lesen_l3_a_kind_without_reads_stands_with_its_reason(made) -> None:
 
 def test_lesen_l3_home_assistant_has_the_rest_paths_of_its_documentation() -> None:
     paths = {one["path"]: one["widgets"] for one in card_reads.reads_of("homeassistant")}
-    assert paths["/api/states"] == ["entities"]
+    assert paths["/api/states"] == ["summary", "history", "entities"]
     assert paths["/api/config"] == [], "no card asks it: from the documentation, without a card's name"
 
 

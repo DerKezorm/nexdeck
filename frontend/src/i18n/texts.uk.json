@@ -1529,7 +1529,17 @@
     "This item changed in nexnotes meanwhile; the card shows it anew.": "Цей пункт тим часом змінився в nexnotes; картка показує його заново.",
     "nexnotes could not take this request.": "nexnotes не зміг прийняти цей запит.",
     "Pick a note in the card's settings.": "Виберіть нотатку в налаштуваннях картки.",
-    "The item is not a number this can be used with.": "Пункт не є придатним номером."
+    "The item is not a number this can be used with.": "Пункт не є придатним номером.",
+    "Entities": "Сутності",
+    "Not found": "Не знайдено",
+    "No history in this period": "Немає історії за цей період",
+    "Sum": "Сума",
+    "Lowest": "Найнижче",
+    "Highest": "Найвище",
+    "Count": "Кількість",
+    "Count of those on or open": "Скільки увімкнено чи відкрито",
+    "Indoor": "У приміщенні",
+    "Outdoor": "Надворі"
   },
   "adapter": {
     "Team > Service users > a user > Access tokens. A service user with the User role reads every peer and can change nothing.": "Team > Service users > користувач > Access tokens. Service user із роллю User читає кожного піра й нічого не може змінити.",
@@ -4262,6 +4272,17 @@
     "The notes this token sees, newest change first. Locked notes are never offered.": "Нотатки, які бачить цей токен, спершу змінені останніми. Заблоковані нотатки ніколи не пропонуються.",
     "Show ticked items": "Показувати позначені пункти",
     "Below the open ones, struck through.": "Під відкритими, закресленими.",
-    "Leave empty for as many as the value needs, one below 10.": "Залиште порожнім, щоб показувати стільки, скільки потрібно значенню, один нижче 10."
+    "Leave empty for as many as the value needs, one below 10.": "Залиште порожнім, щоб показувати стільки, скільки потрібно значенню, один нижче 10.",
+    "Several entities as one number": "Кілька сутностей одним числом",
+    "The sum, average, lowest or highest of several entities, or how many of them are on or open.": "Сума, середнє, найменше чи найбільше значення кількох сутностей, або скільки з них увімкнено чи відкрито.",
+    "One per line. A group stands for the entities in it.": "По одній у рядку. Група означає сутності, що в ній.",
+    "Sum": "Сума",
+    "Count of those on or open": "Скільки увімкнено чи відкрито",
+    "Leave empty to take the unit of the entities, when they share one.": "Залиште порожнім, щоб узяти одиницю сутностей, якщо вона спільна.",
+    "History chart": "Графік історії",
+    "Several entities as lines over the last hour, six hours, day or week, from Home Assistant's history.": "Кілька сутностей лініями за останню годину, шість годин, день або тиждень, з історії Home Assistant.",
+    "One per line, up to eight. A name after a | labels the line.": "По одній у рядку, до восьми. Назва після | підписує лінію.",
+    "1 hour": "1 година",
+    "6 hours": "6 годин"
   }
 }

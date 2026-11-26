@@ -2730,7 +2730,18 @@
     "The notes this token sees, newest change first. Locked notes are never offered.": "De notities die deze token ziet, laatst gewijzigde eerst. Vergrendelde notities worden nooit aangeboden.",
     "Show ticked items": "Afgevinkte punten tonen",
     "Below the open ones, struck through.": "Onder de open punten, doorgestreept.",
-    "Leave empty for as many as the value needs, one below 10.": "Leeg laten voor zoveel als de waarde nodig heeft, één onder de 10."
+    "Leave empty for as many as the value needs, one below 10.": "Leeg laten voor zoveel als de waarde nodig heeft, één onder de 10.",
+    "Several entities as one number": "Meerdere entiteiten als één getal",
+    "The sum, average, lowest or highest of several entities, or how many of them are on or open.": "De som, het gemiddelde, de laagste of hoogste waarde van meerdere entiteiten, of hoeveel er aan of open zijn.",
+    "One per line. A group stands for the entities in it.": "Eén per regel. Een groep staat voor de entiteiten erin.",
+    "Sum": "Som",
+    "Count of those on or open": "Aantal dat aan of open is",
+    "Leave empty to take the unit of the entities, when they share one.": "Leeg laten om de eenheid van de entiteiten te nemen, als ze dezelfde hebben.",
+    "History chart": "Verloopgrafiek",
+    "Several entities as lines over the last hour, six hours, day or week, from Home Assistant's history.": "Meerdere entiteiten als lijnen over het laatste uur, zes uur, de dag of de week, uit de geschiedenis van Home Assistant.",
+    "One per line, up to eight. A name after a | labels the line.": "Eén per regel, tot acht. Een naam na een | benoemt de lijn.",
+    "1 hour": "1 uur",
+    "6 hours": "6 uur"
   },
   "labels": {
     "Private resources": "Privé-resources",
@@ -4262,6 +4273,16 @@
     "This item changed in nexnotes meanwhile; the card shows it anew.": "Dit punt is intussen in nexnotes veranderd; de kaart toont het opnieuw.",
     "nexnotes could not take this request.": "nexnotes kon dit verzoek niet aannemen.",
     "Pick a note in the card's settings.": "Kies een notitie in de instellingen van de kaart.",
-    "The item is not a number this can be used with.": "Het punt is geen nummer waarmee te werken valt."
+    "The item is not a number this can be used with.": "Het punt is geen nummer waarmee te werken valt.",
+    "Entities": "Entiteiten",
+    "Not found": "Niet gevonden",
+    "No history in this period": "Geen geschiedenis in deze periode",
+    "Sum": "Som",
+    "Lowest": "Laagste",
+    "Highest": "Hoogste",
+    "Count": "Aantal",
+    "Count of those on or open": "Aantal dat aan of open is",
+    "Indoor": "Binnen",
+    "Outdoor": "Buiten"
   }
 }

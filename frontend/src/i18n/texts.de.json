@@ -2730,7 +2730,18 @@
     "The notes this token sees, newest change first. Locked notes are never offered.": "Die Notizen, die dieser Token sieht, die zuletzt geänderte zuerst. Gesperrte Notizen werden nie angeboten.",
     "Show ticked items": "Abgehakte Punkte zeigen",
     "Below the open ones, struck through.": "Unter den offenen, durchgestrichen.",
-    "Leave empty for as many as the value needs, one below 10.": "Leer lassen für so viele, wie der Wert braucht, unter 10 eine."
+    "Leave empty for as many as the value needs, one below 10.": "Leer lassen für so viele, wie der Wert braucht, unter 10 eine.",
+    "Several entities as one number": "Mehrere Entitäten als eine Zahl",
+    "The sum, average, lowest or highest of several entities, or how many of them are on or open.": "Summe, Mittel, kleinster oder größter Wert mehrerer Entitäten, oder wie viele davon an oder offen sind.",
+    "One per line. A group stands for the entities in it.": "Eine pro Zeile. Eine Gruppe steht für die Entitäten darin.",
+    "Sum": "Summe",
+    "Count of those on or open": "Anzahl, die an oder offen sind",
+    "Leave empty to take the unit of the entities, when they share one.": "Leer lassen, um die Einheit der Entitäten zu nehmen, wenn sie dieselbe haben.",
+    "History chart": "Verlaufsdiagramm",
+    "Several entities as lines over the last hour, six hours, day or week, from Home Assistant's history.": "Mehrere Entitäten als Linien über die letzte Stunde, sechs Stunden, den Tag oder die Woche, aus dem Verlauf von Home Assistant.",
+    "One per line, up to eight. A name after a | labels the line.": "Eine pro Zeile, bis zu acht. Ein Name nach einem | beschriftet die Linie.",
+    "1 hour": "1 Stunde",
+    "6 hours": "6 Stunden"
   },
   "labels": {
     "Private resources": "Private Ressourcen",
@@ -4262,6 +4273,16 @@
     "This item changed in nexnotes meanwhile; the card shows it anew.": "Dieser Punkt hat sich in nexnotes inzwischen geändert; die Karte zeigt ihn neu.",
     "nexnotes could not take this request.": "nexnotes konnte diese Anfrage nicht annehmen.",
     "Pick a note in the card's settings.": "Wähle in den Einstellungen der Karte eine Notiz.",
-    "The item is not a number this can be used with.": "Der Punkt ist keine Nummer, mit der sich arbeiten lässt."
+    "The item is not a number this can be used with.": "Der Punkt ist keine Nummer, mit der sich arbeiten lässt.",
+    "Entities": "Entitäten",
+    "Not found": "Nicht gefunden",
+    "No history in this period": "Kein Verlauf in diesem Zeitraum",
+    "Sum": "Summe",
+    "Lowest": "Niedrigster Wert",
+    "Highest": "Höchster Wert",
+    "Count": "Zählen",
+    "Count of those on or open": "Anzahl, die an oder offen sind",
+    "Indoor": "Innen",
+    "Outdoor": "Außen"
   }
 }

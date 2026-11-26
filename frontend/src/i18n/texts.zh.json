@@ -2730,7 +2730,18 @@
     "The notes this token sees, newest change first. Locked notes are never offered.": "此令牌可见的笔记，最近修改的在前。已锁定的笔记从不提供。",
     "Show ticked items": "显示已勾选的项目",
     "Below the open ones, struck through.": "在未完成项下方，带删除线。",
-    "Leave empty for as many as the value needs, one below 10.": "留空则按数值所需显示，小于 10 时显示一位。"
+    "Leave empty for as many as the value needs, one below 10.": "留空则按数值所需显示，小于 10 时显示一位。",
+    "Several entities as one number": "多个实体合为一个数值",
+    "The sum, average, lowest or highest of several entities, or how many of them are on or open.": "多个实体的总和、平均值、最小值或最大值，或其中开启或打开的数量。",
+    "One per line. A group stands for the entities in it.": "每行一个。组代表其中包含的实体。",
+    "Sum": "总和",
+    "Count of those on or open": "开启或打开的数量",
+    "Leave empty to take the unit of the entities, when they share one.": "留空则使用实体的单位（若相同）。",
+    "History chart": "历史图表",
+    "Several entities as lines over the last hour, six hours, day or week, from Home Assistant's history.": "多个实体以曲线显示最近一小时、六小时、一天或一周的数据，来自 Home Assistant 的历史记录。",
+    "One per line, up to eight. A name after a | labels the line.": "每行一个，最多八个。| 后面的名称作为曲线标签。",
+    "1 hour": "1 小时",
+    "6 hours": "6 小时"
   },
   "labels": {
     "Private resources": "私有资源",
@@ -4262,6 +4273,16 @@
     "This item changed in nexnotes meanwhile; the card shows it anew.": "此项目在 nexnotes 中已被修改；卡片将重新显示。",
     "nexnotes could not take this request.": "nexnotes 无法接受此请求。",
     "Pick a note in the card's settings.": "请在卡片设置中选择一条笔记。",
-    "The item is not a number this can be used with.": "该项目不是可用的编号。"
+    "The item is not a number this can be used with.": "该项目不是可用的编号。",
+    "Entities": "实体",
+    "Not found": "未找到",
+    "No history in this period": "此期间无历史记录",
+    "Sum": "总和",
+    "Lowest": "最低",
+    "Highest": "最高",
+    "Count": "数量",
+    "Count of those on or open": "开启或打开的数量",
+    "Indoor": "室内",
+    "Outdoor": "室外"
   }
 }

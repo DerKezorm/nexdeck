@@ -2730,7 +2730,18 @@
     "The notes this token sees, newest change first. Locked notes are never offered.": "このトークンが見られるメモ (最新の変更順)。ロックされたメモは表示されません。",
     "Show ticked items": "チェック済みの項目を表示",
     "Below the open ones, struck through.": "未完了の項目の下に取り消し線付きで。",
-    "Leave empty for as many as the value needs, one below 10.": "空欄にすると値に必要な桁数を表示し、10 未満は 1 桁です。"
+    "Leave empty for as many as the value needs, one below 10.": "空欄にすると値に必要な桁数を表示し、10 未満は 1 桁です。",
+    "Several entities as one number": "複数のエンティティを一つの数値に",
+    "The sum, average, lowest or highest of several entities, or how many of them are on or open.": "複数のエンティティの合計、平均、最小、最大、またはオンや開いている数。",
+    "One per line. A group stands for the entities in it.": "1行に1つ。グループはその中のエンティティとして扱われます。",
+    "Sum": "合計",
+    "Count of those on or open": "オンまたは開いている数",
+    "Leave empty to take the unit of the entities, when they share one.": "空欄にすると、エンティティの単位が共通ならそれを使います。",
+    "History chart": "履歴グラフ",
+    "Several entities as lines over the last hour, six hours, day or week, from Home Assistant's history.": "複数のエンティティを、Home Assistant の履歴から直近1時間、6時間、1日、1週間の線で表示します。",
+    "One per line, up to eight. A name after a | labels the line.": "1行に1つ、最大8つ。| の後の名前が線のラベルになります。",
+    "1 hour": "1時間",
+    "6 hours": "6時間"
   },
   "labels": {
     "Private resources": "プライベートリソース",
@@ -4262,6 +4273,16 @@
     "This item changed in nexnotes meanwhile; the card shows it anew.": "この項目は nexnotes で変更されました。カードを更新して表示します。",
     "nexnotes could not take this request.": "nexnotes はこのリクエストを受け付けられませんでした。",
     "Pick a note in the card's settings.": "カードの設定でメモを選んでください。",
-    "The item is not a number this can be used with.": "この項目は使用できる番号ではありません。"
+    "The item is not a number this can be used with.": "この項目は使用できる番号ではありません。",
+    "Entities": "エンティティ",
+    "Not found": "見つかりません",
+    "No history in this period": "この期間の履歴はありません",
+    "Sum": "合計",
+    "Lowest": "最小",
+    "Highest": "最大",
+    "Count": "件数",
+    "Count of those on or open": "オンまたは開いている数",
+    "Indoor": "屋内",
+    "Outdoor": "屋外"
   }
 }

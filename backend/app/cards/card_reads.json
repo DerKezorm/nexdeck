@@ -826,6 +826,8 @@
   {
    "path": "/api/states",
    "widgets": [
+    "summary",
+    "history",
     "entities"
    ]
   },
