@@ -2165,6 +2165,38 @@
         "When nexnotes cannot be reached, both cards keep their last state with an orange line saying since when, and nothing can be ticked until nexnotes answers again.",
         "A note that was deleted, locked or is no longer shared with you is said on the card, without anything of what it showed."
       ]
+    },
+    "1.12.0": {
+      "lead": "Several queries and several entities now share one chart, filled with their own history from the first moment, and Bambuddy shows what your 3D printers are doing.",
+      "sections": [
+        {
+          "title": "Prometheus: several queries on one chart",
+          "body": "The card Several queries draws up to six PromQL queries as curves, one per line as label | query | colour | unit. It reads Prometheus' own history for the last 30 minutes, 6 hours or 24 hours, so the chart is full as soon as the card appears. The latest value of the first curve is the big number above it, and its warning and alarm thresholds are drawn as dashed lines. A query that returns several series draws one curve for each.",
+          "path": "Add a card > Prometheus > Several queries"
+        },
+        {
+          "title": "Home Assistant: several entities as one number",
+          "body": "The card Several entities as one number adds up, averages or takes the lowest or highest of several entities, or counts how many are on or open: the power of six plugs, the mean of four thermostats, the windows left open. A group stands for the entities in it, and an entity that is unavailable is left out with a note on how many were counted.",
+          "path": "Add a card > Home Assistant > Several entities as one number"
+        },
+        {
+          "title": "Home Assistant: a history chart",
+          "body": "The card History chart draws up to eight entities as lines over the last hour, six hours, day or week, read from Home Assistant's history, so it is full the moment it is placed. A name after a | labels a line.",
+          "path": "Add a card > Home Assistant > History chart"
+        },
+        {
+          "title": "Bambuddy, in beta",
+          "body": "Four cards for the Bambu Lab printers that Bambuddy manages: Printer with state, job, progress, time left, temperatures and the last print; AMS with each slot's filament, colour and what is left on the spool; Printers, all of them at a glance; and the Print queue. They only read: nothing on them starts, pauses or stops a print.",
+          "path": "Settings > Integrations > Bambuddy"
+        }
+      ],
+      "smallTitle": "Also in this version",
+      "small": [
+        "Pointing at a history chart shows every line's value at that moment, also on the speed test histories.",
+        "The Entity card of Home Assistant has a Decimals field, so a rate of 0.07 per kWh no longer reads 0.1.",
+        "A JSON API card keeps the decimals it is set to: a card set to 1 now shows 23.4 instead of 23.",
+        "MCP clients that ask for a newer protocol version on their first message connect again."
+      ]
     }
   }
 }

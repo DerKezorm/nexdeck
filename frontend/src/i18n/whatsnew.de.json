@@ -2165,6 +2165,38 @@
         "Ist nexnotes nicht erreichbar, behalten beide Karten ihren letzten Stand mit einer orangen Zeile, seit wann; abhaken geht erst wieder, wenn nexnotes antwortet.",
         "Eine Notiz, die gelöscht, gesperrt oder nicht mehr mit dir geteilt ist, sagt die Karte, ohne etwas von ihrem Inhalt zu zeigen."
       ]
+    },
+    "1.12.0": {
+      "lead": "Mehrere Abfragen und mehrere Entitäten teilen sich jetzt ein Diagramm, vom ersten Moment an mit ihrem eigenen Verlauf, und Bambuddy zeigt, was deine 3D-Drucker gerade tun.",
+      "sections": [
+        {
+          "title": "Prometheus: mehrere Abfragen in einem Diagramm",
+          "body": "Die Karte „Mehrere Abfragen“ zeichnet bis zu sechs PromQL-Abfragen als Kurven, eine je Zeile als Name | Abfrage | Farbe | Einheit. Sie liest den Verlauf aus Prometheus selbst, für die letzten 30 Minuten, 6 Stunden oder 24 Stunden, und ist deshalb sofort voll. Der letzte Wert der ersten Kurve steht groß darüber, ihre Warn- und Alarmschwelle sind gestrichelte Linien. Eine Abfrage mit mehreren Reihen zeichnet für jede eine Kurve.",
+          "path": "Karte hinzufügen > Prometheus > Mehrere Abfragen"
+        },
+        {
+          "title": "Home Assistant: mehrere Entitäten als eine Zahl",
+          "body": "Die Karte „Mehrere Entitäten als eine Zahl“ zählt zusammen, bildet den Mittelwert, den kleinsten oder größten Wert, oder zählt, wie viele an oder offen sind: die Leistung von sechs Steckdosen, das Mittel von vier Thermostaten, die offenen Fenster. Eine Gruppe steht für ihre Mitglieder, und eine nicht verfügbare Entität bleibt draußen, mit dem Hinweis, wie viele gezählt wurden.",
+          "path": "Karte hinzufügen > Home Assistant > Mehrere Entitäten als eine Zahl"
+        },
+        {
+          "title": "Home Assistant: ein Verlaufsdiagramm",
+          "body": "Die Karte „Verlaufsdiagramm“ zeichnet bis zu acht Entitäten als Linien über die letzte Stunde, sechs Stunden, den Tag oder die Woche, aus dem Verlauf von Home Assistant, und ist deshalb sofort voll. Ein Name hinter einem | beschriftet eine Linie.",
+          "path": "Karte hinzufügen > Home Assistant > Verlaufsdiagramm"
+        },
+        {
+          "title": "Bambuddy, als Beta",
+          "body": "Vier Karten für die Bambu-Lab-Drucker, die Bambuddy verwaltet: Drucker mit Zustand, Auftrag, Fortschritt, Restzeit, Temperaturen und dem letzten Druck; AMS mit Filament, Farbe und Rest jeder Spule; Alle Drucker auf einen Blick; und die Druckwarteschlange. Sie lesen nur: Nichts auf ihnen startet, pausiert oder stoppt einen Druck.",
+          "path": "Einstellungen > Anbindungen > Bambuddy"
+        }
+      ],
+      "smallTitle": "Außerdem in dieser Version",
+      "small": [
+        "Zeigst du auf ein Verlaufsdiagramm, erscheinen die Werte aller Linien zu diesem Moment, auch bei den Speedtests.",
+        "Die Entitätskarte von Home Assistant hat ein Feld „Nachkommastellen“, ein Preis von 0,07 je kWh steht nicht mehr als 0,1 da.",
+        "Eine JSON-API-Karte hält sich an ihre Nachkommastellen: Bei 1 zeigt sie jetzt 23,4 statt 23.",
+        "MCP-Clients, die schon in der ersten Nachricht eine neuere Protokollversion nennen, verbinden sich wieder."
+      ]
     }
   }
 }
